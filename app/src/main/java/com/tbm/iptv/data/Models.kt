@@ -1,0 +1,124 @@
+package com.tbm.iptv.data
+
+import org.json.JSONObject
+
+enum class Kind(val label: String) { LIVE("טלוויזיה"), MOVIE("סרטים"), SERIES("סדרות") }
+
+/** פריט שמוצג ברשימות – ערוץ, סרט או סדרה */
+interface Entry {
+    val key: String
+    val name: String
+    val group: String
+    val logo: String?
+}
+
+data class Channel(
+    override val key: String,
+    override val name: String,
+    override val logo: String?,
+    override val group: String,
+    val url: String,
+    val kind: Kind,
+    val streamId: Int? = null,
+    val epgId: String? = null,
+) : Entry
+
+data class SeriesItem(
+    override val key: String,
+    override val name: String,
+    override val logo: String?,
+    override val group: String,
+    val seriesId: Int? = null,
+    val plot: String? = null,
+    val episodesM3u: List<Episode>? = null,
+) : Entry
+
+data class Episode(
+    val key: String,
+    val title: String,
+    val season: Int,
+    val episode: Int,
+    val url: String,
+    val plot: String? = null,
+    val image: String? = null,
+)
+
+data class Content(
+    val live: List<Channel>,
+    val movies: List<Channel>,
+    val series: List<SeriesItem>,
+)
+
+data class EpgEntry(val title: String, val start: Long, val end: Long)
+
+data class Playlist(
+    val id: String,
+    val name: String,
+    val type: String, // "m3u" | "xtream"
+    val url: String,
+    val user: String = "",
+    val pass: String = "",
+) {
+    val isXtream get() = type == "xtream"
+
+    fun toJson(): JSONObject = JSONObject()
+        .put("id", id).put("name", name).put("type", type)
+        .put("url", url).put("user", user).put("pass", pass)
+
+    companion object {
+        fun fromJson(o: JSONObject) = Playlist(
+            o.optString("id"), o.optString("name"), o.optString("type", "m3u"),
+            o.optString("url"), o.optString("user"), o.optString("pass"),
+        )
+    }
+}
+
+/** מה שנשלח לנגן */
+data class PlayItem(
+    val key: String,
+    val title: String,
+    val url: String,
+    val kind: Kind,
+    val logo: String? = null,
+    val seriesName: String? = null,
+    val season: Int? = null,
+    val episode: Int? = null,
+    val streamId: Int? = null,
+) {
+    fun toJson(): JSONObject = JSONObject().apply {
+        put("key", key); put("title", title); put("url", url); put("kind", kind.name)
+        logo?.let { put("logo", it) }
+        seriesName?.let { put("seriesName", it) }
+        season?.let { put("season", it) }
+        episode?.let { put("episode", it) }
+        streamId?.let { put("streamId", it) }
+    }
+
+    companion object {
+        fun fromJson(o: JSONObject) = PlayItem(
+            key = o.optString("key"),
+            title = o.optString("title"),
+            url = o.optString("url"),
+            kind = runCatching { Kind.valueOf(o.optString("kind")) }.getOrDefault(Kind.MOVIE),
+            logo = o.optString("logo").ifBlank { null },
+            seriesName = o.optString("seriesName").ifBlank { null },
+            season = if (o.has("season")) o.optInt("season") else null,
+            episode = if (o.has("episode")) o.optInt("episode") else null,
+            streamId = if (o.has("streamId")) o.optInt("streamId") else null,
+        )
+    }
+}
+
+fun Channel.toPlay() = PlayItem(key, name, url, kind, logo, streamId = streamId)
+
+fun Episode.toPlay(s: SeriesItem) = PlayItem(
+    key = key,
+    title = "${s.name} – S%02dE%02d".format(season, episode) +
+        (if (title.isNotBlank() && !title.contains(s.name, true)) " · $title" else ""),
+    url = url,
+    kind = Kind.SERIES,
+    logo = image ?: s.logo,
+    seriesName = s.name,
+    season = season,
+    episode = episode,
+)

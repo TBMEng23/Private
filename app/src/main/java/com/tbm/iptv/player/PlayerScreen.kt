@@ -1,0 +1,193 @@
+package com.tbm.iptv.player
+
+import android.view.View
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.AspectRatio
+import androidx.compose.material.icons.filled.ClosedCaption
+import androidx.compose.material.icons.filled.SkipNext
+import androidx.compose.material.icons.filled.SkipPrevious
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import androidx.media3.ui.CaptionStyleCompat
+import androidx.media3.ui.PlayerView
+import androidx.media3.ui.SubtitleView
+import com.tbm.iptv.data.Prefs
+import com.tbm.iptv.subs.langLabel
+import com.tbm.iptv.ui.FocusItem
+
+@Composable
+fun PlayerScreen(a: PlayerActivity) {
+    val ui = a.ui
+    Box(Modifier.fillMaxSize().background(Color.Black)) {
+        AndroidView(
+            factory = { ctx ->
+                PlayerView(ctx).apply {
+                    player = a.player
+                    keepScreenOn = true
+                    setShowSubtitleButton(true)
+                    setShowNextButton(false)
+                    setShowPreviousButton(false)
+                    controllerShowTimeoutMs = 4000
+                    setControllerVisibilityListener(PlayerView.ControllerVisibilityListener { v ->
+                        ui.controlsVisible = v == View.VISIBLE
+                    })
+                    subtitleView?.setFractionalTextSize(SubtitleView.DEFAULT_TEXT_SIZE_FRACTION * Prefs.subSize)
+                    subtitleView?.setStyle(
+                        CaptionStyleCompat(
+                            android.graphics.Color.WHITE,
+                            android.graphics.Color.TRANSPARENT,
+                            android.graphics.Color.TRANSPARENT,
+                            CaptionStyleCompat.EDGE_TYPE_OUTLINE,
+                            android.graphics.Color.BLACK,
+                            null,
+                        )
+                    )
+                    a.playerView = this
+                }
+            },
+            update = { it.resizeMode = ui.resize },
+            modifier = Modifier.fillMaxSize(),
+        )
+
+        if (ui.controlsVisible && !ui.pip) TopBar(a)
+
+        ui.error?.let {
+            Text(
+                it, color = Color.White, textAlign = TextAlign.Center,
+                modifier = Modifier.align(Alignment.Center)
+                    .background(Color(0xAA000000), RoundedCornerShape(10.dp)).padding(16.dp),
+            )
+        }
+
+        ui.message?.let {
+            Text(
+                it, color = Color.White, fontSize = 14.sp,
+                modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 90.dp)
+                    .background(Color(0xCC1C263C), RoundedCornerShape(20.dp))
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+            )
+        }
+
+        if (ui.showSubs) SubtitleDialog(a)
+    }
+}
+
+@Composable
+private fun TopBar(a: PlayerActivity) {
+    val ui = a.ui
+    Row(
+        Modifier.fillMaxWidth()
+            .background(Brush.verticalGradient(listOf(Color(0xCC000000), Color.Transparent)))
+            .padding(horizontal = 8.dp, vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        IconButton(onClick = { a.finish() }) {
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, "חזרה", tint = Color.White)
+        }
+        Column(Modifier.weight(1f)) {
+            Text(ui.title, color = Color.White, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            ui.subLabel?.let { Text("כתובית: $it", color = Color(0xFFB0C4DE), fontSize = 12.sp, maxLines = 1) }
+        }
+        if (ui.subLabel != null) {
+            TextButton(onClick = { a.shiftSubtitle(-500) }) { Text("−0.5", color = Color.White) }
+            Text("%+.1f".format(ui.subOffset / 1000.0), color = Color.White, fontSize = 12.sp)
+            TextButton(onClick = { a.shiftSubtitle(500) }) { Text("+0.5", color = Color.White) }
+        }
+        if (!ui.isLive) {
+            IconButton(onClick = {
+                ui.showSubs = true
+                if (ui.subResults.isEmpty() && !ui.subSearching) a.searchSubtitles(auto = false)
+            }) { Icon(Icons.Filled.ClosedCaption, "חיפוש כתוביות", tint = Color.White) }
+        }
+        IconButton(onClick = { a.cycleResize() }) { Icon(Icons.Filled.AspectRatio, "יחס תצוגה", tint = Color.White) }
+        if (ui.hasPrev) IconButton(onClick = { a.prev() }) { Icon(Icons.Filled.SkipPrevious, "הקודם", tint = Color.White) }
+        if (ui.hasNext) IconButton(onClick = { a.next() }) { Icon(Icons.Filled.SkipNext, "הבא", tint = Color.White) }
+    }
+}
+
+@Composable
+private fun SubtitleDialog(a: PlayerActivity) {
+    val ui = a.ui
+    Dialog(onDismissRequest = { ui.showSubs = false }, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+        Surface(
+            shape = RoundedCornerShape(14.dp),
+            color = MaterialTheme.colorScheme.surface,
+            modifier = Modifier.widthIn(max = 640.dp).fillMaxWidth(0.92f).heightIn(max = 560.dp),
+        ) {
+            Column(Modifier.padding(16.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("כתוביות", style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f))
+                    OutlinedButton(onClick = { a.searchSubtitles(auto = false) }) { Text("חפש שוב") }
+                    Spacer(Modifier.width(8.dp))
+                    OutlinedButton(onClick = { a.disableSubtitles(); ui.showSubs = false }) { Text("כבה") }
+                }
+                Spacer(Modifier.size(8.dp))
+                if (ui.subSearching) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        CircularProgressIndicator(Modifier.size(22.dp), strokeWidth = 2.dp)
+                        Spacer(Modifier.width(10.dp))
+                        Text("מחפש ב-Wizdom, כתובית, OpenSubtitles, SubDL…")
+                    }
+                }
+                if (!ui.subSearching && ui.subResults.isEmpty()) {
+                    Text("לא נמצאו כתוביות", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                ui.subErrors.forEach {
+                    Text("⚠ $it", color = Color(0xFFFFB74D), fontSize = 12.sp)
+                }
+                LazyColumn(Modifier.weight(1f, fill = false), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    items(ui.subResults) { r ->
+                        FocusItem(Modifier.fillMaxWidth(), onClick = { a.applySubtitle(r); ui.showSubs = false }) {
+                            Column(Modifier.padding(10.dp)) {
+                                Text(
+                                    "${langLabel(r.lang)} · ${r.provider}",
+                                    color = MaterialTheme.colorScheme.primary, fontSize = 13.sp,
+                                    fontWeight = FontWeight.Bold,
+                                )
+                                Text(r.release.ifBlank { "—" }, fontSize = 13.sp, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                            }
+                        }
+                        HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
+                    }
+                }
+            }
+        }
+    }
+}
