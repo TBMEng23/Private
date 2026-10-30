@@ -443,9 +443,10 @@ private fun BrowseSection(kind: Kind, all: List<Entry>, ver: Int, nav: (Screen) 
 
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val wide = maxWidth >= 600.dp
+        val catW = maxWidth * 0.26f
         if (wide) {
             Row(Modifier.fillMaxSize()) {
-                Column(Modifier.width(maxWidth * 0.26f).fillMaxHeight().background(MaterialTheme.colorScheme.surface.copy(alpha = 0.55f))) {
+                Column(Modifier.width(catW).fillMaxHeight().background(MaterialTheme.colorScheme.surface.copy(alpha = 0.55f))) {
                     Row(Modifier.fillMaxWidth().padding(start = 12.dp, end = 4.dp, top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                         Text(kind.label, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
                         if (!Prefs.isKids) {
