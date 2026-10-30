@@ -2,7 +2,11 @@ package com.tbm.iptv.data
 
 import org.json.JSONObject
 
-enum class Kind(val label: String) { LIVE("טלוויזיה"), MOVIE("סרטים"), SERIES("סדרות") }
+enum class Kind(private val he: String) {
+    LIVE("טלוויזיה"), MOVIE("סרטים"), SERIES("סדרות");
+
+    val label: String get() = com.tbm.iptv.L(he)
+}
 
 /** פריט שמוצג ברשימות – ערוץ, סרט או סדרה */
 interface Entry {
@@ -21,7 +25,16 @@ data class Channel(
     val kind: Kind,
     val streamId: Int? = null,
     val epgId: String? = null,
-) : Entry
+    /** ימי ארכיון (catch-up). 0 = אין */
+    val archiveDays: Int = 0,
+    /** M3U: catchup="default|append|shift|flussonic|xc" */
+    val catchupType: String? = null,
+    val catchupSource: String? = null,
+    /** זמן הוספה לשרת (Xtream, מילישניות) – ל"נוספו לאחרונה" */
+    val added: Long = 0,
+) : Entry {
+    val hasCatchup get() = archiveDays > 0 || catchupType != null
+}
 
 data class SeriesItem(
     override val key: String,
@@ -31,6 +44,7 @@ data class SeriesItem(
     val seriesId: Int? = null,
     val plot: String? = null,
     val episodesM3u: List<Episode>? = null,
+    val added: Long = 0,
 ) : Entry
 
 data class Episode(
@@ -47,9 +61,11 @@ data class Content(
     val live: List<Channel>,
     val movies: List<Channel>,
     val series: List<SeriesItem>,
+    /** כתובת XMLTV מתוך כותרת ה-M3U (url-tvg) */
+    val epgUrl: String? = null,
 )
 
-data class EpgEntry(val title: String, val start: Long, val end: Long)
+data class EpgEntry(val title: String, val start: Long, val end: Long, val desc: String = "")
 
 data class Playlist(
     val id: String,
@@ -73,6 +89,14 @@ data class Playlist(
     }
 }
 
+data class Profile(val id: String, val name: String, val kids: Boolean) {
+    fun toJson(): JSONObject = JSONObject().put("id", id).put("name", name).put("kids", kids)
+
+    companion object {
+        fun fromJson(o: JSONObject) = Profile(o.optString("id"), o.optString("name"), o.optBoolean("kids"))
+    }
+}
+
 /** מה שנשלח לנגן */
 data class PlayItem(
     val key: String,
@@ -84,6 +108,12 @@ data class PlayItem(
     val season: Int? = null,
     val episode: Int? = null,
     val streamId: Int? = null,
+    val epgId: String? = null,
+    val channelName: String? = null,
+    /** צפייה בתוכנית שכבר שודרה – בלי שמירת המשך צפייה ובלי כתוביות אוטומטיות */
+    val isCatchup: Boolean = false,
+    /** הקלטה מקומית */
+    val isLocal: Boolean = false,
 ) {
     fun toJson(): JSONObject = JSONObject().apply {
         put("key", key); put("title", title); put("url", url); put("kind", kind.name)
@@ -92,6 +122,8 @@ data class PlayItem(
         season?.let { put("season", it) }
         episode?.let { put("episode", it) }
         streamId?.let { put("streamId", it) }
+        epgId?.let { put("epgId", it) }
+        channelName?.let { put("channelName", it) }
     }
 
     companion object {
@@ -105,11 +137,16 @@ data class PlayItem(
             season = if (o.has("season")) o.optInt("season") else null,
             episode = if (o.has("episode")) o.optInt("episode") else null,
             streamId = if (o.has("streamId")) o.optInt("streamId") else null,
+            epgId = o.optString("epgId").ifBlank { null },
+            channelName = o.optString("channelName").ifBlank { null },
         )
     }
 }
 
-fun Channel.toPlay() = PlayItem(key, name, url, kind, logo, streamId = streamId)
+fun Channel.toPlay() = PlayItem(
+    key, name, url, kind, logo, streamId = streamId,
+    epgId = epgId, channelName = name,
+)
 
 fun Episode.toPlay(s: SeriesItem) = PlayItem(
     key = key,

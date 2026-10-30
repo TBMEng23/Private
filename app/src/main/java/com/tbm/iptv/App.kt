@@ -8,6 +8,7 @@ class App : Application() {
         super.onCreate()
         instance = this
         Prefs.init(this)
+        I18n.init()
     }
 
     companion object {

@@ -1,5 +1,7 @@
 package com.tbm.iptv.subs
 
+import com.tbm.iptv.L
+
 import androidx.media3.common.MimeTypes
 import com.tbm.iptv.data.Http
 import com.tbm.iptv.data.PlayItem
@@ -62,13 +64,18 @@ interface SubProvider {
 }
 
 fun langLabel(code: String) = when (code) {
-    "he" -> "עברית"; "en" -> "אנגלית"; "ar" -> "ערבית"; "ru" -> "רוסית"; "fr" -> "צרפתית"
-    "es" -> "ספרדית"; "de" -> "גרמנית"; "it" -> "איטלקית"; "pt" -> "פורטוגזית"; "tr" -> "טורקית"
+    "he" -> L("עברית"); "en" -> L("אנגלית"); "ar" -> L("ערבית"); "ru" -> L("רוסית"); "fr" -> L("צרפתית")
+    "es" -> L("ספרדית"); "de" -> L("גרמנית"); "it" -> L("איטלקית"); "pt" -> L("פורטוגזית"); "tr" -> L("טורקית")
     else -> code
 }
 
 object SubtitleManager {
-    val providers: List<SubProvider> = listOf(WizdomProvider, KtuvitProvider, OpenSubtitlesProvider, SubDlProvider)
+    val providers: List<SubProvider> = listOf(
+        WizdomProvider, KtuvitProvider, OpenSubtitlesProvider, SubDlProvider,
+        SubSourceProvider, PodnapisiProvider, YifyProvider,
+    )
+
+    const val MT_NAME = "תרגום מכונה"
 
     suspend fun buildQuery(item: PlayItem): SubQuery = withContext(Dispatchers.IO) {
         val p = TitleParser.parse(item.seriesName ?: item.title)
@@ -91,7 +98,19 @@ object SubtitleManager {
                 }
             }
         }.awaitAll()
-        val all = lists.flatten().filter { it.lang in q.langs }
+        val all = lists.flatten().filter { it.lang in q.langs }.toMutableList()
+        // אין עברית בשום אתר → תרגום אוטומטי של הכתובית האנגלית הטובה ביותר
+        if ("he" in q.langs && all.none { it.lang == "he" } && Prefs.bool("machine_tr", true)) {
+            all.filter { it.lang == "en" }
+                .sortedByDescending { it.score + releaseScore(it.release, q.original) }
+                .take(3)
+                .forEach { en ->
+                    all += SubResult("$MT_NAME (${en.provider})", "he", en.release, -50) {
+                        val src = download(en, q)
+                        RawSub(MachineTranslate.srt(src.text, "en", "iw").toByteArray(Charsets.UTF_8), "mt.${src.ext}")
+                    }
+                }
+        }
         val sorted = all.sortedWith(
             compareBy<SubResult> { q.langs.indexOf(it.lang) }
                 .thenByDescending { it.score + releaseScore(it.release, q.original) }
@@ -113,7 +132,7 @@ object SubtitleManager {
         if (raw.bytes.size > 2 && raw.bytes[0] == 'P'.code.toByte() && raw.bytes[1] == 'K'.code.toByte()) {
             raw = unzip(raw.bytes, q)
         }
-        if (raw.bytes.isEmpty()) throw IOException("קובץ ריק")
+        if (raw.bytes.isEmpty()) throw IOException(L("קובץ ריק"))
         var ext = raw.name.substringAfterLast('.', "srt").lowercase()
         if (ext !in setOf("srt", "ass", "ssa", "vtt")) ext = "srt"
         var text = decode(raw.bytes, r.lang)
@@ -136,7 +155,7 @@ object SubtitleManager {
                 e = z.nextEntry
             }
         }
-        if (entries.isEmpty()) throw IOException("אין קובץ כתוביות בארכיון")
+        if (entries.isEmpty()) throw IOException(L("אין קובץ כתוביות בארכיון"))
         if (q.isSeries && entries.size > 1) {
             val s = q.season ?: 1; val ep = q.episode ?: 1
             val pats = listOf("s%02de%02d".format(s, ep), "%dx%02d".format(s, ep), "e%02d".format(ep))
@@ -187,6 +206,31 @@ object SubtitleManager {
         val t = ((g[1].toLong() * 3600 + g[2].toLong() * 60 + g[3].toLong()) * 1000 + g[5].toLong() + ms)
             .coerceAtLeast(0)
         "%02d:%02d:%02d%s%03d".format(t / 3_600_000, (t / 60_000) % 60, (t / 1000) % 60, g[4], t % 1000)
+    }
+
+    // ---------- מטמון כתוביות: כתובית שנבחרה נשמרת לכל פריט ----------
+    private fun cacheDir() = File(com.tbm.iptv.App.instance.filesDir, "subcache").apply { mkdirs() }
+    private fun cacheFile(key: String) = File(cacheDir(), "${key.hashCode().toUInt()}.json")
+
+    fun saveCache(key: String, sf: SubtitleFile, label: String) {
+        runCatching {
+            cacheFile(key).writeText(
+                JSONObject().put("text", sf.text).put("ext", sf.ext).put("lang", sf.lang).put("label", label).toString()
+            )
+        }
+    }
+
+    fun loadCache(key: String): Pair<SubtitleFile, String>? = runCatching {
+        val f = cacheFile(key)
+        if (!f.exists()) return null
+        val o = JSONObject(f.readText())
+        SubtitleFile(o.getString("text"), o.optString("ext", "srt"), o.optString("lang", "he")) to o.optString("label")
+    }.getOrNull()
+
+    fun clearCache(): Int {
+        val files = cacheDir().listFiles() ?: return 0
+        files.forEach { it.delete() }
+        return files.size
     }
 
     /** כותב את הכתובית לקובץ זמני (עם היסט זמן אם נדרש) */

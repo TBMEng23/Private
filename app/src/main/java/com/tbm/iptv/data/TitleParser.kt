@@ -100,7 +100,11 @@ object Countries {
         OTHER
     }
 
-    fun label(code: String): String = when (code) {
+    fun label(code: String): String = if (com.tbm.iptv.I18n.isEn) when (code) {
+        OTHER -> "Other"; "ARB" -> "Arabic"; "EN" -> "English"; "LAT" -> "Latino"; "KU" -> "Kurdish"
+        "AFR" -> "Africa"; "EXYU" -> "Ex-Yugoslavia"; "ASI" -> "Asia"; "EX" -> "EX"
+        else -> Locale("", code).getDisplayCountry(Locale.ENGLISH).ifBlank { code }
+    } else when (code) {
         OTHER -> "אחר"
         "ARB" -> "ערבית"
         "EN" -> "אנגלית"

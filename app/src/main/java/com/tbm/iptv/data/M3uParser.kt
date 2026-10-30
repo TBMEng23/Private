@@ -17,18 +17,24 @@ object M3uParser {
         val series = LinkedHashMap<String, SeriesAcc>()
         var inf: String? = null
         var grp: String? = null
+        var epgUrl: String? = null
+        var headAttrs: Map<String, String> = emptyMap()
 
         input.bufferedReader(Charsets.UTF_8).useLines { lines ->
             for (raw in lines) {
                 val line = raw.trim().removePrefix("﻿")
                 when {
                     line.isEmpty() -> {}
+                    line.startsWith("#EXTM3U", true) -> {
+                        headAttrs = attrRx.findAll(line).associate { it.groupValues[1].lowercase() to it.groupValues[2] }
+                        epgUrl = headAttrs["url-tvg"] ?: headAttrs["x-tvg-url"] ?: headAttrs["tvg-url"]
+                    }
                     line.startsWith("#EXTINF", true) -> { inf = line; grp = null }
                     line.startsWith("#EXTGRP:", true) -> grp = line.substringAfter(':').trim()
                     line.startsWith("#") -> {}
                     else -> {
                         handle(inf ?: "#EXTINF:-1,${line.substringAfterLast('/')}", grp, line,
-                            live, movies, series)
+                            live, movies, series, headAttrs)
                         inf = null; grp = null
                     }
                 }
@@ -44,12 +50,13 @@ object M3uParser {
                 episodesM3u = acc.eps.sortedWith(compareBy({ it.season }, { it.episode })),
             )
         }
-        return Content(live, movies, seriesList)
+        return Content(live, movies, seriesList, epgUrl)
     }
 
     private fun handle(
         inf: String, grp: String?, url: String,
         live: MutableList<Channel>, movies: MutableList<Channel>, series: MutableMap<String, SeriesAcc>,
+        head: Map<String, String>,
     ) {
         val attrs = attrRx.findAll(inf).associate { it.groupValues[1].lowercase() to it.groupValues[2] }
         val lastQuote = inf.lastIndexOf('"')
@@ -73,7 +80,19 @@ object M3uParser {
         }
 
         when (kind) {
-            Kind.LIVE -> live += Channel(url, name, logo, group, url, Kind.LIVE, epgId = attrs["tvg-id"])
+            Kind.LIVE -> {
+                val cuType = (attrs["catchup"] ?: attrs["catchup-type"] ?: head["catchup"])?.ifBlank { null }
+                val cuSrc = (attrs["catchup-source"] ?: head["catchup-source"])?.ifBlank { null }
+                val cuDays = (attrs["catchup-days"] ?: attrs["tvg-rec"] ?: attrs["timeshift"] ?: head["catchup-days"])
+                    ?.toIntOrNull() ?: 0
+                live += Channel(
+                    url, name, logo, group, url, Kind.LIVE,
+                    epgId = attrs["tvg-id"]?.ifBlank { null } ?: attrs["tvg-name"]?.ifBlank { null },
+                    archiveDays = if (cuDays > 0) cuDays else if (cuType != null) 7 else 0,
+                    catchupType = cuType ?: if (cuDays > 0) "shift" else null,
+                    catchupSource = cuSrc,
+                )
+            }
             Kind.MOVIE -> movies += Channel(url, name, logo, group, url, Kind.MOVIE)
             Kind.SERIES -> {
                 val sName = parsed.title

@@ -1,5 +1,7 @@
 package com.tbm.iptv.data
 
+import com.tbm.iptv.L
+
 import android.util.Base64
 import org.json.JSONArray
 import org.json.JSONObject
@@ -31,7 +33,23 @@ class Xtream(private val p: Playlist) {
 
     private fun JSONObject.idInt(k: String): Int? = optString(k).toIntOrNull()
 
+    /** פרטי חשבון: אזור זמן של השרת (ל-catch-up) ותאריך תפוגה */
+    private fun accountInfo() {
+        runCatching {
+            val o = JSONObject(Http.get(api("")))
+            o.optJSONObject("server_info")?.optString("timezone")?.ifBlank { null }?.let {
+                Prefs.setStrQuiet("tz_${p.id}", it)
+            }
+            o.optJSONObject("user_info")?.let { ui ->
+                if (ui.optString("auth") == "0") throw Exception("auth")
+                Prefs.setStrQuiet("exp_${p.id}", ui.optString("exp_date"))
+                Prefs.setStrQuiet("status_${p.id}", ui.optString("status"))
+            }
+        }
+    }
+
     fun load(force: Boolean): Content {
+        if (force || Prefs.str("tz_${p.id}").isBlank()) accountInfo()
         val liveCats = cats("get_live_categories", force)
         val vodCats = cats("get_vod_categories", force)
         val serCats = cats("get_series_categories", force)
@@ -49,6 +67,8 @@ class Xtream(private val p: Playlist) {
                     group = liveCats[o.optString("category_id")] ?: "ללא קבוצה",
                     url = url, kind = Kind.LIVE, streamId = id,
                     epgId = o.optString("epg_channel_id").ifBlank { null },
+                    archiveDays = if (o.optString("tv_archive") == "1")
+                        (o.optString("tv_archive_duration").toIntOrNull() ?: 1).coerceAtLeast(1) else 0,
                 )
             }
         }
@@ -66,6 +86,7 @@ class Xtream(private val p: Playlist) {
                     group = vodCats[o.optString("category_id")] ?: "ללא קבוצה",
                     url = "$base/movie/${p.user}/${p.pass}/$id.$ext",
                     kind = Kind.MOVIE, streamId = id,
+                    added = (o.optString("added").toLongOrNull() ?: 0L) * 1000,
                 )
             }
         }
@@ -82,12 +103,13 @@ class Xtream(private val p: Playlist) {
                     group = serCats[o.optString("category_id")] ?: "ללא קבוצה",
                     seriesId = id,
                     plot = o.optString("plot").ifBlank { null },
+                    added = (o.optString("last_modified").toLongOrNull() ?: 0L) * 1000,
                 )
             }
         }
 
         if (live.isEmpty() && movies.isEmpty() && series.isEmpty())
-            throw Exception("לא התקבל תוכן מהשרת – בדוק כתובת, שם משתמש וסיסמה")
+            throw Exception(L("לא התקבל תוכן מהשרת – בדוק כתובת, שם משתמש וסיסמה"))
         return Content(live, movies, series)
     }
 

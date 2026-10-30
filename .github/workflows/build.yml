@@ -1,0 +1,40 @@
+name: Build APK
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+
+      - name: Build
+        run: |
+          set -o pipefail
+          gradle assembleRelease --no-daemon --stacktrace 2>&1 | tee build.log
+
+      - name: Report errors
+        if: failure()
+        run: |
+          # שגיאות קומפילציה כהערות (annotations) – קריאות גם בלי הלוג המלא
+          E=$( (grep -E "^e: " build.log; grep -A25 "What went wrong" build.log) | head -120 | sed 's/%/%25/g' | sed ':a;N;$!ba;s/\n/%0A/g')
+          echo "::error title=Build errors::$E"
+          T=$(tail -60 build.log | sed 's/%/%25/g' | sed ':a;N;$!ba;s/\n/%0A/g')
+          echo "::error title=Build tail::$T"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: TBMPlayer-apk
+          path: app/build/outputs/apk/release/*.apk

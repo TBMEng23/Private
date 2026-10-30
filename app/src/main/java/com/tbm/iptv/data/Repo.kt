@@ -1,5 +1,7 @@
 package com.tbm.iptv.data
 
+import com.tbm.iptv.L
+
 import com.tbm.iptv.App
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -34,11 +36,14 @@ object Repo {
     }
 
     suspend fun load(p: Playlist, force: Boolean = false) = withContext(Dispatchers.IO) {
-        state.value = LoadState.Loading("טוען את \"${p.name}\"…")
+        state.value = LoadState.Loading(L("טוען את \"{0}\"…", p.name))
         try {
             val c = if (p.isXtream) Xtream(p).load(force) else loadM3u(p, force)
             seriesCache.clear()
             state.value = LoadState.Ready(c)
+            if (force || Prefs.str("updated_${p.id}").isBlank())
+                Prefs.setStrQuiet("updated_${p.id}", System.currentTimeMillis().toString())
+            scope.launch { Epg.load(p, c, force) }
         } catch (e: Exception) {
             state.value = LoadState.Error(e.message ?: e.javaClass.simpleName)
         }
@@ -58,16 +63,16 @@ object Repo {
             }
             cf
         }
-        if (!f.exists()) throw Exception("קובץ הרשימה לא נמצא")
+        if (!f.exists()) throw Exception(L("קובץ הרשימה לא נמצא"))
         val c = f.inputStream().use { M3uParser.parse(it, p.id) }
         if (c.live.isEmpty() && c.movies.isEmpty() && c.series.isEmpty())
-            throw Exception("הרשימה ריקה או שאינה בפורמט M3U")
+            throw Exception(L("הרשימה ריקה או שאינה בפורמט M3U"))
         return c
     }
 
     fun cacheFile(name: String) = File(App.instance.filesDir, name)
 
-    private fun fresh(f: File, hours: Int = 12) =
+    private fun fresh(f: File, hours: Int = Prefs.refreshHours) =
         f.exists() && System.currentTimeMillis() - f.lastModified() < hours * 3_600_000L
 
     fun fetchCached(url: String, name: String, force: Boolean): String {

@@ -1,5 +1,7 @@
 package com.tbm.iptv.subs
 
+import com.tbm.iptv.L
+
 import com.tbm.iptv.data.Http
 import com.tbm.iptv.data.Prefs
 import org.json.JSONArray
@@ -16,7 +18,7 @@ object WizdomProvider : SubProvider {
     override fun enabled() = Prefs.bool("p_wizdom", true) && "he" in Prefs.subLangs()
 
     override suspend fun search(q: SubQuery): List<SubResult> {
-        val imdb = q.imdb ?: throw IOException("לא נמצא מזהה IMDb")
+        val imdb = q.imdb ?: throw IOException(L("לא נמצא מזהה IMDb"))
         val txt = try {
             Http.get("$HOST/api/releases/$imdb", hdr)
         } catch (e: IOException) {
@@ -85,7 +87,7 @@ object KtuvitProvider : SubProvider {
         val c = r.headers.values("Set-Cookie").firstNotNullOfOrNull { h ->
             h.split("Login=").getOrNull(1)?.substringBefore(";")?.ifBlank { null }
         }
-        if (!ok || c == null) throw IOException("התחברות נכשלה – בדוק אימייל וסיסמה מוצפנת")
+        if (!ok || c == null) throw IOException(L("התחברות נכשלה – בדוק אימייל וסיסמה מוצפנת"))
         cookie = c
         cookieFor = email + hash
     }
@@ -155,7 +157,7 @@ object KtuvitProvider : SubProvider {
         val id = dField(
             Http.post("${BASE}Services/ContentProvider.svc/RequestSubtitleDownload", body, headers()).body
         ).optString("DownloadIdentifier")
-        if (id.isBlank()) throw IOException("כתובית סירבה להורדה")
+        if (id.isBlank()) throw IOException(L("כתובית סירבה להורדה"))
         val bytes = Http.getBytes("${BASE}Services/DownloadFile.ashx?DownloadIdentifier=$id", headers())
         return RawSub(bytes, "ktuvit.srt")
     }
@@ -264,5 +266,111 @@ object SubDlProvider : SubProvider {
             val full = if (url.startsWith("http")) url else "https://dl.subdl.com$url"
             SubResult(name, lang, s.optString("release_name"), 1) { RawSub(Http.getBytes(full), "subdl.zip") }
         }
+    }
+}
+
+// ======================= Podnapisi (ללא הרשמה, יש עברית) =======================
+object PodnapisiProvider : SubProvider {
+    override val name = "Podnapisi"
+    override fun enabled() = Prefs.bool("p_podnapisi", true)
+
+    override suspend fun search(q: SubQuery): List<SubResult> {
+        val out = ArrayList<SubResult>()
+        for (lang in q.langs.take(3)) {
+            val sb = StringBuilder("https://www.podnapisi.net/subtitles/search/old?sXML=1")
+            sb.append("&sL=").append(lang).append("&sK=").append(Http.enc(q.title))
+            if (q.isSeries) sb.append("&sTS=${q.season}&sTE=${q.episode}")
+            q.year?.let { if (!q.isSeries) sb.append("&sY=$it") }
+            val xml = Http.get(sb.toString())
+            val doc = Jsoup.parse(xml, "", org.jsoup.parser.Parser.xmlParser())
+            doc.select("subtitle").forEach { s ->
+                val pid = s.selectFirst("pid")?.text()?.trim().orEmpty()
+                if (pid.isBlank()) return@forEach
+                val l = s.selectFirst("language")?.text()?.trim()?.lowercase()?.substringBefore('-') ?: lang
+                val rls = s.selectFirst("release")?.text()?.trim().orEmpty()
+                    .ifBlank { s.selectFirst("title")?.text().orEmpty() }
+                out += SubResult(name, l, rls, 1) {
+                    RawSub(Http.getBytes("https://www.podnapisi.net/subtitles/$pid/download?container=zip"), "podnapisi.zip")
+                }
+            }
+        }
+        return out
+    }
+}
+
+// ======================= SubSource (מפתח API חינמי, יש עברית) =======================
+object SubSourceProvider : SubProvider {
+    override val name = "SubSource"
+    private const val API = "https://api.subsource.net/api/v1"
+    private fun key() = Prefs.str("subsource_key").trim()
+    override fun enabled() = Prefs.bool("p_subsource", true) && key().isNotBlank()
+    private fun hdr() = mapOf("X-API-Key" to key(), "Accept" to "application/json")
+    private val names = mapOf("he" to "hebrew", "en" to "english", "ar" to "arabic", "ru" to "russian",
+        "fr" to "french", "es" to "spanish", "de" to "german")
+
+    override suspend fun search(q: SubQuery): List<SubResult> {
+        val url = if (q.imdb != null) "$API/movies/search?searchType=imdb&imdb=${q.imdb}"
+        else "$API/movies/search?searchType=text&q=${Http.enc(q.title)}"
+        val movies = JSONObject(Http.get(url + (if (q.isSeries) "&season=${q.season}" else ""), hdr()))
+            .optJSONArray("data") ?: return emptyList()
+        var movieId: String? = null
+        for (i in 0 until movies.length()) {
+            val m = movies.optJSONObject(i) ?: continue
+            if (q.isSeries && m.has("season") && m.optInt("season", -1) != q.season) continue
+            movieId = m.optString("movieId").ifBlank { null } ?: continue
+            break
+        }
+        if (movieId == null) return emptyList()
+        val out = ArrayList<SubResult>()
+        val epRx = if (q.isSeries) Regex("(?i)s0?${q.season}\\s*e0?${q.episode}(?!\\d)|\\b${q.season}x0?${q.episode}\\b") else null
+        for (lang in q.langs.take(3)) {
+            val ln = names[lang] ?: continue
+            val a = JSONObject(Http.get("$API/subtitles?movieId=$movieId&language=$ln&limit=50", hdr()))
+                .optJSONArray("data") ?: continue
+            for (i in 0 until a.length()) {
+                val s = a.optJSONObject(i) ?: continue
+                val id = s.optString("subtitleId").ifBlank { null } ?: continue
+                val rel = when (val r = s.opt("releaseInfo")) {
+                    is JSONArray -> (0 until r.length()).joinToString(" / ") { r.optString(it) }
+                    null -> ""
+                    else -> r.toString()
+                }
+                if (epRx != null && rel.isNotBlank() && Regex("(?i)s\\d+\\s*e\\d+").containsMatchIn(rel) && !epRx.containsMatchIn(rel)) continue
+                out += SubResult(name, lang, rel, 2) {
+                    RawSub(Http.getBytes("$API/subtitles/$id/download", hdr()), "subsource.zip")
+                }
+            }
+        }
+        return out
+    }
+}
+
+// ======================= YIFY Subtitles (סרטים, ללא הרשמה) =======================
+object YifyProvider : SubProvider {
+    override val name = "YIFY"
+    private const val HOST = "https://yts-subs.com"
+    private val names = mapOf("he" to "hebrew", "en" to "english", "ar" to "arabic", "ru" to "russian",
+        "fr" to "french", "es" to "spanish", "de" to "german")
+    override fun enabled() = Prefs.bool("p_yify", true)
+
+    override suspend fun search(q: SubQuery): List<SubResult> {
+        if (q.isSeries) return emptyList()
+        val imdb = q.imdb ?: return emptyList()
+        val doc = Jsoup.parse(Http.get("$HOST/movie-imdb/$imdb"), HOST)
+        val out = ArrayList<SubResult>()
+        doc.select("tr").forEach { tr ->
+            val link = tr.selectFirst("a[href*=/subtitles/]") ?: return@forEach
+            val langName = (tr.selectFirst(".sub-lang")?.text() ?: tr.text()).lowercase()
+            val code = q.langs.firstOrNull { l -> names[l]?.let { langName.contains(it) } == true } ?: return@forEach
+            val page = link.absUrl("href")
+            val rls = link.text().removePrefix("subtitle").trim()
+            out += SubResult(name, code, rls, 0) {
+                val p = Jsoup.parse(Http.get(page), page)
+                val zip = p.selectFirst("a.download-subtitle, a[href$=.zip]")?.absUrl("href")
+                    ?: throw java.io.IOException(L("קישור הורדה לא נמצא"))
+                RawSub(Http.getBytes(zip), "yify.zip")
+            }
+        }
+        return out
     }
 }

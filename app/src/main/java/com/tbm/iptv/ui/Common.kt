@@ -1,5 +1,7 @@
 package com.tbm.iptv.ui
 
+import com.tbm.iptv.L
+
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
@@ -31,7 +33,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.font.FontWeight
@@ -46,21 +50,30 @@ import com.tbm.iptv.player.PlayerActivity
 val Gold = Color(0xFFFFC94A)
 
 private val Scheme = darkColorScheme(
-    primary = Color(0xFF2EA8FF),
+    primary = Color(0xFF3A9BFF),
     onPrimary = Color.White,
-    secondary = Color(0xFF00C2A8),
-    background = Color(0xFF0B1220),
-    onBackground = Color(0xFFE6EAF2),
-    surface = Color(0xFF141C2E),
-    onSurface = Color(0xFFE6EAF2),
-    surfaceVariant = Color(0xFF1E2840),
-    onSurfaceVariant = Color(0xFFA9B3C7),
+    primaryContainer = Color(0xFF12335A),
+    onPrimaryContainer = Color(0xFFD6E8FF),
+    secondary = Color(0xFF22C997),
+    background = Color(0xFF050608),
+    onBackground = Color(0xFFF1F3F7),
+    surface = Color(0xFF17181C),
+    onSurface = Color(0xFFF1F3F7),
+    surfaceVariant = Color(0xFF24262C),
+    onSurfaceVariant = Color(0xFF9EA4B0),
+    surfaceContainer = Color(0xFF1D1F24),
+    surfaceContainerHigh = Color(0xFF26282E),
+    surfaceContainerHighest = Color(0xFF2E3037),
+    outline = Color(0xFF3A3D45),
+    outlineVariant = Color(0xFF2A2C32),
+    error = Color(0xFFFF6B6B),
 )
 
 @Composable
 fun AppTheme(content: @Composable () -> Unit) {
     MaterialTheme(colorScheme = Scheme) {
-        CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+        val dir = if (com.tbm.iptv.I18n.isEn) LayoutDirection.Ltr else LayoutDirection.Rtl
+        CompositionLocalProvider(LocalLayoutDirection provides dir) {
             Surface(color = Scheme.background, contentColor = Scheme.onBackground) { content() }
         }
     }
@@ -80,12 +93,14 @@ fun FocusItem(
     val focused by interaction.collectIsFocusedAsState()
     val shape = RoundedCornerShape(8.dp)
     val bg = when {
-        focused -> MaterialTheme.colorScheme.primary.copy(alpha = 0.40f)
-        selected -> MaterialTheme.colorScheme.primary.copy(alpha = 0.20f)
+        focused -> MaterialTheme.colorScheme.primary.copy(alpha = 0.32f)
+        selected -> MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)
         else -> Color.Transparent
     }
+    val scale by animateFloatAsState(if (focused) 1.04f else 1f, label = "focusScale")
     Box(
         modifier
+            .graphicsLayer { scaleX = scale; scaleY = scale }
             .clip(shape)
             .background(bg)
             .border(if (focused) 2.dp else 0.dp, if (focused) MaterialTheme.colorScheme.primary else Color.Transparent, shape)
@@ -101,12 +116,12 @@ fun FocusItem(
 @Composable
 fun ScreenHeader(title: String, onBack: () -> Unit, actions: @Composable () -> Unit = {}) {
     Row(
-        Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surface).padding(4.dp),
+        Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.background).padding(horizontal = 4.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "חזרה") }
+        IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, L("חזרה")) }
         Text(
-            title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold,
+            title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold,
             maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f),
         )
         actions()
@@ -129,10 +144,15 @@ object Launcher {
                 )
                 return
             } catch (e: ActivityNotFoundException) {
-                Toast.makeText(ctx, "לא נמצא נגן חיצוני – משתמש בנגן המובנה", Toast.LENGTH_SHORT).show()
+                Toast.makeText(ctx, L("לא נמצא נגן חיצוני – משתמש בנגן המובנה"), Toast.LENGTH_SHORT).show()
             }
         }
         ctx.startActivity(Intent(ctx, PlayerActivity::class.java))
+    }
+
+    /** חזרה מהחלון הצף למסך מלא – בלי לטעון מחדש */
+    fun resumeMini(ctx: Context) {
+        ctx.startActivity(Intent(ctx, PlayerActivity::class.java).putExtra("resume", true))
     }
 }
 
