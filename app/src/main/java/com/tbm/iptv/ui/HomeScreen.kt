@@ -31,6 +31,13 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.PlaylistPlay
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.filled.ViewList
+import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.ViewAgenda
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.FiberManualRecord
@@ -373,9 +380,9 @@ private fun EntryRowStrip(
         items(list) { e ->
             val r = Prefs.resume(e.key)
             Poster(e.name, e.logo, Prefs.isFav(e.key), r?.let { it.first.toFloat() / it.second.coerceAtLeast(1) },
-                onLong = { onLong(e) }) {
+                rating = e.rating(), onLong = { onLong(e) }) {
                 if (kind == Kind.SERIES && e is SeriesItem) nav(Screen.Series(e))
-                else if (e is Channel) Launcher.play(ctx, listOf(e.toPlay()), 0)
+                else if (e is Channel) nav(Screen.Movie(e))
             }
         }
     }
@@ -384,7 +391,7 @@ private fun EntryRowStrip(
 @Composable
 private fun Poster(
     name: String, logo: String?, fav: Boolean, progress: Float?, sub: String? = null,
-    width: androidx.compose.ui.unit.Dp? = 118.dp, onLong: (() -> Unit)? = null, onClick: () -> Unit,
+    width: androidx.compose.ui.unit.Dp? = 118.dp, rating: Float = 0f, onLong: (() -> Unit)? = null, onClick: () -> Unit,
 ) {
     FocusItem(onLongClick = onLong, onClick = onClick) {
         Column((if (width != null) Modifier.width(width) else Modifier.fillMaxWidth()).padding(4.dp)) {
@@ -392,6 +399,10 @@ private fun Poster(
                 if (logo == null) Text(name, Modifier.align(Alignment.Center).padding(6.dp), textAlign = TextAlign.Center, fontSize = 13.sp)
                 AsyncImage(logo, null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
                 if (fav) Icon(Icons.Filled.Star, null, tint = Gold, modifier = Modifier.align(Alignment.TopEnd).padding(4.dp).size(18.dp))
+                if (rating > 0f) Text("%.1f".format(rating), color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold,
+                    modifier = Modifier.align(Alignment.TopStart).padding(4.dp)
+                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.85f), RoundedCornerShape(4.dp))
+                        .padding(horizontal = 4.dp, vertical = 1.dp))
                 if (progress != null && progress > 0f) LinearProgressIndicator(
                     progress = { progress.coerceIn(0f, 1f) },
                     modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth(),
@@ -415,7 +426,19 @@ private fun BrowseSection(kind: Kind, all: List<Entry>, ver: Int, nav: (Screen) 
     val favs = remember(ver) { Prefs.favs() }
     val favCount = remember(filtered, favs) { filtered.count { it.key in favs } }
     val hasNew = remember(filtered) { filtered.any { ((it as? Channel)?.added ?: (it as? SeriesItem)?.added ?: 0L) > 0L } }
-    val recentKeys = remember(ver) { Prefs.recentChannels() }
+    val recentKeys = remember(ver, filtered) {
+        when (kind) {
+            Kind.LIVE -> Prefs.recentChannels()
+            Kind.MOVIE -> Prefs.recent().filter { it.item.kind == Kind.MOVIE }.map { it.item.key }
+            Kind.SERIES -> {
+                val byName = filtered.associateBy { it.name }
+                Prefs.recent().filter { it.item.kind == Kind.SERIES }.mapNotNull { r -> r.item.seriesName?.let { byName[it]?.key } }.distinct()
+            }
+        }
+    }
+    var mode by remember(kind, ver) { mutableStateOf(Prefs.str("view_${kind.name}", "grid")) }
+    var drill by rememberSaveable(kind) { mutableStateOf(false) }
+    var modeMenu by remember { mutableStateOf(false) }
     var group by rememberSaveable(kind) { mutableStateOf<String?>(null) }
     var query by rememberSaveable(kind) { mutableStateOf("") }
     var menu by remember { mutableStateOf<MenuTarget?>(null) }
@@ -433,8 +456,23 @@ private fun BrowseSection(kind: Kind, all: List<Entry>, ver: Int, nav: (Screen) 
     }
 
     val selectGroup: (String?) -> Unit = { g ->
-        if (g != null && g in view.lockedGroups && !Parental.unlocked) Parental.require(L("קבוצה נעולה")) { group = g }
-        else group = g
+        if (g != null && g in view.lockedGroups && !Parental.unlocked) Parental.require(L("קבוצה נעולה")) { group = g; drill = true }
+        else { group = g; drill = true }
+    }
+    androidx.activity.compose.BackHandler(enabled = mode != "grid" && drill) { drill = false; group = null }
+    val modeButton: @Composable () -> Unit = {
+        Box {
+            IconButton(onClick = { modeMenu = true }) {
+                Icon(when (mode) { "rows" -> Icons.Filled.ViewAgenda; "cats" -> Icons.AutoMirrored.Filled.ViewList; else -> Icons.Filled.GridView }, L("תצוגה"))
+            }
+            androidx.compose.material3.DropdownMenu(modeMenu, { modeMenu = false }) {
+                listOf("grid" to L("רשת + בחירת קטגוריה"), "rows" to L("שורות לפי קטגוריה"), "cats" to L("רשימת קטגוריות")).forEach { (m, t) ->
+                    androidx.compose.material3.DropdownMenuItem(
+                        text = { Text((if (m == mode) "✓ " else "") + t) },
+                        onClick = { modeMenu = false; mode = m; drill = false; group = null; Prefs.setStr("view_${kind.name}", m) })
+                }
+            }
+        }
     }
 
     val specials = buildList {
@@ -442,6 +480,7 @@ private fun BrowseSection(kind: Kind, all: List<Entry>, ver: Int, nav: (Screen) 
         add(Triple<String?, String, Int>(FAV_GROUP, L("★ מועדפים"), favCount))
         if (kind == Kind.LIVE && recentKeys.isNotEmpty()) add(Triple<String?, String, Int>(RECENT_GROUP, L("🕘 אחרונים"), recentKeys.size))
         if (kind != Kind.LIVE && hasNew) add(Triple<String?, String, Int>(NEW_GROUP, L("🆕 נוספו לאחרונה"), 200))
+        if (kind != Kind.LIVE && recentKeys.isNotEmpty()) add(Triple<String?, String, Int>(RECENT_GROUP, L("🕘 נצפו לאחרונה"), recentKeys.size))
     }
 
     BoxWithConstraints(Modifier.fillMaxSize()) {
@@ -456,6 +495,7 @@ private fun BrowseSection(kind: Kind, all: List<Entry>, ver: Int, nav: (Screen) 
                             IconButton(onClick = { Prefs.activePlaylist()?.let { Repo.loadAsync(it, true) } }) { Icon(Icons.Filled.Refresh, L("רענון")) }
                             IconButton(onClick = { nav(Screen.Groups(kind)) }) { Icon(Icons.Filled.FilterList, L("ניהול קבוצות")) }
                         }
+                        modeButton()
                     }
                     OutlinedTextField(query, { query = it }, singleLine = true,
                         modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp), placeholder = { Text(L("חיפוש…")) })
@@ -466,7 +506,10 @@ private fun BrowseSection(kind: Kind, all: List<Entry>, ver: Int, nav: (Screen) 
                         }
                     }
                 }
-                ContentArea(kind, shownItems, favs, all, true, nav, Modifier.weight(1f)) { menu = MenuTarget(kind, it, all) }
+                if (mode == "rows" && group == null && query.isBlank())
+                    RowsView(kind, filtered, view.groups, if (Parental.unlocked) emptySet() else view.lockedGroups, favs, nav,
+                        Modifier.weight(1f), selectGroup) { menu = MenuTarget(kind, it, all) }
+                else ContentArea(kind, shownItems, favs, all, true, nav, Modifier.weight(1f)) { menu = MenuTarget(kind, it, all) }
             }
         } else {
             Column(Modifier.fillMaxSize()) {
@@ -474,7 +517,25 @@ private fun BrowseSection(kind: Kind, all: List<Entry>, ver: Int, nav: (Screen) 
                     OutlinedTextField(query, { query = it }, singleLine = true, modifier = Modifier.weight(1f),
                         placeholder = { Text(L("חיפוש ב{0}", kind.label)) })
                     if (!Prefs.isKids) IconButton(onClick = { nav(Screen.Groups(kind)) }) { Icon(Icons.Filled.FilterList, L("ניהול קבוצות")) }
+                    modeButton()
                 }
+                val curLabel0 = specials.firstOrNull { it.first == group }?.second ?: group ?: L("הכל")
+                if (mode != "grid" && drill) {
+                    // בתוך קטגוריה (מתצוגת שורות/קטגוריות) – כותרת עם חזרה
+                    Row(Modifier.fillMaxWidth().padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                        IconButton(onClick = { drill = false; group = null }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, L("חזרה")) }
+                        Text(curLabel0, fontWeight = FontWeight.Bold, fontSize = 17.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                        Text("${shownItems.size}", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 13.sp, modifier = Modifier.padding(end = 12.dp))
+                    }
+                    ContentArea(kind, shownItems, favs, all, false, nav, Modifier.weight(1f)) { menu = MenuTarget(kind, it, all) }
+                } else if (mode == "cats" && query.isBlank()) {
+                    CatsList(specials, view.groups, counts, if (Parental.unlocked) emptySet() else view.lockedGroups, Modifier.weight(1f), selectGroup)
+                } else if (mode == "rows" && query.isBlank()) {
+                    RowsView(kind, filtered, view.groups, if (Parental.unlocked) emptySet() else view.lockedGroups, favs, nav,
+                        Modifier.weight(1f), selectGroup) { menu = MenuTarget(kind, it, all) }
+                } else if (mode != "grid") {
+                    ContentArea(kind, shownItems, favs, all, false, nav, Modifier.weight(1f)) { menu = MenuTarget(kind, it, all) }
+                } else {
                 // כפתור קטגוריה אחד – פותח רשימה אנכית עם חיפוש (במקום גלילה לצדדים)
                 val curLabel = specials.firstOrNull { it.first == group }?.second ?: group ?: L("הכל")
                 val curCount = if (group != null && specials.none { it.first == group }) counts[group] ?: 0 else shownItems.size
@@ -495,6 +556,7 @@ private fun BrowseSection(kind: Kind, all: List<Entry>, ver: Int, nav: (Screen) 
                     }
                 }
                 ContentArea(kind, shownItems, favs, all, false, nav, Modifier.weight(1f)) { menu = MenuTarget(kind, it, all) }
+                }
             }
         }
     }
@@ -578,7 +640,7 @@ private fun ContentArea(
                 ChannelList(chans, favs, null, modifier, onLong) { _, i -> playAt(i) }
             }
         }
-        Kind.MOVIE -> PosterGrid(items, favs, modifier, onLong) { e -> Launcher.play(ctx, listOf((e as Channel).toPlay()), 0) }
+        Kind.MOVIE -> PosterGrid(items, favs, modifier, onLong) { e -> nav(Screen.Movie(e as Channel)) }
         Kind.SERIES -> PosterGrid(items, favs, modifier, onLong) { e -> nav(Screen.Series(e as SeriesItem)) }
     }
 }
@@ -711,7 +773,7 @@ fun PosterGrid(items: List<Entry>, favs: Set<String>, modifier: Modifier, onLong
         gridItemsIndexed(items) { _, e ->
             val r = remember(e.key, ver) { Prefs.resume(e.key) }
             Poster(e.name, e.logo, e.key in favs, r?.let { it.first.toFloat() / it.second.coerceAtLeast(1) },
-                width = null, onLong = { onLong(e) }) { onClick(e) }
+                width = null, rating = e.rating(), onLong = { onLong(e) }) { onClick(e) }
         }
     }
 }
@@ -862,6 +924,154 @@ private fun SearchSection(content: Content, ver: Int, nav: (Screen) -> Unit) {
             if (q.length >= 2 && live.isEmpty() && vod.isEmpty() && ser.isEmpty()) {
                 item { Text(L("לא נמצאו תוצאות"), Modifier.padding(16.dp)) }
             }
+        }
+    }
+}
+
+
+fun Entry.rating(): Float = (this as? Channel)?.rating ?: (this as? SeriesItem)?.rating ?: 0f
+private fun Entry.addedAt(): Long = (this as? Channel)?.added ?: (this as? SeriesItem)?.added ?: 0L
+
+// ============================================================ תצוגת קטגוריות (כמו Televizo)
+@Composable
+private fun CatsList(
+    specials: List<Triple<String?, String, Int>>, groups: List<String>, counts: Map<String, Int>, locked: Set<String>,
+    modifier: Modifier, onPick: (String?) -> Unit,
+) {
+    LazyColumn(modifier.fillMaxSize()) {
+        items(specials) { (g, label, n) -> CatLine(label, if (g == NEW_GROUP) null else n, false, g == FAV_GROUP) { onPick(g) } }
+        items(groups) { g -> CatLine(g, counts[g] ?: 0, g in locked, false) { onPick(g) } }
+    }
+}
+
+@Composable
+private fun CatLine(name: String, count: Int?, locked: Boolean, accent: Boolean, onClick: () -> Unit) {
+    FocusItem(Modifier.fillMaxWidth(), onClick = onClick) {
+        Column {
+            Row(Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 17.dp), verticalAlignment = Alignment.CenterVertically) {
+                if (locked) Icon(Icons.Filled.Lock, null, Modifier.size(16.dp).padding(end = 4.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(name, Modifier.weight(1f), fontSize = 16.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                    color = if (accent) Gold else MaterialTheme.colorScheme.onBackground)
+                if (count != null && !locked) Text("$count", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.sp)
+                Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            androidx.compose.material3.HorizontalDivider(color = Color(0x22FFFFFF))
+        }
+    }
+}
+
+// ============================================================ תצוגת שורות (כמו MyTVOnline)
+@Composable
+private fun RowsView(
+    kind: Kind, items: List<Entry>, groups: List<String>, locked: Set<String>, favs: Set<String>, nav: (Screen) -> Unit,
+    modifier: Modifier, onSeeAll: (String?) -> Unit, onLong: (Entry) -> Unit,
+) {
+    val byGroup = remember(items) { items.groupBy { it.group } }
+    val shownGroups = remember(groups, byGroup, locked) { groups.filter { it !in locked && byGroup[it] != null } }
+    val favItems = remember(items, favs) { items.filter { it.key in favs } }
+    val heroes = remember(items) {
+        if (kind == Kind.LIVE) emptyList()
+        else items.filter { it.logo != null }.sortedByDescending { it.addedAt() * 10 + (it.rating() * 1).toLong() }.take(8)
+    }
+    LazyColumn(modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 16.dp)) {
+        if (heroes.isNotEmpty()) item { FeaturedHero(heroes, kind, favs, nav) }
+        if (favItems.isNotEmpty()) item { CategoryStrip(L("★ מועדפים"), favItems, kind, favs, nav, { onSeeAll(FAV_GROUP) }, onLong) }
+        items(shownGroups, key = { it }) { g ->
+            CategoryStrip(g, byGroup[g].orEmpty(), kind, favs, nav, { onSeeAll(g) }, onLong)
+        }
+        if (shownGroups.isEmpty()) item { Text(L("אין פריטים"), Modifier.padding(24.dp)) }
+    }
+}
+
+@Composable
+private fun FeaturedHero(list: List<Entry>, kind: Kind, favs: Set<String>, nav: (Screen) -> Unit) {
+    var idx by remember(list) { mutableStateOf(0) }
+    LaunchedEffect(list) { while (true) { kotlinx.coroutines.delay(8000); idx = (idx + 1) % list.size } }
+    val e = list[idx.coerceIn(0, list.size - 1)]
+    val open = { if (e is SeriesItem) nav(Screen.Series(e)) else if (e is Channel) nav(Screen.Movie(e)) }
+    Box(Modifier.fillMaxWidth().height(440.dp).padding(horizontal = 12.dp, vertical = 6.dp).clip(RoundedCornerShape(10.dp))
+        .background(MaterialTheme.colorScheme.surfaceVariant).clickable { open() }) {
+        androidx.compose.animation.Crossfade(e.logo, label = "hero") { img ->
+            AsyncImage(img, null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+        }
+        Box(Modifier.fillMaxSize().background(androidx.compose.ui.graphics.Brush.verticalGradient(
+            0.55f to Color.Transparent, 1f to Color(0xEE0B0C10))))
+        Column(Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(14.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(e.name, color = Color.White, fontWeight = FontWeight.Black, fontSize = 22.sp, maxLines = 2,
+                overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
+            Row(Modifier.padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                if (e.rating() > 0f) Text("★ %.1f".format(e.rating()), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp,
+                    modifier = Modifier.background(MaterialTheme.colorScheme.primary, RoundedCornerShape(50)).padding(horizontal = 10.dp, vertical = 3.dp))
+                Spacer(Modifier.width(8.dp))
+                Text(e.group, color = Color(0xFFCFD0D6), fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Button(onClick = open, shape = RoundedCornerShape(6.dp)) {
+                    Icon(Icons.Filled.Info, null, Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)); Text(L("פרטים"))
+                }
+                val fav = e.key in favs
+                OutlinedButton(onClick = { Prefs.toggleFav(e.key) }, shape = RoundedCornerShape(6.dp)) {
+                    Icon(if (fav) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder, null, Modifier.size(18.dp), tint = if (fav) Color(0xFFE53935) else Color.White)
+                    Spacer(Modifier.width(6.dp)); Text(L("מועדף"), color = Color.White)
+                }
+            }
+            Row(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                list.indices.forEach { i ->
+                    Box(Modifier.size(if (i == idx) 8.dp else 6.dp).clip(RoundedCornerShape(50))
+                        .background(if (i == idx) Color.White else Color(0x66FFFFFF)))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun CategoryStrip(
+    title: String, list: List<Entry>, kind: Kind, favs: Set<String>, nav: (Screen) -> Unit, onSeeAll: () -> Unit, onLong: (Entry) -> Unit,
+) {
+    val ctx = LocalContext.current
+    val shown = remember(list) { list.take(30) }
+    Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp, top = 14.dp), verticalAlignment = Alignment.CenterVertically) {
+        Text("$title (${list.size})", fontSize = 17.sp, fontWeight = FontWeight.Bold, maxLines = 1,
+            overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+        androidx.compose.material3.TextButton(onClick = onSeeAll) { Text(L("הכל ›"), fontWeight = FontWeight.Bold) }
+    }
+    LazyRow(contentPadding = PaddingValues(horizontal = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        if (kind == Kind.LIVE) {
+            val chans = shown.filterIsInstance<Channel>()
+            itemsIndexed(chans) { i, c -> ChannelCard(c, c.key in favs, { onLong(c) }) {
+                val all = list.filterIsInstance<Channel>()
+                Launcher.play(ctx, all.map { it.toPlay() }, i)
+            } }
+        } else items(shown) { e ->
+            val r = remember(e.key) { Prefs.resume(e.key) }
+            Poster(e.name, e.logo, e.key in favs, r?.let { it.first.toFloat() / it.second.coerceAtLeast(1) },
+                width = 124.dp, rating = e.rating(), onLong = { onLong(e) }) {
+                if (e is SeriesItem) nav(Screen.Series(e)) else if (e is Channel) nav(Screen.Movie(e))
+            }
+        }
+    }
+}
+
+@Composable
+private fun ChannelCard(c: Channel, fav: Boolean, onLong: () -> Unit, onClick: () -> Unit) {
+    val epgVer = Epg.version.intValue
+    val now = remember(c.key, epgVer) { Epg.nowNext(c.epgId, c.name).first }
+    FocusItem(onLongClick = onLong, onClick = onClick) {
+        Column(Modifier.width(170.dp).background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(8.dp)).padding(10.dp)) {
+            Box(Modifier.fillMaxWidth().height(52.dp), contentAlignment = Alignment.Center) {
+                AsyncImage(c.logo, null, Modifier.fillMaxSize(), contentScale = ContentScale.Fit)
+                if (fav) Icon(Icons.Filled.Star, null, tint = Gold, modifier = Modifier.align(Alignment.TopEnd).size(14.dp))
+            }
+            Spacer(Modifier.height(6.dp))
+            Text(c.name, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(now?.title ?: L("אין מידע שידור"), fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                color = MaterialTheme.colorScheme.onSurfaceVariant)
+            val t = System.currentTimeMillis()
+            LinearProgressIndicator(
+                progress = { if (now != null && now.end > now.start) ((t - now.start).toFloat() / (now.end - now.start)).coerceIn(0f, 1f) else 0f },
+                modifier = Modifier.fillMaxWidth().padding(top = 6.dp).height(3.dp),
+            )
         }
     }
 }

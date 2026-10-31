@@ -49,6 +49,10 @@ import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarBorder
 import androidx.compose.material.icons.filled.Tune
+import androidx.compose.material.icons.filled.Translate
+import androidx.compose.material.icons.filled.LiveTv
+import androidx.compose.material.icons.filled.Movie
+import androidx.compose.material.icons.filled.VideoLibrary
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.outlined.PushPin
@@ -114,97 +118,6 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.UUID
-
-// ============================================================ מסך סדרה
-@Composable
-fun SeriesScreen(s: SeriesItem, onBack: () -> Unit) {
-    val ctx = LocalContext.current
-    val ver = Prefs.version.intValue
-    var eps by remember { mutableStateOf<List<Episode>?>(null) }
-    var err by remember { mutableStateOf<String?>(null) }
-    LaunchedEffect(s.key) {
-        val p = Prefs.activePlaylist()
-        if (p == null) { err = L("אין רשימה פעילה"); return@LaunchedEffect }
-        try { eps = Repo.episodes(p, s) } catch (e: Exception) { err = e.message ?: L("שגיאה") }
-    }
-    val all = eps ?: emptyList()
-    val seasons = remember(all) { all.map { it.season }.distinct().sorted() }
-    var season by remember(seasons) { mutableStateOf(seasons.firstOrNull() ?: 1) }
-    val fav = remember(ver) { Prefs.isFav(s.key) }
-
-    Column(Modifier.fillMaxSize()) {
-        ScreenHeader(s.name, onBack) {
-            IconButton(onClick = { Prefs.toggleFav(s.key) }) {
-                Icon(if (fav) Icons.Filled.Star else Icons.Filled.StarBorder, L("מועדף"), tint = if (fav) Gold else MaterialTheme.colorScheme.onSurface)
-            }
-        }
-        Row(Modifier.fillMaxWidth().padding(12.dp)) {
-            AsyncImage(
-                s.logo, null,
-                Modifier.size(width = 110.dp, height = 165.dp).clip(RoundedCornerShape(10.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant),
-                contentScale = ContentScale.Crop,
-            )
-            Spacer(Modifier.width(14.dp))
-            Column(Modifier.weight(1f)) {
-                Text(s.name, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                Text(s.group, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
-                if (all.isNotEmpty()) Text(L("{0} עונות · {1} פרקים", seasons.size, all.size), fontSize = 12.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Spacer(Modifier.height(6.dp))
-                s.plot?.let { Text(it, fontSize = 13.sp, maxLines = 6, overflow = TextOverflow.Ellipsis) }
-                val next = remember(all, ver) {
-                    all.firstOrNull { e -> Prefs.resume(e.key).let { it == null || it.first < it.second * 0.95 } }
-                }
-                if (next != null) Button(onClick = {
-                    Launcher.play(ctx, all.map { it.toPlay(s) }, all.indexOf(next))
-                }, modifier = Modifier.padding(top = 8.dp)) {
-                    Text("▶ " + (if (Prefs.resume(next.key) != null) L("המשך") else L("נגן")) + " S%02dE%02d".format(next.season, next.episode))
-                }
-            }
-        }
-        when {
-            err != null -> Text(L("שגיאה: {0}", err), Modifier.padding(16.dp))
-            eps == null -> Box(Modifier.fillMaxWidth().padding(24.dp)) { CircularProgressIndicator(Modifier.align(Alignment.Center)) }
-            all.isEmpty() -> Text(L("לא נמצאו פרקים"), Modifier.padding(16.dp))
-            else -> {
-                if (seasons.size > 1) {
-                    ScrollableTabRow(selectedTabIndex = seasons.indexOf(season).coerceAtLeast(0), edgePadding = 8.dp) {
-                        seasons.forEach { n -> Tab(selected = n == season, onClick = { season = n }, text = { Text(L("עונה {0}", n)) }) }
-                    }
-                }
-                val list = all.filter { it.season == season }
-                LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(8.dp)) {
-                    items(list) { e ->
-                        val r = remember(ver, e.key) { Prefs.resume(e.key) }
-                        FocusItem(Modifier.fillMaxWidth().padding(vertical = 2.dp), onClick = {
-                            Launcher.play(ctx, all.map { it.toPlay(s) }, all.indexOf(e))
-                        }) {
-                            Row(Modifier.padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                                AsyncImage(e.image ?: s.logo, null,
-                                    Modifier.size(width = 104.dp, height = 58.dp).clip(RoundedCornerShape(6.dp))
-                                        .background(MaterialTheme.colorScheme.surfaceVariant), contentScale = ContentScale.Crop)
-                                Spacer(Modifier.width(10.dp))
-                                Column(Modifier.weight(1f)) {
-                                    Text(L("פרק {0}", e.episode), fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                                    if (e.title.isNotBlank()) Text(e.title, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                    if (r != null && r.second > 0) {
-                                        if (r.first >= r.second * 0.95) Text(L("✓ נצפה"), fontSize = 11.sp, color = MaterialTheme.colorScheme.secondary)
-                                        else LinearProgressIndicator(
-                                            progress = { (r.first.toFloat() / r.second).coerceIn(0f, 1f) },
-                                            modifier = Modifier.fillMaxWidth().padding(top = 4.dp), color = Color(0xFFE53935),
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
 
 // ============================================================ ניהול קבוצות
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
@@ -394,40 +307,63 @@ fun SettingsScreen(page: String, nav: (Screen) -> Unit, onBack: () -> Unit) {
 private fun MainSettings(nav: (Screen) -> Unit) {
     val ctx = LocalContext.current
     var confirm by remember { mutableStateOf<String?>(null) }
+    var viewPick by remember { mutableStateOf<Kind?>(null) }
+    val modeName: (Kind) -> String = { k ->
+        when (Prefs.str("view_${k.name}", "grid")) { "rows" -> L("שורות לפי קטגוריה"); "cats" -> L("רשימת קטגוריות"); else -> L("רשת + בחירת קטגוריה") }
+    }
+    val p = Prefs.activePlaylist()
+    GroupTitle(L("כללי"))
     Card {
-        Column(Modifier.padding(horizontal = 14.dp, vertical = 10.dp)) {
-            Text(L("שפת אפליקציה"), fontWeight = FontWeight.Bold)
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                RadioButton(selected = !com.tbm.iptv.I18n.isEn, onClick = { com.tbm.iptv.I18n.set("he") })
-                Text("עברית", Modifier.padding(end = 16.dp))
-                RadioButton(selected = com.tbm.iptv.I18n.isEn, onClick = { com.tbm.iptv.I18n.set("en") })
-                Text("English")
-            }
+        NavRow(L("שפת אפליקציה"), Icons.Filled.Translate, sub = if (com.tbm.iptv.I18n.isEn) "English" else "עברית") {
+            com.tbm.iptv.I18n.set(if (com.tbm.iptv.I18n.isEn) "he" else "en")
         }
+        NavRow(L("מקורות תוכן"), Icons.Filled.Sensors, sub = p?.name) { nav(Screen.Playlists) }
+        NavRow(L("נתוני EPG"), Icons.Filled.DateRange, sub = L("לוח שידורים וצפייה לאחור")) { nav(Screen.Settings("epg")) }
     }
-    Spacer(Modifier.height(10.dp))
+    GroupTitle(L("תצוגה"))
     Card {
-        NavRow(L("מקורות תוכן"), Icons.Filled.Sensors) { nav(Screen.Playlists) }
-        NavRow(L("ניהול קבוצות"), Icons.Filled.Folder) { nav(Screen.Groups(Kind.LIVE)) }
-        NavRow(L("נתוני EPG"), Icons.Filled.DateRange) { nav(Screen.Settings("epg")) }
-        NavRow(L("תוכן ופופולרי היום"), Icons.Filled.Tune) { nav(Screen.Settings("content")) }
-        NavRow(L("נקה היסטוריה"), Icons.Filled.Delete, arrow = false) { confirm = "history" }
+        NavRow(L("תצוגת ערוצים"), Icons.Filled.LiveTv, sub = modeName(Kind.LIVE)) { viewPick = Kind.LIVE }
+        NavRow(L("תצוגת סרטים"), Icons.Filled.Movie, sub = modeName(Kind.MOVIE)) { viewPick = Kind.MOVIE }
+        NavRow(L("תצוגת סדרות"), Icons.Filled.VideoLibrary, sub = modeName(Kind.SERIES)) { viewPick = Kind.SERIES }
+        NavRow(L("סידור והסתרת קטגוריות"), Icons.Filled.Folder, sub = L("סדר, הסתרה, הצמדה, סינון ארצות")) { nav(Screen.Groups(Kind.LIVE)) }
+        NavRow(L("תוכן ופופולרי היום"), Icons.Filled.Tune, sub = L("מפתח TMDB")) { nav(Screen.Settings("content")) }
     }
-    Spacer(Modifier.height(10.dp))
+    GroupTitle(L("נגן"))
     Card {
-        NavRow(L("שמע וכתוביות"), Icons.Filled.ClosedCaption) { nav(Screen.Settings("subs")) }
-        NavRow(L("אפשרויות נגן"), Icons.Filled.SettingsSuggest) { nav(Screen.Settings("player")) }
-        NavRow(L("בקרת הורים ופרופילים"), Icons.Filled.Shield) {
+        NavRow(L("אפשרויות נגן"), Icons.Filled.SettingsSuggest, sub = L("PiP, פרק הבא אוטומטי, נגן חיצוני, קריינות")) { nav(Screen.Settings("player")) }
+        NavRow(L("שמע וכתוביות"), Icons.Filled.ClosedCaption, sub = L("חיפוש אוטומטי, מקורות, תרגום מכונה")) { nav(Screen.Settings("subs")) }
+    }
+    GroupTitle(L("בקרת הורים"))
+    Card {
+        NavRow(L("בקרת הורים ופרופילים"), Icons.Filled.Shield, sub = L("קוד, נעילות, פרופיל ילדים")) {
             Parental.requireAlways(L("בקרת הורים")) { nav(Screen.Settings("parental")) }
         }
     }
-    Spacer(Modifier.height(10.dp))
+    GroupTitle(L("נתונים"))
     Card {
         NavRow(L("גיבוי ושחזור"), Icons.Filled.Backup) { nav(Screen.Settings("backup")) }
+        NavRow(L("היסטוריית צפייה"), Icons.Filled.Delete, arrow = false, sub = L("{0} פריטים – לחץ לניקוי", Prefs.recent().size)) { confirm = "history" }
         NavRow(L("איפוס העדפות משתמש"), Icons.Filled.RestartAlt, arrow = false) { confirm = "reset" }
     }
-    Spacer(Modifier.height(10.dp))
-    Card { NavRow(L("אודות"), Icons.Filled.Info) { nav(Screen.Settings("about")) } }
+    GroupTitle(L("אודות"))
+    Card { NavRow(L("אודות"), Icons.Filled.Info, sub = "TBM Player " + com.tbm.iptv.appVersion(ctx)) { nav(Screen.Settings("about")) } }
+    viewPick?.let { k ->
+        AlertDialog(
+            onDismissRequest = { viewPick = null },
+            title = { Text(L("תצוגת {0}", k.label)) },
+            text = {
+                Column {
+                    listOf("grid" to L("רשת + בחירת קטגוריה"), "rows" to L("שורות לפי קטגוריה"), "cats" to L("רשימת קטגוריות")).forEach { (m, t) ->
+                        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                            RadioButton(selected = Prefs.str("view_${k.name}", "grid") == m, onClick = { Prefs.setStr("view_${k.name}", m); viewPick = null })
+                            Text(t)
+                        }
+                    }
+                }
+            },
+            confirmButton = { TextButton(onClick = { viewPick = null }) { Text(L("סגור")) } },
+        )
+    }
     val vctx = LocalContext.current
     Text("TBM Player " + remember { com.tbm.iptv.appVersion(vctx) }, fontSize = 12.sp,
         color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
@@ -765,11 +701,20 @@ private fun Card(content: @Composable () -> Unit) {
 }
 
 @Composable
-private fun NavRow(label: String, icon: ImageVector, arrow: Boolean = true, onClick: () -> Unit) {
+private fun GroupTitle(t: String) {
+    Text(t, fontSize = 15.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary,
+        modifier = Modifier.padding(start = 6.dp, top = 16.dp, bottom = 6.dp))
+}
+
+@Composable
+private fun NavRow(label: String, icon: ImageVector, arrow: Boolean = true, sub: String? = null, onClick: () -> Unit) {
     FocusItem(Modifier.fillMaxWidth(), onClick = onClick) {
-        Row(Modifier.padding(horizontal = 14.dp, vertical = 16.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.padding(horizontal = 14.dp, vertical = if (sub != null) 11.dp else 16.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(icon, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text(label, Modifier.weight(1f).padding(horizontal = 14.dp), fontSize = 16.sp)
+            Column(Modifier.weight(1f).padding(horizontal = 14.dp)) {
+                Text(label, fontSize = 16.sp)
+                sub?.let { Text(it, fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis) }
+            }
             if (arrow) Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }

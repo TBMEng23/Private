@@ -32,6 +32,8 @@ data class Channel(
     val catchupSource: String? = null,
     /** זמן הוספה לשרת (Xtream, מילישניות) – ל"נוספו לאחרונה" */
     val added: Long = 0,
+    /** דירוג 0–10 (סרטים, 0 = אין) */
+    val rating: Float = 0f,
 ) : Entry {
     val hasCatchup get() = archiveDays > 0 || catchupType != null
 }
@@ -45,6 +47,7 @@ data class SeriesItem(
     val plot: String? = null,
     val episodesM3u: List<Episode>? = null,
     val added: Long = 0,
+    val rating: Float = 0f,
 ) : Entry
 
 data class Episode(
@@ -55,6 +58,21 @@ data class Episode(
     val url: String,
     val plot: String? = null,
     val image: String? = null,
+    /** אורך בשניות (0 = לא ידוע) */
+    val durationSec: Int = 0,
+)
+
+/** פרטים מלאים לדף סדרה/סרט (כמו נטפליקס) */
+data class MediaInfo(
+    val plot: String? = null,
+    val cast: String? = null,
+    val director: String? = null,
+    val genre: String? = null,
+    val year: String? = null,
+    val rating: Double = 0.0,
+    val backdrops: List<String> = emptyList(),
+    val trailer: String? = null,
+    val durationSec: Int = 0,
 )
 
 data class Content(

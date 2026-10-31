@@ -69,6 +69,8 @@ class PlayerUi {
     var subOffset by mutableLongStateOf(0L)
 
     var showList by mutableStateOf(false)
+    /** חלון "אפשרויות" (⚙) – null סגור, אחרת דף: main/audio/speed/aspect/sleep */
+    var options by mutableStateOf<String?>(null)
     var showRecord by mutableStateOf(false)
     var zapDigits by mutableStateOf("")
     var sleepMin by mutableIntStateOf(0)
@@ -440,6 +442,8 @@ class PlayerActivity : FragmentActivity() {
         ui.gesture = "🔊 ${v * 100 / max.coerceAtLeast(1)}%"
     }
 
+    fun setResize(m: Int) { ui.resize = m }
+
     fun cycleResize() {
         ui.resize = when (ui.resize) {
             AspectRatioFrameLayout.RESIZE_MODE_FIT -> AspectRatioFrameLayout.RESIZE_MODE_ZOOM
@@ -458,7 +462,11 @@ class PlayerActivity : FragmentActivity() {
     // ------------------------------------------------------------------ טיימר שינה
     fun cycleSleep() {
         val steps = listOf(0, 15, 30, 60, 90, 120)
-        ui.sleepMin = steps[(steps.indexOf(ui.sleepMin) + 1) % steps.size]
+        setSleep(steps[(steps.indexOf(ui.sleepMin) + 1) % steps.size])
+    }
+
+    fun setSleep(min: Int) {
+        ui.sleepMin = min
         sleepJob?.cancel()
         if (ui.sleepMin > 0) {
             sleepJob = lifecycleScope.launch {
@@ -728,7 +736,7 @@ class PlayerActivity : FragmentActivity() {
     }
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
-        if (event.action == KeyEvent.ACTION_DOWN && !ui.showSubs && !ui.showList && !ui.showRecord) {
+        if (event.action == KeyEvent.ACTION_DOWN && !ui.showSubs && !ui.showList && !ui.showRecord && ui.options == null) {
             val live = ui.isLive
             val code = event.keyCode
             touched()

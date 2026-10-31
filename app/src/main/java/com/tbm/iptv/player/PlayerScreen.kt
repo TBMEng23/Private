@@ -21,6 +21,9 @@ import androidx.compose.material.icons.filled.Replay10
 import androidx.compose.material.icons.filled.ScreenRotation
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.Subtitles
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.MusicNote
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.foundation.layout.Arrangement
@@ -198,6 +201,7 @@ fun PlayerScreen(a: PlayerActivity) {
         if (ui.showList && !ui.pip) ChannelOverlay(a, Modifier.align(Alignment.CenterStart))
         if (ui.showGuide && !ui.pip) ChannelGuidePanel(a, Modifier.align(Alignment.CenterEnd))
         if (ui.showSubs) SubtitleDialog(a)
+        if (ui.options != null) OptionsSheet(a)
         if (ui.showRecord) RecordDialog(a)
         if (ui.stillWatching) androidx.compose.material3.AlertDialog(
             onDismissRequest = { },
@@ -544,8 +548,104 @@ private fun TopBar(a: PlayerActivity, modifier: Modifier) {
         if (!ui.isLive) IconButton(onClick = { a.toggleVoice() }) {
             Icon(Icons.Filled.RecordVoiceOver, L("קריינות AI"), tint = if (ui.voiceOn) Color(0xFFFFC94A) else Color.White)
         }
-        IconButton(onClick = { a.cycleSleep() }) {
-            Icon(Icons.Filled.Bedtime, L("טיימר שינה"), tint = if (ui.sleepMin > 0) Color(0xFFFFC94A) else Color.White)
+        IconButton(onClick = { a.touched(); ui.showSubs = true }) {
+            Icon(Icons.Filled.Subtitles, L("שמע וכתוביות"), tint = Color.White)
+        }
+        IconButton(onClick = { a.touched(); ui.options = "main" }) {
+            Icon(Icons.Filled.Settings, L("אפשרויות"), tint = Color.White)
+        }
+    }
+}
+
+private fun resizeName(m: Int) = when (m) {
+    androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_ZOOM -> L("זום (מילוי עם חיתוך)")
+    androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_FILL -> L("מתיחה למסך מלא")
+    else -> L("מקורי")
+}
+
+/** חלון אפשרויות בסגנון MyTVOnline: שמע, כתוביות, מהירות, יחס תצוגה, טיימר שינה */
+@Composable
+private fun OptionsSheet(a: PlayerActivity) {
+    val ui = a.ui
+    val page = ui.options ?: return
+    val close = { ui.options = null }
+    Dialog(onDismissRequest = close, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+        Box(Modifier.fillMaxSize().pointerInput(Unit) { detectTapGestures { close() } }, contentAlignment = Alignment.BottomCenter) {
+            Surface(
+                color = Color(0xFF26272C), shape = RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp),
+                modifier = Modifier.widthIn(max = 520.dp).fillMaxWidth().heightIn(max = 520.dp)
+                    .pointerInput(Unit) { detectTapGestures { } },
+            ) {
+                Column {
+                    Box(Modifier.align(Alignment.CenterHorizontally).padding(top = 8.dp).size(width = 40.dp, height = 4.dp)
+                        .background(Color(0xFF6A6B72), RoundedCornerShape(2.dp)))
+                    Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                        if (page != "main") IconButton(onClick = { ui.options = "main" }) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, L("חזרה"), tint = Color.White)
+                        } else Spacer(Modifier.width(12.dp))
+                        Text(when (page) {
+                            "audio" -> L("רצועת שמע"); "speed" -> L("מהירות"); "aspect" -> L("יחס תצוגה"); "sleep" -> L("טיימר שינה")
+                            else -> L("אפשרויות")
+                        }, color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    }
+                    HorizontalDivider(color = Color(0x22FFFFFF))
+                    LazyColumn {
+                        when (page) {
+                            "main" -> {
+                                val aud = ui.audio.firstOrNull { it.selected }?.name ?: ui.audio.firstOrNull()?.name ?: L("ברירת מחדל")
+                                item { OptRow(Icons.Filled.MusicNote, L("רצועת שמע"), aud) { ui.options = "audio" } }
+                                val sub = ui.subLabel ?: ui.embedded.firstOrNull { it.selected }?.name ?: L("כבוי")
+                                item { OptRow(Icons.Filled.Subtitles, L("כתוביות"), sub) { ui.options = null; ui.showSubs = true } }
+                                if (!ui.isLive) item { OptRow(Icons.Filled.Speed, L("מהירות"), if (ui.speed == 1f) L("רגילה") else "${ui.speed}×") { ui.options = "speed" } }
+                                item { OptRow(Icons.Filled.AspectRatio, L("יחס תצוגה"), resizeName(ui.resize)) { ui.options = "aspect" } }
+                                item { OptRow(Icons.Filled.Bedtime, L("טיימר שינה"), if (ui.sleepMin > 0) L("{0} דק׳", ui.sleepMin) else L("כבוי")) { ui.options = "sleep" } }
+                                if (!ui.isLive) item { OptRow(Icons.Filled.RecordVoiceOver, L("קריינות AI"), if (ui.voiceOn) L("פעילה") else L("כבויה")) { a.toggleVoice() } }
+                                item { OptRow(Icons.Filled.ScreenRotation, L("סובב מסך"), if (ui.landscape) L("לרוחב") else L("לאורך")) { a.toggleRotate() } }
+                            }
+                            "audio" -> {
+                                if (ui.audio.isEmpty()) item { Text(L("אין רצועות שמע נוספות"), color = Color(0xFFAAAAAA), modifier = Modifier.padding(20.dp)) }
+                                items(ui.audio) { t -> OptChoice(t.name, t.selected) { a.selectAudio(t); close() } }
+                            }
+                            "speed" -> items(listOf(0.5f, 0.75f, 1f, 1.25f, 1.5f, 1.75f, 2f)) { s ->
+                                OptChoice(if (s == 1f) L("רגילה") else "$s×", ui.speed == s) { a.setSpeed(s); close() }
+                            }
+                            "aspect" -> items(listOf(
+                                androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_FIT,
+                                androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_ZOOM,
+                                androidx.media3.ui.AspectRatioFrameLayout.RESIZE_MODE_FILL,
+                            )) { m -> OptChoice(resizeName(m), ui.resize == m) { a.setResize(m); close() } }
+                            "sleep" -> items(listOf(0, 15, 30, 45, 60, 90, 120)) { m ->
+                                OptChoice(if (m == 0) L("כבוי") else L("{0} דק׳", m), ui.sleepMin == m) { a.setSleep(m); close() }
+                            }
+                        }
+                    }
+                    Spacer(Modifier.size(12.dp))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun OptRow(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String, value: String, onClick: () -> Unit) {
+    FocusItem(Modifier.fillMaxWidth(), onClick = onClick) {
+        Row(Modifier.padding(horizontal = 20.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+            Icon(icon, null, tint = Color.White, modifier = Modifier.size(26.dp))
+            Spacer(Modifier.width(18.dp))
+            Column(Modifier.weight(1f)) {
+                Text(title, color = Color.White, fontSize = 17.sp)
+                Text(value, color = Color(0xFFA9AAB0), fontSize = 14.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
+        }
+    }
+}
+
+@Composable
+private fun OptChoice(label: String, selected: Boolean, onClick: () -> Unit) {
+    FocusItem(Modifier.fillMaxWidth(), selected = selected, onClick = onClick) {
+        Row(Modifier.padding(horizontal = 20.dp, vertical = 14.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text(label, color = Color.White, fontSize = 16.sp, modifier = Modifier.weight(1f))
+            if (selected) Icon(Icons.Filled.Check, null, tint = Color(0xFF3A9BFF))
         }
     }
 }

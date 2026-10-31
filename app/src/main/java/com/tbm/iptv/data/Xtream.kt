@@ -115,7 +115,7 @@ class Xtream(private val p: Playlist) {
 
         val movies = ArrayList<Channel>()
         eachObject(file("get_vod_streams", force),
-            setOf("stream_id", "name", "stream_icon", "category_id", "container_extension", "added")) { o ->
+            setOf("stream_id", "name", "stream_icon", "category_id", "container_extension", "added", "rating")) { o ->
             val id = o["stream_id"]?.toIntOrNull() ?: return@eachObject
             val ext = o["container_extension"]?.ifBlank { null } ?: "mp4"
             movies += Channel(
@@ -126,12 +126,13 @@ class Xtream(private val p: Playlist) {
                 url = "$base/movie/${p.user}/${p.pass}/$id.$ext",
                 kind = Kind.MOVIE, streamId = id,
                 added = (o["added"]?.toLongOrNull() ?: 0L) * 1000,
+                rating = o["rating"]?.toFloatOrNull() ?: 0f,
             )
         }
 
         val series = ArrayList<SeriesItem>()
         eachObject(file("get_series", force),
-            setOf("series_id", "name", "cover", "category_id", "plot", "last_modified")) { o ->
+            setOf("series_id", "name", "cover", "category_id", "plot", "last_modified", "rating")) { o ->
             val id = o["series_id"]?.toIntOrNull() ?: return@eachObject
             series += SeriesItem(
                 key = "x:${p.id}:s:$id",
@@ -141,6 +142,7 @@ class Xtream(private val p: Playlist) {
                 seriesId = id,
                 plot = o["plot"]?.ifBlank { null }?.take(600),
                 added = (o["last_modified"]?.toLongOrNull() ?: 0L) * 1000,
+                rating = o["rating"]?.toFloatOrNull() ?: 0f,
             )
         }
 
@@ -149,8 +151,40 @@ class Xtream(private val p: Playlist) {
         return Content(live, movies, series)
     }
 
-    fun seriesEpisodes(seriesId: Int): List<Episode> {
+    fun seriesEpisodes(seriesId: Int): List<Episode> = seriesDetails(seriesId).second
+
+    private fun parseInfo(i: JSONObject?): MediaInfo {
+        if (i == null) return MediaInfo()
+        val bd = ArrayList<String>()
+        when (val b = i.opt("backdrop_path")) {
+            is JSONArray -> for (k in 0 until b.length()) b.optString(k).ifBlank { null }?.let { bd += it }
+            is String -> if (b.isNotBlank()) bd += b
+        }
+        val dur = i.optString("duration_secs").toIntOrNull()
+            ?: i.optString("episode_run_time").toIntOrNull()?.times(60) ?: 0
+        val date = i.optString("releaseDate").ifBlank { i.optString("releasedate") }.ifBlank { i.optString("release_date") }
+        return MediaInfo(
+            plot = i.optString("plot").ifBlank { i.optString("description") }.ifBlank { null },
+            cast = i.optString("cast").ifBlank { i.optString("actors") }.ifBlank { null },
+            director = i.optString("director").ifBlank { null },
+            genre = i.optString("genre").ifBlank { null },
+            year = date.take(4).ifBlank { null },
+            rating = i.optString("rating").toDoubleOrNull() ?: 0.0,
+            backdrops = bd,
+            trailer = i.optString("youtube_trailer").ifBlank { null },
+            durationSec = dur,
+        )
+    }
+
+    /** פרטי סרט (get_vod_info) */
+    fun vodInfo(streamId: Int): MediaInfo = runCatching {
+        parseInfo(JSONObject(Http.get(api("get_vod_info", "&vod_id=$streamId"))).optJSONObject("info"))
+    }.getOrDefault(MediaInfo())
+
+    /** פרטי סדרה + פרקים (get_series_info) */
+    fun seriesDetails(seriesId: Int): Pair<MediaInfo, List<Episode>> {
         val o = JSONObject(Http.get(api("get_series_info", "&series_id=$seriesId")))
+        val info = parseInfo(o.optJSONObject("info"))
         val res = ArrayList<Episode>()
 
         fun addArr(a: JSONArray, seasonKey: Int?) {
@@ -169,6 +203,11 @@ class Xtream(private val p: Playlist) {
                     url = url,
                     plot = info?.optString("plot")?.ifBlank { null },
                     image = info?.optString("movie_image")?.ifBlank { null },
+                    durationSec = info?.optString("duration_secs")?.toIntOrNull()
+                        ?: info?.optString("duration")?.let { d ->
+                            val p = d.split(":").mapNotNull { it.toIntOrNull() }
+                            if (p.size == 3) p[0] * 3600 + p[1] * 60 + p[2] else null
+                        } ?: 0,
                 )
             }
         }
@@ -177,7 +216,7 @@ class Xtream(private val p: Playlist) {
             is JSONObject -> eps.keys().forEach { k -> eps.optJSONArray(k)?.let { addArr(it, k.toIntOrNull()) } }
             is JSONArray -> for (i in 0 until eps.length()) eps.optJSONArray(i)?.let { addArr(it, null) }
         }
-        return res.sortedWith(compareBy({ it.season }, { it.episode }))
+        return info to res.sortedWith(compareBy({ it.season }, { it.episode }))
     }
 
     fun shortEpg(streamId: Int): List<EpgEntry> {

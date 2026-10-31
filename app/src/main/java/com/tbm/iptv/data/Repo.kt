@@ -92,10 +92,26 @@ object Repo {
         }
     }
 
-    suspend fun episodes(p: Playlist, s: SeriesItem): List<Episode> = withContext(Dispatchers.IO) {
-        s.episodesM3u ?: seriesCache[s.key] ?: run {
-            val id = s.seriesId ?: return@run emptyList()
-            Xtream(p).seriesEpisodes(id).also { seriesCache[s.key] = it }
+    private val infoCache = ConcurrentHashMap<String, MediaInfo>()
+
+    suspend fun episodes(p: Playlist, s: SeriesItem): List<Episode> = details(p, s).second
+
+    /** פרטי סדרה מלאים + פרקים */
+    suspend fun details(p: Playlist, s: SeriesItem): Pair<MediaInfo, List<Episode>> = withContext(Dispatchers.IO) {
+        s.episodesM3u?.let { return@withContext MediaInfo(plot = s.plot) to it }
+        val cachedEps = seriesCache[s.key]; val cachedInfo = infoCache[s.key]
+        if (cachedEps != null && cachedInfo != null) return@withContext cachedInfo to cachedEps
+        val id = s.seriesId ?: return@withContext MediaInfo(plot = s.plot) to emptyList()
+        val (info, eps) = Xtream(p).seriesDetails(id)
+        seriesCache[s.key] = eps; infoCache[s.key] = info
+        info to eps
+    }
+
+    /** פרטי סרט */
+    suspend fun vodInfo(p: Playlist, c: Channel): MediaInfo = withContext(Dispatchers.IO) {
+        infoCache[c.key] ?: run {
+            val id = c.streamId
+            if (!p.isXtream || id == null) MediaInfo() else Xtream(p).vodInfo(id).also { infoCache[c.key] = it }
         }
     }
 
