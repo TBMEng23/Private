@@ -90,7 +90,7 @@ object I18n {
         "אין מידע על השחקנים" to "No cast information",
         "לא נמצא טריילר" to "No trailer found",
         "טריילר" to "Trailer",
-        "ייפתח ב-YouTube" to "Opens in YouTube",
+        "ייפתח ב-YouTube" to "Opens in YouTube", "פתח ב-YouTube" to "Open in YouTube",
         "אין תמונות" to "No images",
         "{0} עונות" to "{0} seasons",
         "פרקים" to "Episodes",

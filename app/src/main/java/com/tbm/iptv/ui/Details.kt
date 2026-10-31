@@ -188,25 +188,96 @@ private fun CastList(info: MediaInfo?) {
     }
 }
 
+/** מזהה YouTube מתוך מזהה/קישור */
+private fun ytId(t: String): String? {
+    if (!t.contains("/") && !t.contains("=")) return t.trim().ifBlank { null }
+    Regex("(?:v=|youtu\\.be/|embed/|shorts/)([A-Za-z0-9_-]{6,})").find(t)?.let { return it.groupValues[1] }
+    return null
+}
+
 @Composable
 private fun TrailerTab(info: MediaInfo?) {
     val ctx = LocalContext.current
     val t = info?.trailer
+    var playing by remember(t) { mutableStateOf(false) }
     Column(Modifier.padding(16.dp)) {
+        val id = t?.let { ytId(it) }
         if (t == null) Text(L("לא נמצא טריילר"), color = Color(0xFF9A9BA3))
+        else if (playing && id != null) TrailerPlayer(id)
         else {
-            val img = info.backdrops.firstOrNull()
+            val img = info.backdrops.firstOrNull() ?: id?.let { "https://img.youtube.com/vi/$it/hqdefault.jpg" }
             Box(Modifier.fillMaxWidth().aspectRatio(16f / 9f).clip(RoundedCornerShape(8.dp)).background(Color.Black)
-                .clickable { openTrailer(ctx, t) }, contentAlignment = Alignment.Center) {
-                AsyncImage(img ?: if (!t.startsWith("http")) "https://img.youtube.com/vi/$t/hqdefault.jpg" else null, null,
-                    Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+                .clickable { if (id != null) playing = true else openTrailer(ctx, t) }, contentAlignment = Alignment.Center) {
+                AsyncImage(img, null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
                 Box(Modifier.size(64.dp).background(Color(0xCC000000), CircleShape), contentAlignment = Alignment.Center) {
                     Icon(Icons.Filled.PlayArrow, L("טריילר"), tint = Color.White, modifier = Modifier.size(40.dp))
                 }
             }
-            Text(L("ייפתח ב-YouTube"), color = Color(0xFF9A9BA3), fontSize = 12.sp, modifier = Modifier.padding(top = 6.dp))
+        }
+        if (t != null) Text(L("פתח ב-YouTube"), color = Color(0xFF9A9BA3), fontSize = 12.sp,
+            modifier = Modifier.padding(top = 8.dp).clickable { openTrailer(ctx, t) })
+    }
+}
+
+/** נגן טריילר בתוך האפליקציה (YouTube מוטמע) – כפתור מסך מלא מגדיל ומסובב לרוחב */
+@android.annotation.SuppressLint("SetJavaScriptEnabled")
+@Composable
+private fun TrailerPlayer(id: String) {
+    val ctx = LocalContext.current
+    var full by remember { mutableStateOf<android.view.View?>(null) }
+    var cb by remember { mutableStateOf<android.webkit.WebChromeClient.CustomViewCallback?>(null) }
+    androidx.compose.ui.viewinterop.AndroidView(
+        factory = { c ->
+            android.webkit.WebView(c).apply {
+                setBackgroundColor(android.graphics.Color.BLACK)
+                settings.javaScriptEnabled = true
+                settings.domStorageEnabled = true
+                settings.mediaPlaybackRequiresUserGesture = false
+                webChromeClient = object : android.webkit.WebChromeClient() {
+                    override fun onShowCustomView(view: android.view.View, callback: CustomViewCallback) { full = view; cb = callback }
+                    override fun onHideCustomView() { full = null; cb = null }
+                }
+                webViewClient = android.webkit.WebViewClient()
+                val html = """<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>html,body{margin:0;padding:0;background:#000;height:100%;overflow:hidden}iframe{border:0;width:100%;height:100%}</style></head>
+<body><iframe src="https://www.youtube.com/embed/$id?autoplay=1&playsinline=1&rel=0&modestbranding=1&fs=1"
+allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen
+referrerpolicy="strict-origin-when-cross-origin"></iframe></body></html>"""
+                loadDataWithBaseURL("https://tbmplayer.app/", html, "text/html", "utf-8", null)
+            }
+        },
+        onRelease = { it.destroy() },
+        modifier = Modifier.fillMaxWidth().aspectRatio(16f / 9f).clip(RoundedCornerShape(8.dp)),
+    )
+    full?.let { v ->
+        val act = ctx.findActivity()
+        androidx.compose.runtime.DisposableEffect(v) {
+            val old = act?.requestedOrientation
+            act?.requestedOrientation = android.content.pm.ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+            onDispose { act?.requestedOrientation = old ?: android.content.pm.ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED }
+        }
+        androidx.compose.ui.window.Dialog(
+            onDismissRequest = { cb?.onCustomViewHidden(); full = null },
+            properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
+        ) {
+            androidx.compose.ui.viewinterop.AndroidView(
+                factory = { c ->
+                    android.widget.FrameLayout(c).apply {
+                        setBackgroundColor(android.graphics.Color.BLACK)
+                        (v.parent as? android.view.ViewGroup)?.removeView(v)
+                        addView(v, android.widget.FrameLayout.LayoutParams(-1, -1))
+                    }
+                },
+                modifier = Modifier.fillMaxSize(),
+            )
         }
     }
+}
+
+private fun android.content.Context.findActivity(): android.app.Activity? {
+    var c: android.content.Context? = this
+    while (c is android.content.ContextWrapper) { if (c is android.app.Activity) return c; c = c.baseContext }
+    return null
 }
 
 @Composable
