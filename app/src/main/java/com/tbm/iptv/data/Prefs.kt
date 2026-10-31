@@ -193,6 +193,21 @@ object Prefs {
         get() = float("sub_size", 1.0f)
         set(v) = setFloat("sub_size", v)
 
+    /** רקע שחור מלא מאחורי הכתובית – מכסה כתוביות צרובות בתמונה */
+    var subBox: Boolean
+        get() = bool("sub_box", false)
+        set(v) = setBool("sub_box", v)
+
+    /** גובה הכתובית מתחתית המסך (0–0.5) */
+    var subPos: Float
+        get() = float("sub_pos", 0.08f)
+        set(v) = setFloat("sub_pos", v.coerceIn(0f, 0.5f))
+
+    /** כשנטענת כתובית חיצונית – לכבות כתוביות מובנות בקובץ */
+    var replaceEmbedded: Boolean
+        get() = bool("replace_embedded", true)
+        set(v) = setBool("replace_embedded", v)
+
     // ================= המשך צפייה (לכל פרופיל) =================
     private fun resumeObj(): JSONObject = obj(pk("resume"))
 

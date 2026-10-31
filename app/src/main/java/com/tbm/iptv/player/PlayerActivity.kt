@@ -45,6 +45,9 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+/** רצועת כתוביות מובנת בקובץ */
+data class EmbeddedSub(val groupIndex: Int, val name: String, val selected: Boolean)
+
 class PlayerUi {
     var title by mutableStateOf("")
     var item by mutableStateOf<PlayItem?>(null)
@@ -73,6 +76,8 @@ class PlayerUi {
     var mtOffer by mutableStateOf<SubResult?>(null)
     /** קריינות AI פעילה */
     var voiceOn by mutableStateOf(false)
+    /** כתוביות מובנות בקובץ (לא כולל החיצונית שלנו) */
+    var embedded by mutableStateOf<List<EmbeddedSub>>(emptyList())
     var casting by mutableStateOf(false)
 }
 
@@ -104,6 +109,28 @@ class PlayerActivity : FragmentActivity() {
             if (!ui.voiceOn) return
             val t = cueGroup.cues.mapNotNull { it.text?.toString() }.joinToString(" ")
             if (t.isNotBlank()) voice?.speak(t)
+        }
+
+        override fun onTracksChanged(tracks: androidx.media3.common.Tracks) {
+            val ours = ui.subLabel
+            val list = ArrayList<EmbeddedSub>()
+            var ourGroup: androidx.media3.common.Tracks.Group? = null
+            tracks.groups.forEachIndexed { gi, g ->
+                if (g.type != C.TRACK_TYPE_TEXT) return@forEachIndexed
+                val f = g.getTrackFormat(0)
+                if (ours != null && f.label == ours) { ourGroup = g; return@forEachIndexed }
+                val name = listOfNotNull(f.label, f.language?.let { langLabel(it.take(2)) }).joinToString(" · ").ifBlank { L("רצועה {0}", gi + 1) }
+                list += EmbeddedSub(gi, name, g.isSelected)
+            }
+            ui.embedded = list
+            // כתובית חיצונית נטענה – לבחור אותה ולכבות את המובנות
+            val og = ourGroup
+            if (og != null && subFile != null && Prefs.replaceEmbedded && !og.isSelected) {
+                player.trackSelectionParameters = player.trackSelectionParameters.buildUpon()
+                    .setTrackTypeDisabled(C.TRACK_TYPE_TEXT, false)
+                    .setOverrideForType(androidx.media3.common.TrackSelectionOverride(og.mediaTrackGroup, 0))
+                    .build()
+            }
         }
 
         override fun onIsPlayingChanged(isPlaying: Boolean) {
@@ -445,9 +472,20 @@ class PlayerActivity : FragmentActivity() {
         toast(L("סנכרון כתוביות: %+.1f שניות").format(ui.subOffset / 1000.0))
     }
 
+    /** בחירת כתובית מובנת מהקובץ */
+    fun selectEmbedded(e: EmbeddedSub) {
+        val g = player.currentTracks.groups.getOrNull(e.groupIndex) ?: return
+        player.trackSelectionParameters = player.trackSelectionParameters.buildUpon()
+            .setTrackTypeDisabled(C.TRACK_TYPE_TEXT, false)
+            .setOverrideForType(androidx.media3.common.TrackSelectionOverride(g.mediaTrackGroup, 0))
+            .build()
+        toast(L("נבחרה כתובית מובנת: {0}", e.name))
+    }
+
     fun disableSubtitles() {
         subFile = null; ui.subLabel = null
         player.trackSelectionParameters = player.trackSelectionParameters.buildUpon()
+            .clearOverridesOfType(C.TRACK_TYPE_TEXT)
             .setTrackTypeDisabled(C.TRACK_TYPE_TEXT, true).build()
         toast(L("הכתוביות כובו"))
     }
@@ -463,6 +501,7 @@ class PlayerActivity : FragmentActivity() {
             pos,
         )
         player.trackSelectionParameters = player.trackSelectionParameters.buildUpon()
+            .clearOverridesOfType(C.TRACK_TYPE_TEXT)
             .setTrackTypeDisabled(C.TRACK_TYPE_TEXT, false)
             .setPreferredTextLanguage(sf.lang)
             .build()

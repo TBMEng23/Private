@@ -71,9 +71,30 @@ import com.tbm.iptv.subs.langLabel
 import com.tbm.iptv.ui.FocusItem
 import com.tbm.iptv.ui.fmtTime
 
+/** סגנון כתוביות: גודל, מיקום, ורקע שחור לכיסוי כתוביות צרובות */
+fun applySubStyle(pv: PlayerView) {
+    val sv = pv.subtitleView ?: return
+    sv.setApplyEmbeddedStyles(false)
+    sv.setApplyEmbeddedFontSizes(false)
+    sv.setFractionalTextSize(SubtitleView.DEFAULT_TEXT_SIZE_FRACTION * Prefs.subSize)
+    sv.setBottomPaddingFraction(Prefs.subPos)
+    val box = Prefs.subBox
+    sv.setStyle(
+        CaptionStyleCompat(
+            android.graphics.Color.WHITE,
+            if (box) android.graphics.Color.BLACK else android.graphics.Color.TRANSPARENT,
+            if (box) android.graphics.Color.BLACK else android.graphics.Color.TRANSPARENT,
+            if (box) CaptionStyleCompat.EDGE_TYPE_NONE else CaptionStyleCompat.EDGE_TYPE_OUTLINE,
+            android.graphics.Color.BLACK,
+            null,
+        )
+    )
+}
+
 @Composable
 fun PlayerScreen(a: PlayerActivity) {
     val ui = a.ui
+    val styleVer = Prefs.version.intValue
     Box(Modifier.fillMaxSize().background(Color.Black)) {
         AndroidView(
             factory = { ctx ->
@@ -87,21 +108,14 @@ fun PlayerScreen(a: PlayerActivity) {
                     setControllerVisibilityListener(PlayerView.ControllerVisibilityListener { v ->
                         ui.controlsVisible = v == View.VISIBLE
                     })
-                    subtitleView?.setFractionalTextSize(SubtitleView.DEFAULT_TEXT_SIZE_FRACTION * Prefs.subSize)
-                    subtitleView?.setStyle(
-                        CaptionStyleCompat(
-                            android.graphics.Color.WHITE,
-                            android.graphics.Color.TRANSPARENT,
-                            android.graphics.Color.TRANSPARENT,
-                            CaptionStyleCompat.EDGE_TYPE_OUTLINE,
-                            android.graphics.Color.BLACK,
-                            null,
-                        )
-                    )
                     a.playerView = this
                 }
             },
-            update = { it.resizeMode = ui.resize },
+            update = {
+                it.resizeMode = ui.resize
+                @Suppress("UNUSED_VARIABLE") val v = styleVer
+                applySubStyle(it)
+            },
             modifier = Modifier.fillMaxSize(),
         )
 
@@ -278,6 +292,7 @@ private fun RecordDialog(a: PlayerActivity) {
     }
 }
 
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 private fun SubtitleDialog(a: PlayerActivity) {
     val ui = a.ui
@@ -323,6 +338,22 @@ private fun SubtitleDialog(a: PlayerActivity) {
                 }
                 ui.subErrors.forEach {
                     Text("⚠ $it", color = Color(0xFFFFB74D), fontSize = 12.sp)
+                }
+                // כתוביות מובנות בקובץ + כיסוי כתוביות צרובות
+                if (ui.embedded.isNotEmpty()) {
+                    Text(L("כתוביות מובנות בקובץ:"), fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 6.dp))
+                    androidx.compose.foundation.lazy.LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        items(ui.embedded) { e ->
+                            androidx.compose.material3.FilterChip(selected = e.selected, onClick = { a.selectEmbedded(e); ui.showSubs = false },
+                                label = { Text(e.name, fontSize = 12.sp) })
+                        }
+                    }
+                }
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 4.dp)) {
+                    androidx.compose.material3.Switch(checked = Prefs.subBox, onCheckedChange = { Prefs.subBox = it })
+                    Text(L("רקע שחור (מכסה כתוביות צרובות בתמונה)"), fontSize = 12.sp, modifier = Modifier.weight(1f).padding(horizontal = 6.dp))
+                    TextButton(onClick = { Prefs.subPos = Prefs.subPos + 0.03f }) { Text("▲") }
+                    TextButton(onClick = { Prefs.subPos = Prefs.subPos - 0.03f }) { Text("▼") }
                 }
                 LazyColumn(Modifier.weight(1f, fill = false), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     items(ui.subResults) { r ->

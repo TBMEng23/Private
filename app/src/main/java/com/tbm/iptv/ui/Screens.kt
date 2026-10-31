@@ -511,6 +511,10 @@ private fun SubsPage() {
             Field(L("שפות מועדפות לפי סדר (he,en)"), Prefs.str("sub_langs", "he,en")) { Prefs.setStr("sub_langs", it) }
             Text(L("גודל כתוביות: {0}×", "%.1f".format(Prefs.subSize)), fontSize = 13.sp)
             Slider(value = Prefs.subSize, onValueChange = { Prefs.subSize = it }, valueRange = 0.6f..2.0f)
+            SwitchRow(L("כתובית חיצונית מחליפה כתוביות מובנות בקובץ"), Prefs.replaceEmbedded) { Prefs.replaceEmbedded = it }
+            SwitchRow(L("רקע שחור (מכסה כתוביות צרובות בתמונה)"), Prefs.subBox) { Prefs.subBox = it }
+            Text(L("גובה הכתוביות"), fontSize = 13.sp)
+            Slider(value = Prefs.subPos, onValueChange = { Prefs.subPos = it }, valueRange = 0f..0.5f)
             OutlinedButton(onClick = {
                 val n = SubtitleManager.clearCache()
                 Toast.makeText(ctx, L("נמחקו {0} כתוביות שמורות", n), Toast.LENGTH_SHORT).show()

@@ -37,4 +37,4 @@ object CrashLog {
     fun clear() { file?.delete() }
 }
 
-object BuildConfigLite { const val VERSION = "2.1.3" }
+object BuildConfigLite { const val VERSION = "2.2" }
