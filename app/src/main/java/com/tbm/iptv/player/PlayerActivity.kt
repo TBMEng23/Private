@@ -47,7 +47,15 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /** רצועת כתוביות מובנת בקובץ */
-data class EmbeddedSub(val groupIndex: Int, val name: String, val selected: Boolean)
+data class EmbeddedSub(val groupIndex: Int, val name: String, val selected: Boolean, val lang: String? = null)
+
+/** סדר שפות: עברית, אנגלית, ואז כל השאר */
+fun langRank(code: String?): Int = when (code?.lowercase()?.take(3)?.trimEnd('-', '_')) {
+    "he", "iw", "heb" -> 0
+    "en", "eng" -> 1
+    else -> 2
+}
+fun isHebrewTrack(e: EmbeddedSub) = langRank(e.lang) == 0 || Regex("(?i)hebrew|עברית").containsMatchIn(e.name)
 
 class PlayerUi {
     var title by mutableStateOf("")
@@ -142,9 +150,10 @@ class PlayerActivity : FragmentActivity() {
                 val f = g.getTrackFormat(0)
                 if (ours != null && f.label == ours) { ourGroup = g; return@forEachIndexed }
                 val name = listOfNotNull(f.label, f.language?.let { langLabel(it.take(2)) }).joinToString(" · ").ifBlank { L("רצועה {0}", gi + 1) }
-                list += EmbeddedSub(gi, name, g.isSelected)
+                list += EmbeddedSub(gi, name, g.isSelected, f.language)
             }
-            ui.embedded = list
+            // עברית ראשונה, אחריה אנגלית, ואז השאר
+            ui.embedded = list.sortedWith(compareBy({ if (isHebrewTrack(it)) 0 else langRank(it.lang) }, { it.name }))
             val al = ArrayList<EmbeddedSub>()
             tracks.groups.forEachIndexed { gi, g ->
                 if (g.type != C.TRACK_TYPE_AUDIO) return@forEachIndexed
@@ -152,7 +161,7 @@ class PlayerActivity : FragmentActivity() {
                 val ch = if (f.channelCount > 2) " ${f.channelCount}ch" else ""
                 val name = (listOfNotNull(f.label, f.language?.let { langLabel(it.take(2)) }).joinToString(" · ")
                     .ifBlank { L("שמע {0}", al.size + 1) }) + ch
-                al += EmbeddedSub(gi, name, g.isSelected)
+                al += EmbeddedSub(gi, name, g.isSelected, f.language)
             }
             ui.audio = al
             // כתובית חיצונית נטענה – לבחור אותה ולכבות את המובנות
@@ -615,6 +624,10 @@ class PlayerActivity : FragmentActivity() {
                 ui.subResults = results
                 ui.subErrors = errors
                 if (auto) {
+                    // יש כתובית עברית מובנית בקובץ – עדיפה על הורדה
+                    ui.embedded.firstOrNull { isHebrewTrack(it) }?.let { he ->
+                        if (subFile == null) { if (!he.selected) selectEmbedded(he); return@launch }
+                    }
                     val best = SubtitleManager.pickBest(results)
                     when {
                         best == null -> toast(L("לא נמצאו כתוביות אוטומטית"))

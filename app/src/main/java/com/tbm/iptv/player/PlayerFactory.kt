@@ -43,6 +43,9 @@ object PlayerFactory {
                         .setContentType(C.AUDIO_CONTENT_TYPE_MOVIE).build(),
                     true,
                 )
+                // כתוביות מובנות: עברית קודם, אחריה אנגלית
+                trackSelectionParameters = trackSelectionParameters.buildUpon()
+                    .setPreferredTextLanguages("he", "iw", "en").build()
                 val lang = Prefs.audioLang
                 if (lang.isNotBlank()) {
                     trackSelectionParameters = trackSelectionParameters.buildUpon()
