@@ -99,6 +99,18 @@ fun GuideSection(content: Content) {
     Column(Modifier.fillMaxSize()) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(L("לוח שידורים"), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+            // סיבוב ללוח שידורים רחב – עובד גם כשסיבוב אוטומטי כבוי
+            val act = LocalContext.current as? android.app.Activity
+            var land by remember { mutableStateOf(false) }
+            androidx.compose.runtime.DisposableEffect(Unit) {
+                onDispose { act?.requestedOrientation = android.content.pm.ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED }
+            }
+            IconButton(onClick = {
+                land = !land
+                act?.requestedOrientation = if (land) android.content.pm.ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+                else android.content.pm.ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+            }) { Icon(androidx.compose.material.icons.Icons.Filled.ScreenRotation, L("סובב מסך"),
+                tint = if (land) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface) }
             IconButton(onClick = { winStart -= 2 * HOUR }) { Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, L("מוקדם יותר")) }
             TextButton(onClick = {
                 winStart = System.currentTimeMillis() / (30 * 60_000L) * (30 * 60_000L)

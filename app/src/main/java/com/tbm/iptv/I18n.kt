@@ -77,7 +77,7 @@ object I18n {
         "צופה מתוך ההקלטה (חיבור אחד לספק) – אפשר להשהות" to "Watching from the recording (one provider connection) – pause available",
         "⏹ עצור הקלטה ושמור" to "⏹ Stop and save recording", "+30 דק׳" to "+30 min", "+שעה" to "+1 hour",
         "עד סוף \"{0}\" ({1})" to "Until end of \"{0}\" ({1})", "ללא הגבלה – עד שאעצור" to "No limit – until I stop",
-        "עוד X דקות מעכשיו" to "X more minutes from now", "קבע" to "Set", "גרסה {0}" to "Version {0}",
+        "עוד X דקות מעכשיו" to "X more minutes from now", "קבע" to "Set", "גרסה {0}" to "Version {0}", "סובב מסך" to "Rotate screen",
         "🔌 בדוק חיבור לכל המקורות" to "🔌 Test all sources", "בודק…" to "Testing…", "לא פעיל" to "Inactive", "בדוק" to "Test",
         "ללא סימון = כל הארצות מוצגות." to "Nothing selected = all countries shown.", "OpenSubtitles v3 – ללא מפתח" to "OpenSubtitles v3 – no key needed",
     )
