@@ -68,7 +68,7 @@ object Epg {
             if (force || !fresh) {
                 try { Http.download(url, f) } catch (e: Exception) { if (!f.exists()) throw e }
             }
-            parse(f, c)
+            parse(f, c, ((Prefs.str("epg_off_${p.id}", "0").toFloatOrNull() ?: 0f) * 3_600_000L).toLong())
             status = if (programs.isEmpty()) L("המדריך ריק") else ""
         } catch (e: OutOfMemoryError) {
             programs = emptyMap(); nameIndex = emptyMap()
@@ -90,7 +90,15 @@ object Epg {
     /** מקסימום תוכניות בזיכרון – מונע קריסה בספקים עם אלפי ערוצים */
     private const val MAX_ENTRIES = 500_000
 
-    private fun parse(f: File, c: Content) {
+    /** מחיקת המדריך של מקור (קובץ מטמון + זיכרון) */
+    fun clear(p: Playlist) {
+        runCatching { Repo.cacheFile("epg_${p.id}.xml").delete() }
+        programs = emptyMap(); nameIndex = emptyMap()
+        status = L("המדריך נמחק")
+        version.intValue = version.intValue + 1
+    }
+
+    private fun parse(f: File, c: Content, offsetMs: Long = 0L) {
         val now = System.currentTimeMillis()
         val hour = 3_600_000L
         val day = 86_400_000L
@@ -136,8 +144,8 @@ object Epg {
                         }
                         "programme" -> {
                             pCh = xp.getAttributeValue(null, "channel")?.lowercase()
-                            pStart = parseTime(xp.getAttributeValue(null, "start"))
-                            pEnd = parseTime(xp.getAttributeValue(null, "stop"))
+                            pStart = parseTime(xp.getAttributeValue(null, "start")) + offsetMs
+                            pEnd = parseTime(xp.getAttributeValue(null, "stop")) + offsetMs
                             val fr = pCh?.let { fromById[it] }
                             keep = fr != null && pEnd > fr && pStart < to && pEnd > pStart
                             pTitle = ""; pDesc = ""; inProg = true

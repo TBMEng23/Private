@@ -86,6 +86,27 @@ class Xtream(private val p: Playlist) {
         }
     }
 
+    /** פרטי חשבון לתצוגה (מסך "מידע") */
+    fun accountDetails(): List<Pair<String, String>> {
+        val o = JSONObject(Http.get(api("")))
+        val ui = o.optJSONObject("user_info") ?: JSONObject()
+        val si = o.optJSONObject("server_info") ?: JSONObject()
+        val df = java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", java.util.Locale.US)
+        fun ts(v: String) = v.toLongOrNull()?.takeIf { it > 0 }?.let { df.format(java.util.Date(it * 1000)) } ?: L("ללא הגבלה")
+        return listOf(
+            L("סטטוס") to ui.optString("status"),
+            L("שם משתמש") to ui.optString("username"),
+            L("תוקף") to ts(ui.optString("exp_date")),
+            L("נוצר") to ts(ui.optString("created_at")),
+            L("ניסיון") to (if (ui.optString("is_trial") == "1") L("כן") else L("לא")),
+            L("חיבורים פעילים") to "${ui.optString("active_cons")} / ${ui.optString("max_connections")}",
+            L("פורמטים") to (ui.optJSONArray("allowed_output_formats")?.let { a -> (0 until a.length()).joinToString(", ") { a.optString(it) } } ?: ""),
+            L("שרת") to (si.optString("url") + (si.optString("port").takeIf { it.isNotBlank() }?.let { ":$it" } ?: "")),
+            L("אזור זמן") to si.optString("timezone"),
+            L("שעת שרת") to si.optString("time_now"),
+        ).filter { it.second.isNotBlank() }
+    }
+
     fun load(force: Boolean): Content {
         if (force || Prefs.str("tz_${p.id}").isBlank()) accountInfo()
         val liveCats = cats("get_live_categories", force)

@@ -38,6 +38,10 @@ import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.clickable
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Lock
@@ -776,6 +780,8 @@ fun PlaylistsScreen(onDone: () -> Unit, onBack: (() -> Unit)?) {
     var dialog by remember { mutableStateOf<String?>(null) }
     var editing by remember { mutableStateOf<Playlist?>(null) }
     var deleting by remember { mutableStateOf<Playlist?>(null) }
+    var menuFor by remember { mutableStateOf<Playlist?>(null) }
+    var infoFor by remember { mutableStateOf<Playlist?>(null) }
     val df = remember { SimpleDateFormat("dd/MM/yyyy", Locale.US) }
 
     fun activate(p: Playlist, force: Boolean = false) {
@@ -825,7 +831,10 @@ fun PlaylistsScreen(onDone: () -> Unit, onBack: (() -> Unit)?) {
                     color = if (p.id == active) MaterialTheme.colorScheme.primary.copy(alpha = 0.16f) else MaterialTheme.colorScheme.surface,
                     modifier = Modifier.fillMaxWidth().padding(vertical = 5.dp),
                 ) {
-                    FocusItem(Modifier.fillMaxWidth(), onClick = { activate(p) }) {
+                    val disabled = Prefs.bool("disabled_${p.id}", false)
+                    FocusItem(Modifier.fillMaxWidth(), onLongClick = { menuFor = p }, onClick = {
+                        if (disabled) menuFor = p else activate(p)
+                    }) {
                         Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
                             Text(if (p.id == active) "✓" else "", Modifier.width(22.dp), color = MaterialTheme.colorScheme.primary,
                                 fontWeight = FontWeight.Bold)
@@ -836,13 +845,11 @@ fun PlaylistsScreen(onDone: () -> Unit, onBack: (() -> Unit)?) {
                                 upd?.let { Text(L("עדכון אחרון: {0}", it), fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant) }
                                 exp?.let { Text(L("תוקף: {0}", it), fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant) }
                                 if (p.isXtream && p.user.isNotBlank()) Text(L("משתמש: {0}", p.user), fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                Text(if (p.id == active) L("● פעיל כעת") else L("לחץ כדי לעבור למקור הזה"), fontSize = 12.sp,
+                                Text(if (disabled) L("מושבת") else if (p.id == active) L("● פעיל כעת") else L("לחץ כדי לעבור למקור הזה"), fontSize = 12.sp,
                                     color = if (p.id == active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                                     fontWeight = if (p.id == active) FontWeight.Bold else FontWeight.Normal)
                             }
-                            IconButton(onClick = { editing = p }) { Icon(Icons.Filled.Edit, L("עריכה")) }
-                            IconButton(onClick = { activate(p, true) }) { Icon(Icons.Filled.Refresh, L("רענון")) }
-                            IconButton(onClick = { deleting = p }) { Icon(Icons.Filled.Delete, L("מחיקה")) }
+                            IconButton(onClick = { menuFor = p }) { Icon(Icons.Filled.MoreVert, L("אפשרויות")) }
                         }
                     }
                 }
@@ -881,9 +888,30 @@ fun PlaylistsScreen(onDone: () -> Unit, onBack: (() -> Unit)?) {
             }
             Toast.makeText(ctx, L("נשמר"), Toast.LENGTH_SHORT).show()
         }
-        if (old.isXtream) XtreamDialog(onAdd = save, onDismiss = { editing = null }, edit = old)
-        else M3uDialog(onAdd = save, onDismiss = { editing = null }, edit = old)
+        SourceEditor(old, onSave = save, onDismiss = { editing = null })
     }
+    menuFor?.let { m ->
+        val disabled = Prefs.bool("disabled_${m.id}", false)
+        SourceMenu(m.name, disabled, onDismiss = { menuFor = null }) { action ->
+            menuFor = null
+            when (action) {
+                "refresh" -> activate(m, true)
+                "epg" -> {
+                    val c = Repo.content
+                    if (m.id == active && c != null) {
+                        Repo.scope.launch { com.tbm.iptv.data.Epg.load(m, c, true) }
+                        Toast.makeText(ctx, L("מעדכן מדריך שידורים…"), Toast.LENGTH_SHORT).show()
+                    } else Toast.makeText(ctx, L("עבור למקור הזה כדי לעדכן את המדריך"), Toast.LENGTH_SHORT).show()
+                }
+                "clear" -> { com.tbm.iptv.data.Epg.clear(m); Toast.makeText(ctx, L("המדריך נמחק"), Toast.LENGTH_SHORT).show() }
+                "disable" -> Prefs.setBool("disabled_${m.id}", !disabled)
+                "edit" -> editing = m
+                "delete" -> deleting = m
+                "info" -> infoFor = m
+            }
+        }
+    }
+    infoFor?.let { SourceInfo(it) { infoFor = null } }
     deleting?.let { d ->
         AlertDialog(
             onDismissRequest = { deleting = null },
@@ -1126,5 +1154,166 @@ private fun ExternalPlayerSettings() {
             },
             confirmButton = { TextButton(onClick = { pick = false }) { Text(L("סגור")) } },
         )
+    }
+}
+
+
+// ============================================================ מקור תוכן: תפריט, מידע, עריכה (כמו MyTVOnline)
+@Composable
+private fun SourceMenu(title: String, disabled: Boolean, onDismiss: () -> Unit, onAction: (String) -> Unit) {
+    androidx.compose.ui.window.Dialog(onDismissRequest = onDismiss,
+        properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false)) {
+        Box(Modifier.fillMaxSize().clickableNoRipple(onDismiss), contentAlignment = Alignment.BottomCenter) {
+            Surface(color = MaterialTheme.colorScheme.surface, shape = RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp),
+                modifier = Modifier.fillMaxWidth().widthIn(max = 560.dp).clickableNoRipple {}) {
+                Column(Modifier.padding(bottom = 12.dp)) {
+                    Box(Modifier.align(Alignment.CenterHorizontally).padding(top = 8.dp).size(width = 40.dp, height = 4.dp)
+                        .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f), RoundedCornerShape(2.dp)))
+                    Text(title, fontWeight = FontWeight.Bold, fontSize = 20.sp, modifier = Modifier.padding(20.dp))
+                    HorizontalDivider()
+                    listOf(
+                        Triple("refresh", Icons.Filled.Refresh, L("רענון")),
+                        Triple("epg", Icons.Filled.DateRange, L("עדכון מדריך שידורים")),
+                        Triple("clear", Icons.Filled.Delete, L("מחיקת מדריך שידורים")),
+                        Triple("disable", if (disabled) Icons.Filled.Visibility else Icons.Filled.VisibilityOff, if (disabled) L("הפעלה") else L("השבתה")),
+                        Triple("edit", Icons.Filled.Edit, L("עריכה")),
+                        Triple("delete", Icons.Filled.Delete, L("מחיקה")),
+                        Triple("info", Icons.Filled.Info, L("מידע")),
+                    ).forEach { (k, icon, label) ->
+                        FocusItem(Modifier.fillMaxWidth(), onClick = { onAction(k) }) {
+                            Row(Modifier.padding(horizontal = 20.dp, vertical = 15.dp), verticalAlignment = Alignment.CenterVertically) {
+                                Icon(icon, null)
+                                Spacer(Modifier.width(20.dp))
+                                Text(label, fontSize = 17.sp)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun Modifier.clickableNoRipple(onClick: () -> Unit): Modifier =
+    this.then(Modifier.clickable(interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
+        indication = null, onClick = onClick))
+
+@Composable
+private fun SourceInfo(p: Playlist, onDismiss: () -> Unit) {
+    var rows by remember { mutableStateOf<List<Pair<String, String>>?>(null) }
+    var err by remember { mutableStateOf<String?>(null) }
+    LaunchedEffect(p.id) {
+        if (!p.isXtream) {
+            val c = Repo.content
+            rows = listOfNotNull(L("סוג") to "M3U", c?.let { L("ערוצים") to "${it.live.size}" },
+                c?.let { L("סרטים") to "${it.movies.size}" }, c?.let { L("סדרות") to "${it.series.size}" })
+            return@LaunchedEffect
+        }
+        try {
+            rows = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { com.tbm.iptv.data.Xtream(p).accountDetails() }
+        } catch (e: Exception) { err = e.message ?: L("שגיאה") }
+    }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(p.name) },
+        text = {
+            Column(Modifier.verticalScroll(rememberScrollState())) {
+                when {
+                    err != null -> Text(L("שגיאה: {0}", err))
+                    rows == null -> CircularProgressIndicator()
+                    else -> rows!!.forEach { (k, v) ->
+                        Row(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+                            Text(k, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.width(120.dp))
+                            Text(v, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = onDismiss) { Text(L("סגור")) } },
+    )
+}
+
+/** עריכת מקור – מסך מלא: שם, כתובת (מוסתרת), התחברות, היסט EPG, אפשרויות מתקדמות */
+@Composable
+private fun SourceEditor(p: Playlist, onSave: (Playlist) -> Unit, onDismiss: () -> Unit) {
+    var name by remember { mutableStateOf(p.name) }
+    var url by remember { mutableStateOf(p.url) }
+    var login by remember { mutableStateOf(p.isXtream) }
+    var user by remember { mutableStateOf(p.user) }
+    var pass by remember { mutableStateOf(p.pass) }
+    var showUrl by remember { mutableStateOf(false) }
+    var showPass by remember { mutableStateOf(false) }
+    var offset by remember { mutableStateOf(Prefs.str("epg_off_${p.id}", "0")) }
+    var offMenu by remember { mutableStateOf(false) }
+    var advanced by remember { mutableStateOf(false) }
+    var epgUrl by remember { mutableStateOf(Prefs.epgUrl(p)) }
+    androidx.compose.ui.window.Dialog(onDismissRequest = onDismiss,
+        properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false)) {
+        Surface(color = MaterialTheme.colorScheme.background, modifier = Modifier.fillMaxSize()) {
+            Column(Modifier.fillMaxSize().windowInsetsPadding(androidx.compose.foundation.layout.WindowInsets.systemBars)
+                .verticalScroll(rememberScrollState()).padding(20.dp)) {
+                Text(L("עריכת מקור"), fontSize = 26.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 16.dp))
+                OutlinedTextField(name, { name = it }, label = { Text(L("שם המקור")) }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                Spacer(Modifier.height(12.dp))
+                OutlinedTextField(url, { url = it }, label = { Text(L("כתובת השרת / הרשימה")) }, singleLine = true,
+                    visualTransformation = if (showUrl) VisualTransformation.None else PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
+                    trailingIcon = { IconButton(onClick = { showUrl = !showUrl }) { Icon(if (showUrl) Icons.Filled.VisibilityOff else Icons.Filled.Visibility, null) } },
+                    modifier = Modifier.fillMaxWidth())
+                Row(Modifier.fillMaxWidth().padding(vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text(L("נדרשת התחברות? (Xtream)"), fontSize = 17.sp, modifier = Modifier.weight(1f))
+                    Switch(checked = login, onCheckedChange = { login = it })
+                }
+                if (login) {
+                    OutlinedTextField(user, { user = it }, label = { Text(L("שם משתמש")) }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                    Spacer(Modifier.height(12.dp))
+                    OutlinedTextField(pass, { pass = it }, label = { Text(L("סיסמה")) }, singleLine = true,
+                        visualTransformation = if (showPass) VisualTransformation.None else PasswordVisualTransformation(),
+                        trailingIcon = { IconButton(onClick = { showPass = !showPass }) { Icon(if (showPass) Icons.Filled.VisibilityOff else Icons.Filled.Visibility, null) } },
+                        modifier = Modifier.fillMaxWidth())
+                    Spacer(Modifier.height(12.dp))
+                }
+                Box {
+                    OutlinedTextField(
+                        value = if (offset == "0") L("ללא") else (if (offset.startsWith("-")) "" else "+") + offset + L(" שעות"),
+                        onValueChange = {}, readOnly = true, label = { Text(L("היסט זמן למדריך (EPG)")) },
+                        trailingIcon = { Icon(Icons.Filled.ExpandMore, null) }, modifier = Modifier.fillMaxWidth())
+                    Box(Modifier.matchParentSize().clickableNoRipple { offMenu = true })
+                    androidx.compose.material3.DropdownMenu(offMenu, { offMenu = false }) {
+                        listOf("-3", "-2", "-1.5", "-1", "-0.5", "0", "0.5", "1", "1.5", "2", "3").forEach { o ->
+                            androidx.compose.material3.DropdownMenuItem(
+                                text = { Text(if (o == "0") L("ללא") else (if (o.startsWith("-")) "" else "+") + o + L(" שעות")) },
+                                onClick = { offset = o; offMenu = false })
+                        }
+                    }
+                }
+                Hint(L("אם לוח השידורים מראה תוכניות בשעה לא נכונה (למשל שעה מוקדם), הזז כאן."))
+                FocusItem(Modifier.fillMaxWidth(), onClick = { advanced = !advanced }) {
+                    Row(Modifier.padding(vertical = 14.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Text(L("אפשרויות מתקדמות"), fontSize = 17.sp, modifier = Modifier.weight(1f))
+                        Icon(if (advanced) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore, null)
+                    }
+                }
+                if (advanced) {
+                    OutlinedTextField(epgUrl, { epgUrl = it }, label = { Text(L("כתובת EPG חלופית (XMLTV)")) }, singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri), modifier = Modifier.fillMaxWidth())
+                    Hint(L("ריק = המדריך של הספק."))
+                }
+                Spacer(Modifier.height(24.dp))
+                Button(onClick = {
+                    Prefs.setStr("epg_off_${p.id}", offset)
+                    Prefs.setEpgUrl(p, epgUrl.trim())
+                    onSave(p.copy(name = name.ifBlank { p.name }, url = url.trim(), type = if (login) "xtream" else "m3u",
+                        user = if (login) user.trim() else "", pass = if (login) pass.trim() else ""))
+                }, enabled = url.isNotBlank() && (!login || (user.isNotBlank() && pass.isNotBlank())),
+                    modifier = Modifier.fillMaxWidth().height(52.dp), shape = RoundedCornerShape(26.dp)) { Text(L("עדכן"), fontSize = 17.sp) }
+                Spacer(Modifier.height(10.dp))
+                OutlinedButton(onClick = onDismiss, modifier = Modifier.fillMaxWidth().height(52.dp), shape = RoundedCornerShape(26.dp)) {
+                    Text(L("ביטול"), fontSize = 17.sp)
+                }
+            }
+        }
     }
 }
