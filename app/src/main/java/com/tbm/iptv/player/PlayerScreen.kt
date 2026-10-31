@@ -202,7 +202,7 @@ private fun TopBar(a: PlayerActivity) {
         if (ui.castAvailable) {
             AndroidView(
                 factory = { ctx ->
-                    MediaRouteButton(ContextThemeWrapper(ctx, androidx.appcompat.R.style.Theme_AppCompat)).also {
+                    MediaRouteButton(ContextThemeWrapper(ctx, com.tbm.iptv.R.style.AppTheme_Player)).also {
                         runCatching { CastButtonFactory.setUpMediaRouteButton(ctx.applicationContext, it) }
                     }
                 },
