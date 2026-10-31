@@ -527,6 +527,7 @@ private fun PlayerPage() {
             HorizontalDivider(Modifier.padding(vertical = 8.dp))
             Text(L("קריינות AI מהכתוביות"), fontWeight = FontWeight.Bold)
             SwitchRow(L("להפעיל אוטומטית בסרטים וסדרות"), Prefs.voiceDefault) { Prefs.voiceDefault = it }
+            VoiceSettings()
             Text(L("מהירות דיבור: {0}×", "%.1f".format(Prefs.voiceRate)), fontSize = 13.sp)
             Slider(value = Prefs.voiceRate, onValueChange = { Prefs.voiceRate = it }, valueRange = 0.6f..1.8f)
             Text(L("עוצמת הקול המקורי בזמן הקריינות: {0}%", (Prefs.voiceDuck * 100).toInt()), fontSize = 13.sp)
@@ -1316,4 +1317,77 @@ private fun SourceEditor(p: Playlist, onSave: (Playlist) -> Unit, onDismiss: () 
             }
         }
     }
+}
+
+
+/** קריינות: סגנון קול, דוברים שונים, בחירת קול לגבר/לאישה מתוך הקולות המותקנים + ניסיון */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun VoiceSettings() {
+    val ctx = LocalContext.current
+    Prefs.version.intValue
+    var voices by remember { mutableStateOf<List<android.speech.tts.Voice>>(emptyList()) }
+    var tts by remember { mutableStateOf<android.speech.tts.TextToSpeech?>(null) }
+    androidx.compose.runtime.DisposableEffect(Unit) {
+        var t: android.speech.tts.TextToSpeech? = null
+        t = android.speech.tts.TextToSpeech(ctx.applicationContext) { st ->
+            if (st == android.speech.tts.TextToSpeech.SUCCESS) {
+                t?.language = com.tbm.iptv.player.VoiceOver.localeOf("he")
+                voices = t?.let { com.tbm.iptv.player.VoiceOver.voicesFor(it, "he") } ?: emptyList()
+            }
+        }
+        tts = t
+        onDispose { runCatching { t?.stop(); t?.shutdown() } }
+    }
+    fun test(sp: com.tbm.iptv.player.Speaker, voiceName: String, text: String) {
+        val t = tts ?: return
+        voices.firstOrNull { it.name == voiceName }?.let { runCatching { t.voice = it } }
+        t.setPitch(sp.pitch); t.setSpeechRate(Prefs.voiceRate * sp.rate)
+        t.speak(text, android.speech.tts.TextToSpeech.QUEUE_FLUSH, null, "test")
+    }
+    val cfg = com.tbm.iptv.player.VoiceCfg
+    Text(L("סגנון קול"), fontSize = 13.sp, modifier = Modifier.padding(top = 6.dp))
+    androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        listOf("auto" to L("לפי הדובר"), "narrator" to L("מספר"), "man" to L("גבר"), "woman" to L("אישה"), "child" to L("ילד")).forEach { (k, t) ->
+            FilterChipSimple(t, cfg.style == k) {
+                cfg.style = k
+                val sp = when (k) { "man" -> com.tbm.iptv.player.Speaker.MAN; "woman" -> com.tbm.iptv.player.Speaker.WOMAN
+                    "child" -> com.tbm.iptv.player.Speaker.CHILD; else -> com.tbm.iptv.player.Speaker.NARRATOR }
+                test(sp, if (k == "man") cfg.maleVoice else cfg.femaleVoice, L("שלום, ככה אני נשמע."))
+            }
+        }
+    }
+    Hint(L("\"לפי הדובר\": מזהה מהדקדוק אם מדבר גבר או אישה (\"אני הולכת\" / \"אני הולך\") ומחליף קול בהתאם."))
+    SwitchRow(L("קול שונה לכל צד בדיאלוג (שורות עם מקף)"), cfg.multi) { cfg.multi = it }
+    if (voices.isEmpty()) Hint(L("לא נמצאו קולות עבריים מותקנים – התקן: הגדרות אנדרואיד ← המרת טקסט לדיבור ← Google ← עברית"))
+    else listOf(
+        Triple(L("קול לגבר"), cfg.maleVoice, com.tbm.iptv.player.Speaker.MAN),
+        Triple(L("קול לאישה / ילד"), cfg.femaleVoice, com.tbm.iptv.player.Speaker.WOMAN),
+    ).forEach { (label, cur, sp) ->
+        var open by remember { mutableStateOf(false) }
+        Row(Modifier.fillMaxWidth().padding(vertical = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text(label)
+                val idx = voices.indexOfFirst { it.name == cur }
+                Text(if (idx < 0) L("ברירת מחדל") else com.tbm.iptv.player.VoiceOver.label(voices[idx], idx), fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            TextButton(onClick = { test(sp, cur, if (sp == com.tbm.iptv.player.Speaker.MAN) L("אני הולך הביתה, נתראה מחר.") else L("אני הולכת הביתה, נתראה מחר.")) }) { Text(L("▶ נסה")) }
+            Box {
+                TextButton(onClick = { open = true }) { Text(L("בחר")) }
+                androidx.compose.material3.DropdownMenu(open, { open = false }) {
+                    androidx.compose.material3.DropdownMenuItem(text = { Text(L("ברירת מחדל")) }, onClick = {
+                        if (sp == com.tbm.iptv.player.Speaker.MAN) cfg.maleVoice = "" else cfg.femaleVoice = ""; open = false })
+                    voices.forEachIndexed { i, v ->
+                        androidx.compose.material3.DropdownMenuItem(text = { Text(com.tbm.iptv.player.VoiceOver.label(v, i)) }, onClick = {
+                            if (sp == com.tbm.iptv.player.Speaker.MAN) cfg.maleVoice = v.name else cfg.femaleVoice = v.name
+                            open = false
+                            test(sp, v.name, L("שלום, ככה אני נשמע."))
+                        })
+                    }
+                }
+            }
+        }
+    }
+    Hint(L("קולות ☁ (רשת) נשמעים טבעיים יותר אבל צריכים אינטרנט. כשיש רק קול אחד, ההבדל בין גבר/אישה/ילד נעשה בגובה הקול."))
 }
