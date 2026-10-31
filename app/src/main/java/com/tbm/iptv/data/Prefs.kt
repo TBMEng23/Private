@@ -278,6 +278,17 @@ object Prefs {
         get() = str("audio_lang")
         set(v) = setStr("audio_lang", v)
 
+    // ================= הקלטות =================
+    /** הקלטת הערוץ הנצפה: לצפות מתוך ההקלטה (חיבור אחד לספק + השהיית שידור חי) */
+    var recWatchFromFile: Boolean
+        get() = bool("rec_watch_file", true)
+        set(v) = setBool("rec_watch_file", v)
+
+    /** אורך הקלטה ברירת מחדל כשאין לוח שידורים (דקות) */
+    var recDefaultMin: Int
+        get() = int("rec_default_min", 120)
+        set(v) = setInt("rec_default_min", v)
+
     // ================= קריינות AI =================
     var voiceDefault: Boolean
         get() = bool("voice_default", false)

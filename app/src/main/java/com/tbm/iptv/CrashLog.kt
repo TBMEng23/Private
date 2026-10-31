@@ -25,7 +25,7 @@ object CrashLog {
             e.printStackTrace(PrintWriter(sw))
             val rt = Runtime.getRuntime()
             file?.writeText(
-                "TBM Player ${BuildConfigLite.VERSION} | Android ${Build.VERSION.RELEASE} (${Build.VERSION.SDK_INT}) | " +
+                "TBM Player ${appVersion(App.instance)} | Android ${Build.VERSION.RELEASE} (${Build.VERSION.SDK_INT}) | " +
                     "${Build.MANUFACTURER} ${Build.MODEL}\n" +
                     "thread=$thread | maxMem=${rt.maxMemory() / 1_048_576}MB\n\n" + sw.toString().take(12000)
             )
@@ -37,4 +37,12 @@ object CrashLog {
     fun clear() { file?.delete() }
 }
 
-object BuildConfigLite { const val VERSION = "3.0" }
+object BuildConfigLite { const val VERSION = "3.1" }
+
+/** הגרסה האמיתית מתוך ה-APK (versionName + versionCode) */
+fun appVersion(ctx: android.content.Context): String = runCatching {
+    val pi = ctx.packageManager.getPackageInfo(ctx.packageName, 0)
+    @Suppress("DEPRECATION")
+    val code = if (android.os.Build.VERSION.SDK_INT >= 28) pi.longVersionCode else pi.versionCode.toLong()
+    "${pi.versionName} (build $code)"
+}.getOrDefault(BuildConfigLite.VERSION)

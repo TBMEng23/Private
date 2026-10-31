@@ -54,7 +54,7 @@ object Notif {
 
 // ============================================================ שירות הקלטה
 class RecordingService : Service() {
-    data class RecInfo(val id: String, val title: String, val file: String, val endsAt: Long, val bytes: Long = 0)
+    data class RecInfo(val id: String, val title: String, val file: String, val endsAt: Long, val bytes: Long = 0, val url: String = "")
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val jobs = java.util.concurrent.ConcurrentHashMap<String, Job>()
@@ -69,11 +69,34 @@ class RecordingService : Service() {
         fun dir(ctx: Context): File =
             File(ctx.getExternalFilesDir(null) ?: ctx.filesDir, "Recordings").apply { mkdirs() }
 
-        fun start(ctx: Context, title: String, url: String, durationMs: Long) {
+        /** זמן הסיום של כל הקלטה – ניתן לשינוי תוך כדי הקלטה */
+        val endTimes = java.util.concurrent.ConcurrentHashMap<String, Long>()
+
+        private fun safeName(s: String) = s.replace(Regex("""[\\/:*?"<>|]"""), "_").take(60)
+
+        /** מתחיל הקלטה ומחזיר את נתיב הקובץ */
+        fun start(ctx: Context, title: String, url: String, durationMs: Long): String {
+            val stamp = SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", Locale.US).format(Date())
+            val file = File(dir(ctx), "${safeName(title)}__$stamp.ts")
+            endTimes[file.name] = System.currentTimeMillis() + durationMs
             val i = Intent(ctx, RecordingService::class.java).setAction(ACTION_START)
                 .putExtra("title", title).putExtra("url", url).putExtra("dur", durationMs)
+                .putExtra("file", file.absolutePath)
             ContextCompat.startForegroundService(ctx, i)
+            return file.absolutePath
         }
+
+        /** שינוי זמן הסיום של הקלטה פעילה */
+        fun setEnd(id: String, endAt: Long) {
+            endTimes[id] = endAt
+            active.value[id]?.let { active.value = active.value + (id to it.copy(endsAt = endAt)) }
+        }
+
+        fun endOf(id: String): Long = endTimes[id] ?: 0L
+
+        fun isRecordingFile(path: String) = active.value.values.any { it.file == path }
+
+        fun activeFor(url: String) = active.value.values.firstOrNull { it.url == url }
 
         fun stop(ctx: Context, id: String) {
             ctx.startService(Intent(ctx, RecordingService::class.java).setAction(ACTION_STOP).putExtra("id", id))
@@ -106,7 +129,8 @@ class RecordingService : Service() {
                 val title = intent.getStringExtra("title") ?: L("הקלטה")
                 val url = intent.getStringExtra("url") ?: return START_NOT_STICKY
                 val dur = intent.getLongExtra("dur", 3_600_000L)
-                startJob(title, url, dur)
+                val path = intent.getStringExtra("file")
+                startJob(title, url, dur, path)
             }
             ACTION_STOP -> {
                 val id = intent.getStringExtra("id")
@@ -121,21 +145,23 @@ class RecordingService : Service() {
 
     private fun safe(s: String) = s.replace(Regex("""[\\/:*?"<>|]"""), "_").take(60)
 
-    private fun startJob(title: String, url: String, dur: Long) {
-        val stamp = SimpleDateFormat("yyyy-MM-dd_HH-mm", Locale.US).format(Date())
-        val file = File(dir(this), "${safe(title)}__$stamp.ts")
+    private fun startJob(title: String, url: String, dur: Long, path: String?) {
+        val file = if (path != null) File(path) else {
+            val stamp = SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", Locale.US).format(Date())
+            File(dir(this), "${safe(title)}__$stamp.ts")
+        }
         val id = file.name
-        val endsAt = System.currentTimeMillis() + dur
-        active.value = active.value + (id to RecInfo(id, title, file.absolutePath, endsAt))
+        if (endTimes[id] == null) endTimes[id] = System.currentTimeMillis() + dur
+        active.value = active.value + (id to RecInfo(id, title, file.absolutePath, endOf(id), url = url))
         updateNotif()
         jobs[id] = scope.launch {
             try {
                 FileOutputStream(file, true).use { out ->
                     var tries = 0
-                    while (System.currentTimeMillis() < endsAt && tries < 20) {
+                    while (System.currentTimeMillis() < endOf(id) && tries < 20) {
                         try {
-                            if (url.contains(".m3u8", true)) recordHls(url, out, endsAt, id)
-                            else recordDirect(url, out, endsAt, id)
+                            if (url.contains(".m3u8", true)) recordHls(url, out, id)
+                            else recordDirect(url, out, id)
                             if (!url.contains(".m3u8", true)) tries++ else break
                         } catch (e: Exception) {
                             coroutineContext.ensureActive()
@@ -146,6 +172,7 @@ class RecordingService : Service() {
                 }
             } finally {
                 jobs.remove(id)
+                endTimes.remove(id)
                 active.value = active.value - id
                 if (file.exists() && file.length() < 1024) file.delete()
                 scope.launch(Dispatchers.Main) { checkDone() }
@@ -158,7 +185,7 @@ class RecordingService : Service() {
         active.value = active.value + (id to cur.copy(bytes = cur.bytes + n))
     }
 
-    private suspend fun recordDirect(url: String, out: FileOutputStream, endsAt: Long, id: String) {
+    private suspend fun recordDirect(url: String, out: FileOutputStream, id: String) {
         val req = Request.Builder().url(url).header("User-Agent", Prefs.userAgent).build()
         val call = Http.client.newCall(req)
         call.execute().use { r ->
@@ -166,11 +193,12 @@ class RecordingService : Service() {
             val input = r.body?.byteStream() ?: throw Exception("empty")
             val buf = ByteArray(64 * 1024)
             var lastBump = 0
-            while (System.currentTimeMillis() < endsAt) {
+            while (System.currentTimeMillis() < endOf(id)) {
                 coroutineContext.ensureActive()
                 val n = input.read(buf)
                 if (n < 0) break
                 out.write(buf, 0, n)
+                out.flush()
                 lastBump += n
                 if (lastBump > 1_000_000) { bump(id, lastBump); lastBump = 0 }
             }
@@ -178,7 +206,7 @@ class RecordingService : Service() {
         }
     }
 
-    private suspend fun recordHls(url: String, out: FileOutputStream, endsAt: Long, id: String) {
+    private suspend fun recordHls(url: String, out: FileOutputStream, id: String) {
         val hdr = mapOf("User-Agent" to Prefs.userAgent)
         var media = url
         var text = Http.get(media, hdr)
@@ -197,7 +225,7 @@ class RecordingService : Service() {
             text = Http.get(media, hdr)
         }
         val seen = LinkedHashSet<String>()
-        while (System.currentTimeMillis() < endsAt) {
+        while (System.currentTimeMillis() < endOf(id)) {
             coroutineContext.ensureActive()
             var target = 6
             text.lines().forEach { l ->

@@ -30,6 +30,7 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
 import com.google.android.gms.cast.framework.CastContext
+import com.tbm.iptv.data.Epg
 import com.tbm.iptv.data.Kind
 import com.tbm.iptv.data.PlayItem
 import com.tbm.iptv.data.Prefs
@@ -95,6 +96,8 @@ class PlayerUi {
     var showGuide by mutableStateOf(false)
     /** צופה כרגע בתוכנית מהעבר (catch-up) של הערוץ הנוכחי */
     var inCatchup by mutableStateOf(false)
+    /** צופה מתוך קובץ הקלטה שנכתב כרגע */
+    var fromRecording by mutableStateOf(false)
     var casting by mutableStateOf(false)
 }
 
@@ -250,6 +253,7 @@ class PlayerActivity : FragmentActivity() {
         ui.introSkipped = false
         ui.stillWatching = false
         ui.inCatchup = false
+        ui.fromRecording = false
         saveProgress()
         if (i != Repo.queueIndex) lastIndex = Repo.queueIndex
         attach(i)
@@ -466,10 +470,57 @@ class PlayerActivity : FragmentActivity() {
     }
 
     // ------------------------------------------------------------------ הקלטה
-    fun recordNow(minutes: Int) {
-        val item = current ?: return
-        RecordingService.start(this, item.title, item.url, minutes * 60_000L)
-        toast(L("ההקלטה התחילה ({0} דק׳)", minutes))
+    /** כתובת השידור החי של הערוץ הנוכחי (גם כשצופים מתוך הקלטה) */
+    fun liveUrl(): String? = Repo.queue.getOrNull(Repo.queueIndex)?.url
+
+    /** לחיצה על ⏺: מתחיל להקליט מיד (עד סוף התוכנית / ברירת מחדל), ואז פותח חלון אפשרויות */
+    fun startRecording() {
+        val item = Repo.queue.getOrNull(Repo.queueIndex) ?: return
+        if (RecordingService.activeFor(item.url) != null) { ui.showRecord = true; return }
+        val now = System.currentTimeMillis()
+        val prog = Epg.nowNext(item.epgId, item.channelName).first
+        val end = if (prog != null && prog.end > now + 60_000) prog.end + 5 * 60_000L else now + Prefs.recDefaultMin * 60_000L
+        val title = item.channelName ?: item.title
+        val path = RecordingService.start(this, (prog?.let { "$title - ${it.title}" } ?: title), item.url, end - now)
+        toast(L("⏺ ההקלטה התחילה – עד {0}", com.tbm.iptv.ui.fmtTime(end)))
+        ui.showRecord = true
+        if (Prefs.recWatchFromFile && !ui.casting) lifecycleScope.launch {
+            // ממתינים שיצטברו נתונים ואז עוברים לצפייה מתוך ההקלטה – חיבור אחד בלבד לספק
+            val f = java.io.File(path)
+            var waited = 0
+            while (f.length() < 400_000 && waited < 15_000 && RecordingService.isRecordingFile(path)) {
+                delay(300); waited += 300
+            }
+            if (f.length() > 50_000) playFromRecording(path)
+        }
+    }
+
+    private fun playFromRecording(path: String) {
+        val f = java.io.File(path)
+        val src = androidx.media3.exoplayer.source.ProgressiveMediaSource.Factory(
+            GrowingFileDataSource.Factory(f) { RecordingService.isRecordingFile(path) }
+        ).createMediaSource(androidx.media3.common.MediaItem.fromUri(android.net.Uri.fromFile(f)))
+        player.setMediaSource(src)
+        player.prepare(); player.play()
+        ui.fromRecording = true
+        ui.error = null
+        toast(L("צופה מתוך ההקלטה – אפשר להשהות"))
+    }
+
+    fun stopRecording() {
+        val url = liveUrl() ?: return
+        val r = RecordingService.activeFor(url) ?: return
+        RecordingService.stop(this, r.id)
+        toast(L("ההקלטה נעצרה ונשמרה"))
+        ui.showRecord = false
+        if (ui.fromRecording) { ui.fromRecording = false; playIndex(Repo.queueIndex) }
+    }
+
+    fun setRecordingEnd(endAt: Long) {
+        val url = liveUrl() ?: return
+        val r = RecordingService.activeFor(url) ?: return
+        RecordingService.setEnd(r.id, endAt)
+        toast(L("ההקלטה תסתיים ב-{0}", com.tbm.iptv.ui.fmtTime(endAt)))
     }
 
     // ------------------------------------------------------------------ Chromecast

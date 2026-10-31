@@ -64,6 +64,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import com.tbm.iptv.rec.RecordingService
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -146,6 +148,13 @@ fun PlayerScreen(a: PlayerActivity) {
             if (ui.locked) LockedOverlay(a) else Controls(a)
         }
 
+        if (!ui.controlsVisible && !ui.pip) {
+            val recs by RecordingService.active.collectAsState()
+            val url = a.liveUrl()
+            if (recs.values.any { it.url == url }) Text("● REC", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp,
+                modifier = Modifier.align(Alignment.TopStart).padding(16.dp)
+                    .background(Color(0xCCE50914), RoundedCornerShape(10.dp)).padding(horizontal = 8.dp, vertical = 3.dp))
+        }
         if (ui.boosting) Text("2× ⏩", color = Color.White, fontWeight = FontWeight.Bold,
             modifier = Modifier.align(Alignment.TopCenter).padding(top = 24.dp)
                 .background(Color(0x99000000), RoundedCornerShape(20.dp)).padding(horizontal = 14.dp, vertical = 6.dp))
@@ -519,8 +528,18 @@ private fun TopBar(a: PlayerActivity, modifier: Modifier) {
                 modifier = Modifier.size(48.dp),
             )
         }
-        if (ui.isLive && !Prefs.isKids) IconButton(onClick = { ui.showRecord = true }) {
-            Icon(Icons.Filled.FiberManualRecord, L("הקלטה"), tint = Color(0xFFFF5252))
+        if ((ui.isLive || ui.fromRecording) && !Prefs.isKids) {
+            val recs by RecordingService.active.collectAsState()
+            val url = a.liveUrl()
+            val rec = recs.values.firstOrNull { it.url == url }
+            if (rec != null) {
+                FocusItem(onClick = { ui.showRecord = true }) {
+                    Text("● REC  ⏹", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp,
+                        modifier = Modifier.background(Color(0xFFE50914), RoundedCornerShape(14.dp)).padding(horizontal = 10.dp, vertical = 5.dp))
+                }
+            } else IconButton(onClick = { a.startRecording() }) {
+                Icon(Icons.Filled.FiberManualRecord, L("הקלטה"), tint = Color(0xFFFF5252))
+            }
         }
         if (!ui.isLive) IconButton(onClick = { a.toggleVoice() }) {
             Icon(Icons.Filled.RecordVoiceOver, L("קריינות AI"), tint = if (ui.voiceOn) Color(0xFFFFC94A) else Color.White)
@@ -565,27 +584,62 @@ private fun ChannelOverlay(a: PlayerActivity, modifier: Modifier) {
     }
 }
 
+/** חלון הקלטה: ההקלטה כבר רצה – כאן משנים זמן סיום או עוצרים */
 @Composable
 private fun RecordDialog(a: PlayerActivity) {
     val ui = a.ui
+    val all by RecordingService.active.collectAsState()
+    val url = a.liveUrl()
+    val rec = all.values.firstOrNull { it.url == url }
+    var custom by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf("") }
     val item = ui.item
-    val now = if (item != null) Epg.nowNext(item.epgId, item.channelName).first else null
+    val prog = if (item != null) Epg.nowNext(item.epgId, item.channelName).first else null
     Dialog(onDismissRequest = { ui.showRecord = false }) {
-        Surface(shape = RoundedCornerShape(14.dp), color = MaterialTheme.colorScheme.surface) {
+        Surface(shape = RoundedCornerShape(16.dp), color = MaterialTheme.colorScheme.surface) {
             Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(L("הקלטת {0}", ui.title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                if (now != null) {
-                    val left = ((now.end - System.currentTimeMillis()) / 60_000L).toInt() + 2
-                    OutlinedButton(onClick = { a.recordNow(left.coerceAtLeast(5)); ui.showRecord = false }, modifier = Modifier.fillMaxWidth()) {
-                        Text(L("עד סוף \"{0}\" ({1} דק׳)", now.title, left))
+                if (rec == null) {
+                    Text(L("אין הקלטה פעילה לערוץ הזה"), style = MaterialTheme.typography.titleMedium)
+                    androidx.compose.material3.Button(onClick = { ui.showRecord = false; a.startRecording() }, modifier = Modifier.fillMaxWidth()) {
+                        Text(L("⏺ התחל להקליט"))
+                    }
+                } else {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("● REC", color = Color(0xFFE50914), fontWeight = FontWeight.Bold)
+                        Spacer(Modifier.width(8.dp))
+                        Text(rec.title, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                    }
+                    Text(L("מסתיים ב-{0} · {1} MB", fmtTime(rec.endsAt), rec.bytes / 1_000_000),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 13.sp)
+                    if (ui.fromRecording) Text(L("צופה מתוך ההקלטה (חיבור אחד לספק) – אפשר להשהות"), fontSize = 12.sp,
+                        color = Color(0xFF22C997))
+                    androidx.compose.material3.Button(
+                        onClick = { a.stopRecording() },
+                        colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = Color(0xFFE50914)),
+                        modifier = Modifier.fillMaxWidth(),
+                    ) { Text(L("⏹ עצור הקלטה ושמור"), color = Color.White) }
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        OutlinedButton(onClick = { a.setRecordingEnd(rec.endsAt + 30 * 60_000L) }, modifier = Modifier.weight(1f)) { Text(L("+30 דק׳")) }
+                        OutlinedButton(onClick = { a.setRecordingEnd(rec.endsAt + 60 * 60_000L) }, modifier = Modifier.weight(1f)) { Text(L("+שעה")) }
+                    }
+                    if (prog != null) OutlinedButton(onClick = { a.setRecordingEnd(prog.end + 5 * 60_000L) }, modifier = Modifier.fillMaxWidth()) {
+                        Text(L("עד סוף \"{0}\" ({1})", prog.title, fmtTime(prog.end)), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    }
+                    OutlinedButton(onClick = { a.setRecordingEnd(System.currentTimeMillis() + 12 * 3_600_000L) }, modifier = Modifier.fillMaxWidth()) {
+                        Text(L("ללא הגבלה – עד שאעצור"))
+                    }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        androidx.compose.material3.OutlinedTextField(
+                            custom, { v -> custom = v.filter { it.isDigit() }.take(4) }, singleLine = true,
+                            label = { Text(L("עוד X דקות מעכשיו")) }, modifier = Modifier.weight(1f),
+                            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number),
+                        )
+                        Spacer(Modifier.width(6.dp))
+                        TextButton(enabled = custom.isNotBlank(), onClick = {
+                            a.setRecordingEnd(System.currentTimeMillis() + (custom.toLongOrNull() ?: 0L) * 60_000L); custom = ""
+                        }) { Text(L("קבע")) }
                     }
                 }
-                listOf(30, 60, 120, 180).forEach { m ->
-                    OutlinedButton(onClick = { a.recordNow(m); ui.showRecord = false }, modifier = Modifier.fillMaxWidth()) {
-                        Text(L("{0} דקות", m))
-                    }
-                }
-                TextButton(onClick = { ui.showRecord = false }) { Text(L("ביטול")) }
+                TextButton(onClick = { ui.showRecord = false }, modifier = Modifier.align(Alignment.End)) { Text(L("סגור")) }
             }
         }
     }

@@ -428,6 +428,10 @@ private fun MainSettings(nav: (Screen) -> Unit) {
     }
     Spacer(Modifier.height(10.dp))
     Card { NavRow(L("אודות"), Icons.Filled.Info) { nav(Screen.Settings("about")) } }
+    val vctx = LocalContext.current
+    Text("TBM Player " + remember { com.tbm.iptv.appVersion(vctx) }, fontSize = 12.sp,
+        color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.fillMaxWidth().padding(top = 10.dp),
+        textAlign = androidx.compose.ui.text.style.TextAlign.Center)
 
     confirm?.let { c ->
         AlertDialog(
@@ -740,7 +744,10 @@ private fun BackupPage() {
 private fun AboutPage() {
     Card {
         Column(Modifier.padding(16.dp)) {
-            Text("TBM Player 1.0", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            val ctx = LocalContext.current
+            val ver = remember { com.tbm.iptv.appVersion(ctx) }
+            Text("TBM Player", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            Text(L("גרסה {0}", ver), color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
             Text(L("נגן IPTV ל-M3U ו-Xtream: לוח שידורים, צפייה לאחור, הקלטות, Multi-view, Chromecast, בקרת הורים ופרופילים, וכתוביות אוטומטיות מ-Wizdom, כתובית, OpenSubtitles ו-SubDL."),
                 fontSize = 13.sp, modifier = Modifier.padding(top = 8.dp))
             Text(L("האפליקציה היא נגן בלבד ואינה מספקת תוכן."), fontSize = 12.sp,
