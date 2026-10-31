@@ -50,6 +50,14 @@ object I18n {
         "גובה הכתוביות" to "Subtitle height",
         "קטגוריה" to "Category", "קטגוריות – {0}" to "Categories – {0}", "חיפוש קטגוריה…" to "Search category…",
         "לא נמצאה קטגוריה" to "No category found", "הכל" to "All",
+        "לא פעיל – חסר מפתח/התחברות או כבוי" to "Inactive – missing key/login or turned off",
+        "מחובר, אבל לא הוחזרו תוצאות ({0} מ\"ש)" to "Connected, but no results ({0} ms)",
+        "מחובר ✓ – עברית: {0}, אנגלית: {1} ({2} מ\"ש)" to "Connected ✓ – Hebrew: {0}, English: {1} ({2} ms)",
+        "אין תגובה מהאתר (חריגת זמן)" to "No response from the site (timeout)",
+        "האתר לא זמין ברשת שלך (DNS)" to "Site unreachable on your network (DNS)",
+        "נדחה – בדוק מפתח/סיסמה ({0})" to "Rejected – check key/password ({0})",
+        "חרגת ממכסת הבקשות – נסה מאוחר יותר" to "Request quota exceeded – try later",
+        "🔌 בדוק חיבור לכל המקורות" to "🔌 Test all sources", "בודק…" to "Testing…", "לא פעיל" to "Inactive", "בדוק" to "Test",
         "ללא סימון = כל הארצות מוצגות." to "Nothing selected = all countries shown.", "OpenSubtitles v3 – ללא מפתח" to "OpenSubtitles v3 – no key needed",
     )
 }

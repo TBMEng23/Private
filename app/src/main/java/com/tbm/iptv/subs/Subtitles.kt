@@ -245,6 +245,29 @@ object SubtitleManager {
         return files.size
     }
 
+    /** בדיקת חיבור: חיפוש אמיתי של The Matrix (1999). מחזיר (הצלחה, הודעה) */
+    suspend fun test(p: SubProvider): Pair<Boolean, String> = withContext(Dispatchers.IO) {
+        if (!p.enabled()) return@withContext false to com.tbm.iptv.L("לא פעיל – חסר מפתח/התחברות או כבוי")
+        val q = SubQuery("The Matrix", 1999, null, null, "tt0133093", listOf("he", "en"), "The.Matrix.1999.1080p.BluRay")
+        val t0 = System.currentTimeMillis()
+        try {
+            val r = withTimeout(25_000) { p.search(q) }
+            val ms = System.currentTimeMillis() - t0
+            val he = r.count { it.lang == "he" }; val en = r.count { it.lang == "en" }
+            if (r.isEmpty()) true to com.tbm.iptv.L("מחובר, אבל לא הוחזרו תוצאות ({0} מ\"ש)", ms)
+            else true to com.tbm.iptv.L("מחובר ✓ – עברית: {0}, אנגלית: {1} ({2} מ\"ש)", he, en, ms)
+        } catch (e: Exception) {
+            val m = e.message ?: e.javaClass.simpleName
+            false to when {
+                e is kotlinx.coroutines.TimeoutCancellationException -> com.tbm.iptv.L("אין תגובה מהאתר (חריגת זמן)")
+                e is java.net.UnknownHostException || m.contains("resolve host", true) -> com.tbm.iptv.L("האתר לא זמין ברשת שלך (DNS)")
+                m.contains("401") || m.contains("403") -> com.tbm.iptv.L("נדחה – בדוק מפתח/סיסמה ({0})", m)
+                m.contains("429") -> com.tbm.iptv.L("חרגת ממכסת הבקשות – נסה מאוחר יותר")
+                else -> m
+            }
+        }
+    }
+
     /** כותב את הכתובית לקובץ זמני (עם היסט זמן אם נדרש) */
     fun writeFile(sf: SubtitleFile, offsetMs: Long, dir: File): File {
         dir.listFiles()?.filter { it.name.startsWith("sub_") }?.forEach { it.delete() }

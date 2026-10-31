@@ -525,6 +525,7 @@ private fun SubsPage() {
     Card {
         Column(Modifier.padding(12.dp)) {
             Text(L("התחברות לאתרי כתוביות"), fontWeight = FontWeight.Bold)
+            SubTestPanel()
             Provider(L("Wizdom – עברית, ללא הרשמה"), "p_wizdom")
 
             Provider(L("כתובית (Ktuvit) – עברית"), "p_ktuvit")
@@ -1042,4 +1043,42 @@ private fun WelcomeButton(title: String, sub: String, primary: Boolean, onClick:
             }
         }
     }
+}
+
+/** בדיקת חיבור לכל ספק כתוביות */
+@Composable
+private fun SubTestPanel() {
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
+    val results = androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateMapOf<String, Pair<Boolean, String>?>() }
+    val running = androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateListOf<String>() }
+    fun run(p: com.tbm.iptv.subs.SubProvider) {
+        if (p.name in running) return
+        running += p.name; results[p.name] = null
+        scope.launch {
+            results[p.name] = com.tbm.iptv.subs.SubtitleManager.test(p)
+            running -= p.name
+        }
+    }
+    Column(Modifier.padding(vertical = 6.dp)) {
+        OutlinedButton(onClick = { com.tbm.iptv.subs.SubtitleManager.providers.forEach { run(it) } }, modifier = Modifier.fillMaxWidth()) {
+            Text(L("🔌 בדוק חיבור לכל המקורות"))
+        }
+        com.tbm.iptv.subs.SubtitleManager.providers.forEach { p ->
+            val r = results[p.name]
+            Row(Modifier.fillMaxWidth().padding(vertical = 3.dp), verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text(p.name, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                    when {
+                        p.name in running -> Text(L("בודק…"), fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        r != null -> Text((if (r.first) "" else "✗ ") + r.second, fontSize = 12.sp,
+                            color = if (r.first) Color(0xFF22C997) else MaterialTheme.colorScheme.error)
+                        !p.enabled() -> Text(L("לא פעיל"), fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+                if (p.name in running) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
+                else TextButton(onClick = { run(p) }) { Text(L("בדוק")) }
+            }
+        }
+    }
+    HorizontalDivider(Modifier.padding(vertical = 6.dp))
 }
