@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.Subtitles
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.PictureInPicture
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
@@ -602,6 +603,14 @@ private fun OptionsSheet(a: PlayerActivity) {
                                 item { OptRow(Icons.Filled.Bedtime, L("טיימר שינה"), if (ui.sleepMin > 0) L("{0} דק׳", ui.sleepMin) else L("כבוי")) { ui.options = "sleep" } }
                                 if (!ui.isLive) item { OptRow(Icons.Filled.RecordVoiceOver, L("קריינות AI"), if (ui.voiceOn) L("פעילה") else L("כבויה")) { a.toggleVoice() } }
                                 item { OptRow(Icons.Filled.ScreenRotation, L("סובב מסך"), if (ui.landscape) L("לרוחב") else L("לאורך")) { a.toggleRotate() } }
+                                item {
+                                    val ok = a.pipAllowed()
+                                    OptRow(Icons.Filled.PictureInPicture, L("חלון קטן (תמונה בתוך תמונה)"),
+                                        if (ok) L("פתח עכשיו – או לחץ על כפתור הבית") else L("חסום במכשיר – לחץ כדי לאפשר")) {
+                                        ui.options = null
+                                        if (ok) a.enterPip() else a.openPipSettings()
+                                    }
+                                }
                                 item {
                                     val ctx = androidx.compose.ui.platform.LocalContext.current
                                     val p = ExternalPlayer.pkg

@@ -849,10 +849,36 @@ class PlayerActivity : FragmentActivity() {
         runCatching { enterPictureInPictureMode(pipParams()) }
     }
 
+    /** האם המשתמש התיר "תמונה בתוך תמונה" לאפליקציה (בשיאומי/HyperOS לעיתים כבוי כברירת מחדל) */
+    fun pipAllowed(): Boolean = runCatching {
+        val ops = getSystemService(APP_OPS_SERVICE) as android.app.AppOpsManager
+        val mode = if (Build.VERSION.SDK_INT >= 29)
+            ops.unsafeCheckOpNoThrow(android.app.AppOpsManager.OPSTR_PICTURE_IN_PICTURE, applicationInfo.uid, packageName)
+        else @Suppress("DEPRECATION") ops.checkOpNoThrow(android.app.AppOpsManager.OPSTR_PICTURE_IN_PICTURE, applicationInfo.uid, packageName)
+        mode == android.app.AppOpsManager.MODE_ALLOWED
+    }.getOrDefault(true)
+
+    /** פותח את מסך ההרשאה של תמונה בתוך תמונה לאפליקציה */
+    fun openPipSettings() {
+        val i = Intent("android.settings.PICTURE_IN_PICTURE_SETTINGS", android.net.Uri.parse("package:$packageName"))
+        runCatching { startActivity(i) }.onFailure {
+            runCatching { startActivity(Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS, android.net.Uri.parse("package:$packageName"))) }
+        }
+    }
+
     override fun onUserLeaveHint() {
         super.onUserLeaveHint()
-        // באנדרואיד 12+ הכניסה אוטומטית (setAutoEnterEnabled); בגרסאות ישנות – ידנית
-        if (Prefs.systemPip && player.isPlaying && Build.VERSION.SDK_INT < 31) enterPip()
+        // אנדרואיד 12+ נכנס אוטומטית (setAutoEnterEnabled); אם זה לא קרה (יצרנים מסוימים) – נכנסים ידנית
+        if (!Prefs.systemPip || !player.isPlaying || !pipSupported()) return
+        if (Build.VERSION.SDK_INT >= 24 && isInPictureInPictureMode) return
+        if (!pipAllowed()) {
+            if (!Prefs.bool("pip_warned", false)) {
+                Prefs.setBool("pip_warned", true)
+                android.widget.Toast.makeText(this, L("החלון הקטן חסום – אפשר אותו בהגדרות: אפליקציות ← TBM Player ← תמונה בתוך תמונה"), android.widget.Toast.LENGTH_LONG).show()
+            }
+            return
+        }
+        enterPip()
     }
 
     override fun onStop() {
