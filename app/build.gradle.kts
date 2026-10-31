@@ -18,7 +18,7 @@ android {
 
     // מפתח חתימה קבוע – כל גרסה מתעדכנת מעל הקודמת בלי להסיר.
     // הסיסמה מגיעה מ-GitHub Secret בשם TBM_KS_PASS (לא נשמרת בקוד)
-    val ksPass: String? = System.getenv("TBM_KS_PASS")
+    val ksPass: String? = System.getenv("TBM_KS_PASS")?.trim()?.ifEmpty { null }
     signingConfigs {
         if (ksPass != null && file("tbm-release.jks").exists()) {
             create("tbm") {

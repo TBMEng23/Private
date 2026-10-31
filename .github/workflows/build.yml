@@ -26,7 +26,7 @@ jobs:
         env:
           TBM_KS_B64: ${{ secrets.TBM_KS_B64 }}
         run: |
-          if [ -n "$TBM_KS_B64" ]; then echo "$TBM_KS_B64" | base64 -d > app/tbm-release.jks; echo "signing with TBM key"; else echo "::warning::TBM_KS_B64 secret missing – debug signing"; fi
+          if [ -n "$TBM_KS_B64" ]; then echo "$TBM_KS_B64" | tr -d " \r\n" | base64 -d > app/tbm-release.jks; echo "signing with TBM key"; else echo "::warning::TBM_KS_B64 secret missing – debug signing"; fi
 
       - name: Build
         env:
