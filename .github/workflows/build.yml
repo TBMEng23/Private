@@ -8,6 +8,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
 
@@ -38,3 +40,14 @@ jobs:
         with:
           name: TBMPlayer-apk
           path: app/build/outputs/apk/release/*.apk
+
+      - name: Publish APK to apk branch
+        run: |
+          mkdir out && cp app/build/outputs/apk/release/*.apk out/TBMPlayer.apk
+          cd out
+          git init -q -b apk
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add TBMPlayer.apk
+          git commit -q -m "APK ${GITHUB_SHA::7}"
+          git push -q -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" apk
