@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -820,6 +821,32 @@ fun PlaylistsScreen(onDone: () -> Unit, onBack: (() -> Unit)?) {
         onDone()
     }
 
+    val ctx = LocalContext.current
+    val restore = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
+        if (uri != null) runCatching {
+            val txt = ctx.contentResolver.openInputStream(uri)?.use { it.readBytes().toString(Charsets.UTF_8) } ?: ""
+            Prefs.importJson(txt)
+            com.tbm.iptv.I18n.init()
+            val p = Prefs.activePlaylist() ?: throw IllegalStateException(L("בגיבוי אין רשימת ערוצים"))
+            Toast.makeText(ctx, L("השחזור הושלם"), Toast.LENGTH_SHORT).show()
+            activate(p)
+        }.onFailure { Toast.makeText(ctx, it.message ?: L("שחזור נכשל"), Toast.LENGTH_LONG).show() }
+    }
+
+    if (lists.isEmpty() && onBack == null) {
+        WelcomeScreen(
+            onXtream = { dialog = "xtream" },
+            onM3u = { dialog = "m3u" },
+            onRestore = { restore.launch(arrayOf("application/json", "*/*")) },
+        )
+        val addFirst: (Playlist) -> Unit = { p -> Prefs.savePlaylists(listOf(p)); dialog = null; activate(p) }
+        when (dialog) {
+            "m3u" -> M3uDialog(onAdd = addFirst, onDismiss = { dialog = null })
+            "xtream" -> XtreamDialog(onAdd = addFirst, onDismiss = { dialog = null })
+        }
+        return
+    }
+
     Column(Modifier.fillMaxSize()) {
         if (onBack != null) ScreenHeader(L("מקורות תוכן"), onBack)
         else Column(Modifier.padding(20.dp)) {
@@ -860,6 +887,7 @@ fun PlaylistsScreen(onDone: () -> Unit, onBack: (() -> Unit)?) {
                 Button(onClick = { dialog = "xtream" }) { Text("+ Xtream Codes") }
                 OutlinedButton(onClick = { dialog = "m3u" }) { Text(L("+ רשימת M3U")) }
             }
+            TextButton(onClick = { restore.launch(arrayOf("application/json", "*/*")) }) { Text(L("שחזור מגיבוי…")) }
         }
         if (lists.isNotEmpty()) Button(
             onClick = { Prefs.activePlaylist()?.let { activate(it, true) } },
@@ -952,4 +980,62 @@ private fun XtreamDialog(onAdd: (Playlist) -> Unit, onDismiss: () -> Unit) {
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text(L("ביטול")) } },
     )
+}
+
+// ============================================================ מסך פתיחה
+@Composable
+private fun WelcomeScreen(onXtream: () -> Unit, onM3u: () -> Unit, onRestore: () -> Unit) {
+    Box(
+        Modifier.fillMaxSize().background(
+            androidx.compose.ui.graphics.Brush.verticalGradient(
+                listOf(Color(0xFF0E2A4A), MaterialTheme.colorScheme.background, MaterialTheme.colorScheme.background)
+            )
+        )
+    ) {
+        Column(
+            Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(28.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
+            Row(verticalAlignment = Alignment.Bottom) {
+                Text("TBM", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Black, fontSize = 52.sp)
+                Text(" Player", fontWeight = FontWeight.Bold, fontSize = 34.sp, modifier = Modifier.padding(bottom = 6.dp))
+            }
+            Text(L("טלוויזיה, סרטים וסדרות – עם כתוביות בעברית"), color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontSize = 15.sp, modifier = Modifier.padding(top = 4.dp, bottom = 36.dp))
+            WelcomeButton(L("כניסה עם Xtream Codes"), L("שרת, שם משתמש וסיסמה"), primary = true, onClick = onXtream)
+            Spacer(Modifier.height(12.dp))
+            WelcomeButton(L("רשימת M3U"), L("קישור או קובץ מהמכשיר"), primary = false, onClick = onM3u)
+            Spacer(Modifier.height(12.dp))
+            WelcomeButton(L("שחזור מגיבוי"), L("מחזיר חשבון, מועדפים, הגדרות ומפתחות מקובץ גיבוי"), primary = false, onClick = onRestore)
+            Spacer(Modifier.height(28.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                TextButton(onClick = { com.tbm.iptv.I18n.set("he") }) {
+                    Text("עברית", fontWeight = if (!com.tbm.iptv.I18n.isEn) FontWeight.Bold else FontWeight.Normal)
+                }
+                Text("·", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                TextButton(onClick = { com.tbm.iptv.I18n.set("en") }) {
+                    Text("English", fontWeight = if (com.tbm.iptv.I18n.isEn) FontWeight.Bold else FontWeight.Normal)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun WelcomeButton(title: String, sub: String, primary: Boolean, onClick: () -> Unit) {
+    Surface(
+        shape = RoundedCornerShape(16.dp),
+        color = if (primary) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface,
+        modifier = Modifier.fillMaxWidth().widthIn(max = 480.dp),
+    ) {
+        FocusItem(Modifier.fillMaxWidth(), onClick = onClick) {
+            Column(Modifier.padding(horizontal = 20.dp, vertical = 16.dp)) {
+                Text(title, fontWeight = FontWeight.Bold, fontSize = 17.sp,
+                    color = if (primary) Color.White else MaterialTheme.colorScheme.onSurface)
+                Text(sub, fontSize = 12.sp,
+                    color = if (primary) Color(0xDDFFFFFF) else MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
+    }
 }
