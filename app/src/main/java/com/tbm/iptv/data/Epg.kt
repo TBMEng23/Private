@@ -70,7 +70,10 @@ object Epg {
             }
             parse(f, c)
             status = if (programs.isEmpty()) L("המדריך ריק") else ""
-        } catch (e: Exception) {
+        } catch (e: OutOfMemoryError) {
+            programs = emptyMap(); nameIndex = emptyMap()
+            status = L("המדריך גדול מדי לזיכרון המכשיר")
+        } catch (e: Throwable) {
             status = L("שגיאה בטעינת EPG: {0}", e.message ?: "")
         }
         version.intValue = version.intValue + 1
@@ -84,22 +87,31 @@ object Epg {
         return if (b1 == 0x1f && b2 == 0x8b) GZIPInputStream(bis, 65536) else bis
     }
 
+    /** מקסימום תוכניות בזיכרון – מונע קריסה בספקים עם אלפי ערוצים */
+    private const val MAX_ENTRIES = 500_000
+
     private fun parse(f: File, c: Content) {
-        val wantIds = HashSet<String>()
-        val wantNames = HashSet<String>()
-        var maxArchive = 0
-        c.live.forEach { ch ->
-            ch.epgId?.let { wantIds += it.lowercase() }
-            wantNames += norm(ch.name)
-            if (ch.archiveDays > maxArchive) maxArchive = ch.archiveDays
-            if (ch.catchupType != null && maxArchive < 7) maxArchive = 7
-        }
         val now = System.currentTimeMillis()
-        val from = now - (if (maxArchive > 0) minOf(maxArchive, 7) * 86_400_000L else 6 * 3_600_000L)
-        val to = now + 3 * 86_400_000L
+        val hour = 3_600_000L
+        val day = 86_400_000L
+        // לכל ערוץ: מאיזה זמן לשמור (ארכיון רק לערוצים עם catch-up)
+        val fromById = HashMap<String, Long>()
+        val wantNames = HashMap<String, Long>()
+        c.live.forEach { ch ->
+            val days = if (ch.archiveDays > 0) minOf(ch.archiveDays, 7) else if (ch.catchupType != null) 7 else 0
+            val from = if (days > 0) now - days * day else now - 3 * hour
+            ch.epgId?.lowercase()?.let { id -> if ((fromById[id] ?: Long.MAX_VALUE) > from) fromById[id] = from }
+            val n = norm(ch.name)
+            if (n.isNotEmpty() && (wantNames[n] ?: Long.MAX_VALUE) > from) wantNames[n] = from
+        }
+        val to = now + 2 * day
+        val descFrom = now - 3 * hour
+        val descTo = now + day
 
         val chNames = HashMap<String, String>() // normName -> channel id
         val progs = HashMap<String, ArrayList<EpgEntry>>()
+        val titles = HashMap<String, String>()  // מחרוזות כותרת משותפות
+        var count = 0
 
         open(f).use { input ->
             val xp = Xml.newPullParser()
@@ -110,22 +122,29 @@ object Epg {
             var pStart = 0L; var pEnd = 0L; var pCh: String? = null
             var pTitle = ""; var pDesc = ""
             var inProg = false
-            while (ev != XmlPullParser.END_DOCUMENT) {
+            var keep = false
+            while (ev != XmlPullParser.END_DOCUMENT && count < MAX_ENTRIES) {
                 if (ev == XmlPullParser.START_TAG) {
                     when (xp.name) {
                         "channel" -> curChannel = xp.getAttributeValue(null, "id")?.lowercase()
                         "display-name" -> if (curChannel != null && !inProg) {
                             val n = norm(xp.nextText())
-                            if (n.isNotEmpty() && n in wantNames) chNames.putIfAbsent(n, curChannel)
+                            val fr = wantNames[n]
+                            if (fr != null && chNames.putIfAbsent(n, curChannel!!) == null) {
+                                if ((fromById[curChannel!!] ?: Long.MAX_VALUE) > fr) fromById[curChannel!!] = fr
+                            }
                         }
                         "programme" -> {
                             pCh = xp.getAttributeValue(null, "channel")?.lowercase()
                             pStart = parseTime(xp.getAttributeValue(null, "start"))
                             pEnd = parseTime(xp.getAttributeValue(null, "stop"))
+                            val fr = pCh?.let { fromById[it] }
+                            keep = fr != null && pEnd > fr && pStart < to && pEnd > pStart
                             pTitle = ""; pDesc = ""; inProg = true
                         }
-                        "title" -> if (inProg && pTitle.isEmpty()) pTitle = xp.nextText().trim()
-                        "desc" -> if (inProg && pDesc.isEmpty()) pDesc = xp.nextText().trim().take(400)
+                        "title" -> if (inProg && keep && pTitle.isEmpty()) pTitle = xp.nextText().trim()
+                        "desc" -> if (inProg && keep && pDesc.isEmpty() && pStart in descFrom..descTo)
+                            pDesc = xp.nextText().trim().take(220)
                     }
                 } else if (ev == XmlPullParser.END_TAG) {
                     when (xp.name) {
@@ -133,10 +152,10 @@ object Epg {
                         "programme" -> {
                             inProg = false
                             val ch = pCh
-                            if (ch != null && pEnd > from && pStart < to && pEnd > pStart &&
-                                (ch in wantIds || ch in chNames.values || wantIds.isEmpty())
-                            ) {
-                                progs.getOrPut(ch) { ArrayList() } += EpgEntry(pTitle, pStart, pEnd, pDesc)
+                            if (keep && ch != null) {
+                                val t = titles.getOrPut(pTitle) { pTitle }
+                                progs.getOrPut(ch) { ArrayList() } += EpgEntry(t, pStart, pEnd, pDesc)
+                                count++
                             }
                         }
                     }
@@ -144,7 +163,7 @@ object Epg {
                 ev = xp.next()
             }
         }
-        progs.values.forEach { it.sortBy { e -> e.start } }
+        progs.values.forEach { it.sortBy { e -> e.start }; it.trimToSize() }
         programs = progs
         nameIndex = chNames
     }

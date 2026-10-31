@@ -3,8 +3,12 @@ package com.tbm.iptv.data
 import com.tbm.iptv.L
 
 import android.util.Base64
+import android.util.JsonReader
+import android.util.JsonToken
 import org.json.JSONArray
 import org.json.JSONObject
+import java.io.File
+import java.io.InputStreamReader
 
 /** לקוח Xtream Codes API (player_api.php) */
 class Xtream(private val p: Playlist) {
@@ -16,22 +20,57 @@ class Xtream(private val p: Playlist) {
         "$base/player_api.php?username=$u&password=$pw" +
             (if (action.isNotEmpty()) "&action=$action" else "") + extra
 
-    private fun arr(action: String, force: Boolean): JSONArray {
-        val t = Repo.fetchCached(api(action), "x_${p.id}_$action.json", force).trim()
-        return if (t.startsWith("[")) JSONArray(t) else JSONArray()
+    /** מוריד את התשובה לקובץ (סטרימינג, בלי לטעון לזיכרון) – עם מטמון */
+    private fun file(action: String, force: Boolean): File {
+        val f = Repo.cacheFile("x_${p.id}_$action.json")
+        val fresh = f.exists() && f.length() > 2 &&
+            System.currentTimeMillis() - f.lastModified() < Prefs.refreshHours * 3_600_000L
+        if (force || !fresh) {
+            try { Http.download(api(action), f) } catch (e: Exception) { if (!f.exists()) throw e }
+        }
+        return f
+    }
+
+    /** קריאת מערך JSON אובייקט-אובייקט מהקובץ. שומר רק את השדות המבוקשים */
+    private fun eachObject(f: File, fields: Set<String>, block: (Map<String, String>) -> Unit) {
+        if (!f.exists() || f.length() < 2) return
+        f.inputStream().buffered(65536).use { ins ->
+            val r = JsonReader(InputStreamReader(ins, Charsets.UTF_8))
+            r.isLenient = true
+            try {
+                if (r.peek() != JsonToken.BEGIN_ARRAY) return
+            } catch (e: Exception) { return }
+            r.beginArray()
+            while (r.hasNext()) {
+                if (r.peek() != JsonToken.BEGIN_OBJECT) { r.skipValue(); continue }
+                r.beginObject()
+                val m = HashMap<String, String>(16)
+                while (r.hasNext()) {
+                    val name = r.nextName()
+                    if (name in fields) {
+                        when (r.peek()) {
+                            JsonToken.STRING, JsonToken.NUMBER -> m[name] = r.nextString()
+                            JsonToken.BOOLEAN -> m[name] = if (r.nextBoolean()) "1" else "0"
+                            JsonToken.NULL -> r.nextNull()
+                            else -> r.skipValue()
+                        }
+                    } else r.skipValue()
+                }
+                r.endObject()
+                block(m)
+            }
+        }
     }
 
     private fun cats(action: String, force: Boolean): Map<String, String> {
-        val a = runCatching { arr(action, force) }.getOrDefault(JSONArray())
         val m = HashMap<String, String>()
-        for (i in 0 until a.length()) {
-            val o = a.optJSONObject(i) ?: continue
-            m[o.optString("category_id")] = o.optString("category_name")
+        runCatching {
+            eachObject(file(action, force), setOf("category_id", "category_name")) { o ->
+                m[o["category_id"] ?: return@eachObject] = o["category_name"] ?: ""
+            }
         }
         return m
     }
-
-    private fun JSONObject.idInt(k: String): Int? = optString(k).toIntOrNull()
 
     /** פרטי חשבון: אזור זמן של השרת (ל-catch-up) ותאריך תפוגה */
     private fun accountInfo() {
@@ -41,7 +80,6 @@ class Xtream(private val p: Playlist) {
                 Prefs.setStrQuiet("tz_${p.id}", it)
             }
             o.optJSONObject("user_info")?.let { ui ->
-                if (ui.optString("auth") == "0") throw Exception("auth")
                 Prefs.setStrQuiet("exp_${p.id}", ui.optString("exp_date"))
                 Prefs.setStrQuiet("status_${p.id}", ui.optString("status"))
             }
@@ -53,59 +91,57 @@ class Xtream(private val p: Playlist) {
         val liveCats = cats("get_live_categories", force)
         val vodCats = cats("get_vod_categories", force)
         val serCats = cats("get_series_categories", force)
+        val noGroup = "ללא קבוצה"
+        // אותה מחרוזת קבוצה לכל הפריטים – חוסך זיכרון
+        val pool = HashMap<String, String>()
+        fun grp(cats: Map<String, String>, id: String?) = (cats[id] ?: noGroup).let { pool.getOrPut(it) { it } }
+        val pfx = "$base/live/${p.user}/${p.pass}/"
 
         val live = ArrayList<Channel>()
-        arr("get_live_streams", force).let { a ->
-            for (i in 0 until a.length()) {
-                val o = a.optJSONObject(i) ?: continue
-                val id = o.idInt("stream_id") ?: continue
-                val url = "$base/live/${p.user}/${p.pass}/$id.ts"
-                live += Channel(
-                    key = "x:${p.id}:l:$id",
-                    name = o.optString("name"),
-                    logo = o.optString("stream_icon").ifBlank { null },
-                    group = liveCats[o.optString("category_id")] ?: "ללא קבוצה",
-                    url = url, kind = Kind.LIVE, streamId = id,
-                    epgId = o.optString("epg_channel_id").ifBlank { null },
-                    archiveDays = if (o.optString("tv_archive") == "1")
-                        (o.optString("tv_archive_duration").toIntOrNull() ?: 1).coerceAtLeast(1) else 0,
-                )
-            }
+        eachObject(file("get_live_streams", force),
+            setOf("stream_id", "name", "stream_icon", "category_id", "epg_channel_id", "tv_archive", "tv_archive_duration")) { o ->
+            val id = o["stream_id"]?.toIntOrNull() ?: return@eachObject
+            live += Channel(
+                key = "x:${p.id}:l:$id",
+                name = o["name"] ?: "",
+                logo = o["stream_icon"]?.ifBlank { null },
+                group = grp(liveCats, o["category_id"]),
+                url = "$pfx$id.ts", kind = Kind.LIVE, streamId = id,
+                epgId = o["epg_channel_id"]?.ifBlank { null },
+                archiveDays = if (o["tv_archive"] == "1")
+                    (o["tv_archive_duration"]?.toIntOrNull() ?: 1).coerceAtLeast(1) else 0,
+            )
         }
 
         val movies = ArrayList<Channel>()
-        arr("get_vod_streams", force).let { a ->
-            for (i in 0 until a.length()) {
-                val o = a.optJSONObject(i) ?: continue
-                val id = o.idInt("stream_id") ?: continue
-                val ext = o.optString("container_extension").ifBlank { "mp4" }
-                movies += Channel(
-                    key = "x:${p.id}:m:$id",
-                    name = o.optString("name"),
-                    logo = o.optString("stream_icon").ifBlank { null },
-                    group = vodCats[o.optString("category_id")] ?: "ללא קבוצה",
-                    url = "$base/movie/${p.user}/${p.pass}/$id.$ext",
-                    kind = Kind.MOVIE, streamId = id,
-                    added = (o.optString("added").toLongOrNull() ?: 0L) * 1000,
-                )
-            }
+        eachObject(file("get_vod_streams", force),
+            setOf("stream_id", "name", "stream_icon", "category_id", "container_extension", "added")) { o ->
+            val id = o["stream_id"]?.toIntOrNull() ?: return@eachObject
+            val ext = o["container_extension"]?.ifBlank { null } ?: "mp4"
+            movies += Channel(
+                key = "x:${p.id}:m:$id",
+                name = o["name"] ?: "",
+                logo = o["stream_icon"]?.ifBlank { null },
+                group = grp(vodCats, o["category_id"]),
+                url = "$base/movie/${p.user}/${p.pass}/$id.$ext",
+                kind = Kind.MOVIE, streamId = id,
+                added = (o["added"]?.toLongOrNull() ?: 0L) * 1000,
+            )
         }
 
         val series = ArrayList<SeriesItem>()
-        arr("get_series", force).let { a ->
-            for (i in 0 until a.length()) {
-                val o = a.optJSONObject(i) ?: continue
-                val id = o.idInt("series_id") ?: continue
-                series += SeriesItem(
-                    key = "x:${p.id}:s:$id",
-                    name = o.optString("name"),
-                    logo = o.optString("cover").ifBlank { null },
-                    group = serCats[o.optString("category_id")] ?: "ללא קבוצה",
-                    seriesId = id,
-                    plot = o.optString("plot").ifBlank { null },
-                    added = (o.optString("last_modified").toLongOrNull() ?: 0L) * 1000,
-                )
-            }
+        eachObject(file("get_series", force),
+            setOf("series_id", "name", "cover", "category_id", "plot", "last_modified")) { o ->
+            val id = o["series_id"]?.toIntOrNull() ?: return@eachObject
+            series += SeriesItem(
+                key = "x:${p.id}:s:$id",
+                name = o["name"] ?: "",
+                logo = o["cover"]?.ifBlank { null },
+                group = grp(serCats, o["category_id"]),
+                seriesId = id,
+                plot = o["plot"]?.ifBlank { null }?.take(600),
+                added = (o["last_modified"]?.toLongOrNull() ?: 0L) * 1000,
+            )
         }
 
         if (live.isEmpty() && movies.isEmpty() && series.isEmpty())

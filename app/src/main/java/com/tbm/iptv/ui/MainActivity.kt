@@ -13,6 +13,11 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -131,6 +136,7 @@ fun AppRoot() {
         }
         if (PlayerHolder.miniActive) MiniPlayer(Modifier.align(Alignment.BottomEnd))
         PinDialog()
+        CrashReport()
     }
 }
 
@@ -155,3 +161,42 @@ private fun MiniPlayer(modifier: Modifier) {
         }
     }
 }
+
+/** דוח קריסה מהפעם הקודמת – אפשר להעתיק ולשלוח */
+@Composable
+private fun CrashReport() {
+    val ctx = LocalContext.current
+    var text by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(com.tbm.iptv.CrashLog.read()) }
+    val t = text ?: return
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = { com.tbm.iptv.CrashLog.clear(); text = null },
+        title = { androidx.compose.material3.Text(L("האפליקציה נסגרה בפעם הקודמת")) },
+        text = {
+            androidx.compose.foundation.layout.Column {
+                androidx.compose.material3.Text(L("לחץ \"העתק\" ושלח את הדוח כדי שאפשר יהיה לתקן."),
+                    fontSize = androidx.compose.ui.unit.TextUnit(13f, androidx.compose.ui.unit.TextUnitType.Sp))
+                androidx.compose.material3.Text(
+                    t.take(1500),
+                    fontSize = androidx.compose.ui.unit.TextUnit(10f, androidx.compose.ui.unit.TextUnitType.Sp),
+                    modifier = Modifier.padding(top = 8.dp).androidx_verticalScroll(),
+                )
+            }
+        },
+        confirmButton = {
+            androidx.compose.material3.TextButton(onClick = {
+                val cm = ctx.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                cm.setPrimaryClip(android.content.ClipData.newPlainText("TBM crash", t))
+                android.widget.Toast.makeText(ctx, L("הועתק"), android.widget.Toast.LENGTH_SHORT).show()
+            }) { androidx.compose.material3.Text(L("העתק")) }
+        },
+        dismissButton = {
+            androidx.compose.material3.TextButton(onClick = { com.tbm.iptv.CrashLog.clear(); text = null }) {
+                androidx.compose.material3.Text(L("סגור"))
+            }
+        },
+    )
+}
+
+@Composable
+private fun Modifier.androidx_verticalScroll(): Modifier =
+    this.heightIn(max = 260.dp).verticalScroll(rememberScrollState())

@@ -21,6 +21,11 @@ object I18n {
         "טלוויזיה" to "Live TV", "סרטים" to "Movies", "סדרות" to "Series", "בית" to "Home",
         "לוח שידורים" to "TV Guide", "מועדפים" to "Favorites", "הקלטות" to "Recordings",
         "מולטי-ויו" to "Multi-view", "חיפוש" to "Search",
+        "הרשימה גדולה מדי לזיכרון המכשיר" to "The playlist is too large for this device's memory",
+        "המדריך גדול מדי לזיכרון המכשיר" to "The TV guide is too large for this device's memory",
+        "האפליקציה נסגרה בפעם הקודמת" to "The app closed unexpectedly last time",
+        "לחץ \"העתק\" ושלח את הדוח כדי שאפשר יהיה לתקן." to "Tap \"Copy\" and send the report so it can be fixed.",
+        "העתק" to "Copy", "הועתק" to "Copied", "סגור" to "Close",
     )
 }
 

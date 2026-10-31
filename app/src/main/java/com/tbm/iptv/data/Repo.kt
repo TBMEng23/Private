@@ -3,6 +3,7 @@ package com.tbm.iptv.data
 import com.tbm.iptv.L
 
 import com.tbm.iptv.App
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -20,7 +21,10 @@ sealed interface LoadState {
 }
 
 object Repo {
-    val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    /** שגיאה ברקע לא מפילה את האפליקציה – נרשמת לדוח */
+    val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO + CoroutineExceptionHandler { _, e ->
+        com.tbm.iptv.CrashLog.save(e)
+    })
     val state = MutableStateFlow<LoadState>(LoadState.Idle)
 
     /** תור הניגון הנוכחי – ערוצים בקבוצה / פרקי סדרה */
@@ -44,7 +48,10 @@ object Repo {
             if (force || Prefs.str("updated_${p.id}").isBlank())
                 Prefs.setStrQuiet("updated_${p.id}", System.currentTimeMillis().toString())
             scope.launch { Epg.load(p, c, force) }
-        } catch (e: Exception) {
+        } catch (e: OutOfMemoryError) {
+            System.gc()
+            state.value = LoadState.Error(L("הרשימה גדולה מדי לזיכרון המכשיר"))
+        } catch (e: Throwable) {
             state.value = LoadState.Error(e.message ?: e.javaClass.simpleName)
         }
     }
