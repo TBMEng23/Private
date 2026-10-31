@@ -207,8 +207,51 @@ object SubtitleManager {
     private val rtlChars = Regex("[\\u0590-\\u05FF\\u0600-\\u06FF]")
 
     /** מתקן פיסוק בכתוביות עבריות (נקודה בתחילת שורה וכו') ע"י סימון כיווניות RTL */
-    private fun fixRtl(text: String): String = text.lines().joinToString("\n") { line ->
-        if (rtlChars.containsMatchIn(line) && !line.startsWith("‫")) "‫$line‬" else line
+    private const val PUNCT = ".,!?:;…"
+    private val tagRx = Regex("<[^>]*>|\\{[^}]*\\}")
+
+    /**
+     * עברית מימין לשמאל:
+     * 1. קבצים רבים (קטעים/וויזדום ישנים) שמורים ב"סדר חזותי" לנגנים ישנים – הפיסוק בתחילת השורה
+     *    ("!שלום לך") והמקף של דיאלוג בסוף. מזהים קובץ כזה ומעבירים את הפיסוק לסוף ואת המקף להתחלה.
+     * 2. עוטפים כל שורה עברית ב-RLE…PDF כדי שתוצג תמיד מימין לשמאל.
+     */
+    fun fixRtl(text: String): String {
+        val lines = text.lines().map { it.replace("\u202B", "").replace("\u202C", "") }
+        val heb = lines.filter { rtlChars.containsMatchIn(it) }.map { tagRx.replace(it, "").trim() }.filter { it.isNotEmpty() }
+        val startP = heb.count { it[0] in PUNCT }
+        val endP = heb.count { it.last() in PUNCT }
+        val visual = startP >= 3 && startP > endP
+        return lines.joinToString("\n") { l ->
+            if (!rtlChars.containsMatchIn(l)) l
+            else "\u202B" + (if (visual) flipPunct(l) else l) + "\u202C"
+        }
+    }
+
+    /** "!שלום לך" → "שלום לך!" ; "שלום -" → "- שלום" (שומר תגיות <i> בקצוות) */
+    private fun flipPunct(line: String): String {
+        var i = 0
+        val pre = StringBuilder()
+        while (true) {   // תגיות ורווחים בתחילה
+            val m = tagRx.find(line, i)
+            if (m != null && m.range.first == i) { pre.append(m.value); i = m.range.last + 1 }
+            else if (i < line.length && line[i] == ' ') { pre.append(' '); i++ }
+            else break
+        }
+        var j = line.length
+        val sufParts = ArrayList<String>()
+        while (j > i) {   // תגיות בסוף
+            val tail = line.substring(i, j)
+            val m = Regex("(<[^>]*>|\\{[^}]*\\})\\s*$").find(tail)
+            if (m != null) { sufParts.add(0, tail.substring(m.range.first)); j = i + m.range.first } else break
+        }
+        var core = line.substring(i, j)
+        val lead = core.takeWhile { it in PUNCT }
+        core = core.drop(lead.length)
+        var dash = false
+        val t = core.trimEnd()
+        if (t.endsWith("-") && t.length > 1) { dash = true; core = t.dropLast(1).trimEnd() }
+        return pre.toString() + (if (dash) "- " else "") + core.trimEnd() + lead.reversed() + sufParts.joinToString("")
     }
 
     private val tsRx = Regex("""(\d{1,2}):(\d{2}):(\d{2})([,.])(\d{3})""")
@@ -236,7 +279,9 @@ object SubtitleManager {
         val f = cacheFile(key)
         if (!f.exists()) return null
         val o = JSONObject(f.readText())
-        SubtitleFile(o.getString("text"), o.optString("ext", "srt"), o.optString("lang", "he")) to o.optString("label")
+        val lang = o.optString("lang", "he")
+        val txt = o.getString("text").let { if (lang == "he" || lang == "ar") fixRtl(it) else it }
+        SubtitleFile(txt, o.optString("ext", "srt"), lang) to o.optString("label")
     }.getOrNull()
 
     fun clearCache(): Int {
