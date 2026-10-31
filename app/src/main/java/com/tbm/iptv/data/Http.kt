@@ -24,8 +24,19 @@ object Http {
 
     private val noRedirect: OkHttpClient by lazy { client.newBuilder().followRedirects(false).build() }
 
+    private fun fix(url: String): String {
+        val u = url.trim()
+        if (u.isEmpty()) throw IOException("קישור ריק")
+        return when {
+            u.startsWith("http://", true) || u.startsWith("https://", true) -> u
+            u.startsWith("//") -> "https:$u"
+            u.startsWith("/") || u.startsWith("javascript", true) -> throw IOException("קישור לא תקין: ${u.take(60)}")
+            else -> "https://$u"
+        }
+    }
+
     private fun req(url: String, headers: Map<String, String>): Request.Builder {
-        val b = Request.Builder().url(url)
+        val b = Request.Builder().url(fix(url))
         if (headers.keys.none { it.equals("User-Agent", true) }) b.header("User-Agent", UA)
         headers.forEach { (k, v) -> b.header(k, v) }
         return b

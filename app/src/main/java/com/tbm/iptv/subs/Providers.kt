@@ -379,8 +379,14 @@ object YifyProvider : SubProvider {
             val rls = link.text().removePrefix("subtitle").trim()
             out += SubResult(name, code, rls, 0) {
                 val p = Jsoup.parse(Http.get(page), page)
-                val zip = p.selectFirst("a.download-subtitle, a[href$=.zip]")?.absUrl("href")
-                    ?: throw java.io.IOException(L("קישור הורדה לא נמצא"))
+                val a = p.selectFirst("a.download-subtitle, a[href$=.zip], a[href*=/subtitle/][href$=.zip]")
+                val href = a?.attr("href")?.trim().orEmpty()
+                val zip = when {
+                    href.isEmpty() -> throw java.io.IOException(L("קישור הורדה לא נמצא"))
+                    href.startsWith("http") -> href
+                    href.startsWith("//") -> "https:$href"
+                    else -> java.net.URL(java.net.URL(page), href).toString()
+                }
                 RawSub(Http.getBytes(zip), "yify.zip")
             }
         }

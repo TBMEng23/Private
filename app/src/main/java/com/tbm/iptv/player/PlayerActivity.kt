@@ -403,9 +403,13 @@ class PlayerActivity : FragmentActivity() {
         }
     }
 
-    fun applySubtitle(r: SubResult) {
+    fun applySubtitle(first: SubResult) {
         val item = current ?: return
         lifecycleScope.launch {
+            // הכתובית שנבחרה, ואחריה עד 4 חלופות באותה שפה למקרה שההורדה נכשלת
+            val candidates = listOf(first) + ui.subResults.filter { it !== first && it.lang == first.lang }.take(4)
+            var lastErr: Exception? = null
+            for (r in candidates) {
             toast(L("מוריד כתובית מ-{0}…", r.provider))
             try {
                 val q = subQuery ?: SubtitleManager.buildQuery(item).also { subQuery = it }
@@ -418,9 +422,13 @@ class PlayerActivity : FragmentActivity() {
                 voice?.setLanguage(sf.lang)
                 reloadWithSubtitle()
                 toast(L("נטענה כתובית: {0}", label))
+                return@launch
             } catch (e: Exception) {
-                toast(L("הורדת הכתובית נכשלה: {0}", e.message ?: ""))
+                if (e is kotlinx.coroutines.CancellationException) throw e
+                lastErr = e
             }
+            }
+            toast(L("הורדת הכתובית נכשלה: {0}", lastErr?.message ?: ""))
         }
     }
 
