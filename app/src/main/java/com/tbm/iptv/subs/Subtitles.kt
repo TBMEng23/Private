@@ -71,7 +71,7 @@ fun langLabel(code: String) = when (code) {
 
 object SubtitleManager {
     val providers: List<SubProvider> = listOf(
-        WizdomProvider, KtuvitProvider, OpenSubtitlesProvider, OpenSubtitlesOrgProvider, SubDlProvider,
+        WizdomProvider, KtuvitProvider, OpenSubtitlesProvider, OpenSubtitlesV3Provider, OpenSubtitlesOrgProvider, SubDlProvider,
         SubSourceProvider, PodnapisiProvider, YifyProvider,
     )
 

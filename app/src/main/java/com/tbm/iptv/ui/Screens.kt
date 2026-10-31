@@ -33,6 +33,8 @@ import androidx.compose.material.icons.filled.Backup
 import androidx.compose.material.icons.filled.ChildCare
 import androidx.compose.material.icons.filled.ClosedCaption
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Info
@@ -227,6 +229,8 @@ fun ManageGroupsScreen(startKind: Kind, onBack: () -> Unit) {
     val hiddenItems = remember(ver, all) { val h = Prefs.hiddenItems(); all.filter { it.key in h } }
     var q by remember { mutableStateOf("") }
     var groupMenu by remember { mutableStateOf<String?>(null) }
+    var countriesOpen by remember { mutableStateOf(false) }
+    var cq by remember { mutableStateOf("") }
     val shown = remember(groups, q, allowed) {
         groups.filter { (q.isBlank() || it.contains(q, true)) && (allowed.isEmpty() || Countries.of(it) in allowed) }
     }
@@ -238,17 +242,45 @@ fun ManageGroupsScreen(startKind: Kind, onBack: () -> Unit) {
         }
         LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(12.dp)) {
             item {
-                Text(L("ארצות"), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                Text(L("סמן ארצות להצגה. ללא סימון = הכל."), fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Spacer(Modifier.height(6.dp))
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    countries.forEach { c ->
-                        FilterChip(
-                            selected = c in allowed,
-                            onClick = { val n = allowed.toMutableSet(); if (!n.add(c)) n.remove(c); Prefs.setAllowedCountries(kind, n) },
-                            label = { Text(Countries.label(c)) },
-                        )
+                val toggleC: (String) -> Unit = { c ->
+                    val n = allowed.toMutableSet(); if (!n.add(c)) n.remove(c); Prefs.setAllowedCountries(kind, n)
+                }
+                FocusItem(Modifier.fillMaxWidth(), onClick = { countriesOpen = !countriesOpen }) {
+                    Row(Modifier.padding(vertical = 10.dp, horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Column(Modifier.weight(1f)) {
+                            Text(L("סינון לפי ארצות"), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                            Text(
+                                if (allowed.isEmpty()) L("מוצגות כל הארצות ({0})", countries.size)
+                                else L("נבחרו: {0}", allowed.joinToString(", ") { Countries.label(it) }),
+                                fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
+                        Icon(if (countriesOpen) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore, null)
                     }
+                }
+                if (!countriesOpen && allowed.isNotEmpty()) {
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        allowed.sortedBy { Countries.label(it) }.forEach { c ->
+                            FilterChip(selected = true, onClick = { toggleC(c) }, label = { Text(Countries.label(c) + "  ✕") })
+                        }
+                    }
+                }
+                if (countriesOpen) {
+                    OutlinedTextField(cq, { cq = it }, singleLine = true, modifier = Modifier.fillMaxWidth(),
+                        placeholder = { Text(L("הקלד שם מדינה (ישראל, UK, France…)")) })
+                    Spacer(Modifier.height(6.dp))
+                    val shownC = countries.filter { c ->
+                        cq.isBlank() || Countries.label(c).contains(cq, true) || c.contains(cq, true) ||
+                            java.util.Locale("", c).getDisplayCountry(java.util.Locale.ENGLISH).contains(cq, true)
+                    }.sortedByDescending { it in allowed }
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        shownC.forEach { c ->
+                            FilterChip(selected = c in allowed, onClick = { toggleC(c) }, label = { Text(Countries.label(c)) })
+                        }
+                    }
+                    if (shownC.isEmpty()) Text(L("לא נמצאה מדינה"), fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(L("ללא סימון = כל הארצות מוצגות."), fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 if (allowed.isNotEmpty()) TextButton(onClick = { Prefs.setAllowedCountries(kind, emptySet()) }) { Text(L("נקה בחירת ארצות")) }
                 HorizontalDivider(Modifier.padding(vertical = 10.dp))
@@ -509,9 +541,10 @@ private fun SubsPage() {
             Field(L("מפתח API"), Prefs.str("subsource_key"), secret = true) { Prefs.setStr("subsource_key", it) }
             Hint(L("מפתח חינמי: subsource.net ← חשבון ← לשונית API."))
 
+            Provider(L("OpenSubtitles v3 – ללא מפתח"), "p_os3")
             Provider(L("OpenSubtitles.org – ללא מפתח"), "p_osorg")
-            Provider(L("Podnapisi – ללא הרשמה"), "p_podnapisi")
-            Provider(L("YIFY – סרטים, ללא הרשמה"), "p_yify")
+            Provider(L("Podnapisi – ללא הרשמה"), "p_podnapisi", false)
+            Provider(L("YIFY – סרטים, ללא הרשמה"), "p_yify", false)
         }
     }
     Spacer(Modifier.height(10.dp))
@@ -537,6 +570,15 @@ private fun PlayerPage() {
             SwitchRow(L("In-App PiP – חלון צף בזמן דפדוף"), Prefs.inAppPip) { Prefs.inAppPip = it }
             SwitchRow(L("System PiP – תמונה בתוך תמונה ביציאה מהאפליקציה"), Prefs.systemPip) { Prefs.systemPip = it }
             SwitchRow(L("ניגון אוטומטי של הפרק הבא"), Prefs.autoNext) { Prefs.autoNext = it }
+            HorizontalDivider(Modifier.padding(vertical = 8.dp))
+            Text(L("קריינות AI מהכתוביות"), fontWeight = FontWeight.Bold)
+            SwitchRow(L("להפעיל אוטומטית בסרטים וסדרות"), Prefs.voiceDefault) { Prefs.voiceDefault = it }
+            Text(L("מהירות דיבור: {0}×", "%.1f".format(Prefs.voiceRate)), fontSize = 13.sp)
+            Slider(value = Prefs.voiceRate, onValueChange = { Prefs.voiceRate = it }, valueRange = 0.6f..1.8f)
+            Text(L("עוצמת הקול המקורי בזמן הקריינות: {0}%", (Prefs.voiceDuck * 100).toInt()), fontSize = 13.sp)
+            Slider(value = Prefs.voiceDuck, onValueChange = { Prefs.voiceDuck = it }, valueRange = 0f..1f)
+            Hint(L("הכפתור 🗣 בנגן מפעיל ומכבה. דורש קול עברי מותקן: הגדרות אנדרואיד ← שפה וקלט ← המרת טקסט לדיבור ← Google ← עברית."))
+            HorizontalDivider(Modifier.padding(vertical = 8.dp))
             SwitchRow(L("נגן חיצוני (VLC / MX)"), Prefs.externalPlayer) { Prefs.externalPlayer = it }
             Text(L("זמן הצגת פקדים: {0} שניות", Prefs.osdTimeout), fontSize = 13.sp, modifier = Modifier.padding(top = 8.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -731,9 +773,9 @@ private fun SettingRow(label: String, onClick: () -> Unit) {
     Text(t, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(vertical = 6.dp))
 }
 
-@Composable private fun Provider(label: String, key: String) {
+@Composable private fun Provider(label: String, key: String, def: Boolean = true) {
     HorizontalDivider(Modifier.padding(vertical = 8.dp))
-    SwitchRow(label, Prefs.bool(key, true)) { Prefs.setBool(key, it) }
+    SwitchRow(label, Prefs.bool(key, def)) { Prefs.setBool(key, it) }
 }
 
 @Composable

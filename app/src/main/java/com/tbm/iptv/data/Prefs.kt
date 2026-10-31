@@ -263,6 +263,20 @@ object Prefs {
         get() = str("audio_lang")
         set(v) = setStr("audio_lang", v)
 
+    // ================= קריינות AI =================
+    var voiceDefault: Boolean
+        get() = bool("voice_default", false)
+        set(v) = setBool("voice_default", v)
+
+    var voiceRate: Float
+        get() = float("voice_rate", 1.1f)
+        set(v) = setFloat("voice_rate", v)
+
+    /** עוצמת הקול המקורי בזמן הקריינות (0–1) */
+    var voiceDuck: Float
+        get() = float("voice_duck", 0.25f)
+        set(v) = setFloat("voice_duck", v)
+
     // ================= אפשרויות הורים =================
     var settingsLock: Boolean
         get() = bool("settings_lock", false)

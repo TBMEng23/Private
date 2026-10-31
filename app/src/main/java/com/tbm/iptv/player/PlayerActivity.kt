@@ -71,6 +71,8 @@ class PlayerUi {
     var castAvailable by mutableStateOf(false)
     /** אין עברית – הצעה לתרגם אוטומטית מאנגלית */
     var mtOffer by mutableStateOf<SubResult?>(null)
+    /** קריינות AI פעילה */
+    var voiceOn by mutableStateOf(false)
     var casting by mutableStateOf(false)
 }
 
@@ -97,6 +99,34 @@ class PlayerActivity : FragmentActivity() {
         }
 
         override fun onPlayerError(error: PlaybackException) = handleError(error)
+
+        override fun onCues(cueGroup: androidx.media3.common.text.CueGroup) {
+            if (!ui.voiceOn) return
+            val t = cueGroup.cues.mapNotNull { it.text?.toString() }.joinToString(" ")
+            if (t.isNotBlank()) voice?.speak(t)
+        }
+
+        override fun onIsPlayingChanged(isPlaying: Boolean) {
+            if (!isPlaying) voice?.stop()
+        }
+    }
+
+    private var voice: VoiceOver? = null
+
+    fun toggleVoice() {
+        if (ui.voiceOn) {
+            ui.voiceOn = false
+            voice?.stop()
+            toast(L("קריינות AI כבויה"))
+            return
+        }
+        if (subFile == null && ui.subLabel == null) toast(L("קריינות תתחיל כשתיטען כתובית"))
+        if (voice == null) voice = VoiceOver(this,
+            onDuck = { d -> if (!ui.casting) player.volume = if (d) Prefs.voiceDuck else 1f },
+            onMissingVoice = { toast(L("אין קול מותקן לשפה הזו – התקן קול עברי בהגדרות אנדרואיד ← המרת טקסט לדיבור (Google)")) })
+        voice?.setLanguage(subFile?.lang ?: "he")
+        ui.voiceOn = true
+        toast(L("קריינות AI פעילה"))
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -186,6 +216,8 @@ class PlayerActivity : FragmentActivity() {
         player.prepare()
         player.play()
 
+        voice?.stop()
+        if (Prefs.voiceDefault && item.kind != Kind.LIVE && !ui.voiceOn) toggleVoice()
         if (item.kind != Kind.LIVE && !item.isCatchup && !item.isLocal) {
             val cached = SubtitleManager.loadCache(item.key)
             if (cached != null) {
@@ -383,6 +415,7 @@ class PlayerActivity : FragmentActivity() {
                 val label = "${r.provider} · ${langLabel(r.lang)}"
                 ui.subLabel = label
                 SubtitleManager.saveCache(item.key, sf, label)
+                voice?.setLanguage(sf.lang)
                 reloadWithSubtitle()
                 toast(L("נטענה כתובית: {0}", label))
             } catch (e: Exception) {
@@ -506,6 +539,8 @@ class PlayerActivity : FragmentActivity() {
         playerView?.player = null
         castPlayer?.setSessionAvailabilityListener(null)
         castPlayer?.release()
+        voice?.shutdown()
+        player.volume = 1f
         if (!toMini) PlayerHolder.release()
         super.onDestroy()
     }

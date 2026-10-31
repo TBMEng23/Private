@@ -31,6 +31,15 @@ object I18n {
         "לא פעילים (חסר מפתח בהגדרות ← שמע וכתוביות): {0}" to "Inactive (add a key in Settings → Audio & Subtitles): {0}",
         "מחפש כתוביות…" to "Searching subtitles…", "האתר לא זמין ברשת שלך" to "Site unreachable on your network",
         "OpenSubtitles.org – ללא מפתח" to "OpenSubtitles.org – no key needed",
+        "קריינות AI כבויה" to "AI narration off", "קריינות AI פעילה" to "AI narration on", "קריינות AI" to "AI narration",
+        "קריינות תתחיל כשתיטען כתובית" to "Narration will start once a subtitle loads",
+        "אין קול מותקן לשפה הזו – התקן קול עברי בהגדרות אנדרואיד ← המרת טקסט לדיבור (Google)" to "No voice installed for this language – install a Hebrew voice in Android Settings → Text-to-speech (Google)",
+        "קריינות AI מהכתוביות" to "AI narration from subtitles", "להפעיל אוטומטית בסרטים וסדרות" to "Turn on automatically for movies and series",
+        "מהירות דיבור: {0}×" to "Speech rate: {0}×", "עוצמת הקול המקורי בזמן הקריינות: {0}%" to "Original audio volume while narrating: {0}%",
+        "הכפתור 🗣 בנגן מפעיל ומכבה. דורש קול עברי מותקן: הגדרות אנדרואיד ← שפה וקלט ← המרת טקסט לדיבור ← Google ← עברית." to "The 🗣 button in the player toggles it. Requires a Hebrew voice: Android Settings → Language & input → Text-to-speech → Google → Hebrew.",
+        "סינון לפי ארצות" to "Filter by country", "מוצגות כל הארצות ({0})" to "Showing all countries ({0})", "נבחרו: {0}" to "Selected: {0}",
+        "הקלד שם מדינה (ישראל, UK, France…)" to "Type a country name (Israel, UK, France…)", "לא נמצאה מדינה" to "No country found",
+        "ללא סימון = כל הארצות מוצגות." to "Nothing selected = all countries shown.", "OpenSubtitles v3 – ללא מפתח" to "OpenSubtitles v3 – no key needed",
     )
 }
 

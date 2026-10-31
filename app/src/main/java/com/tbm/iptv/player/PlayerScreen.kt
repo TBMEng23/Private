@@ -30,6 +30,7 @@ import androidx.compose.material.icons.filled.AspectRatio
 import androidx.compose.material.icons.filled.Bedtime
 import androidx.compose.material.icons.filled.ClosedCaption
 import androidx.compose.material.icons.filled.FiberManualRecord
+import androidx.compose.material.icons.filled.RecordVoiceOver
 import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material3.CircularProgressIndicator
@@ -204,6 +205,9 @@ private fun TopBar(a: PlayerActivity) {
                 ui.showSubs = true
                 if (ui.subResults.isEmpty() && !ui.subSearching) a.searchSubtitles(auto = false)
             }) { Icon(Icons.Filled.ClosedCaption, L("חיפוש כתוביות"), tint = Color.White) }
+        }
+        if (!ui.isLive) IconButton(onClick = { a.toggleVoice() }) {
+            Icon(Icons.Filled.RecordVoiceOver, L("קריינות AI"), tint = if (ui.voiceOn) Color(0xFFFFC94A) else Color.White)
         }
         IconButton(onClick = { a.cycleSleep() }) {
             Icon(Icons.Filled.Bedtime, L("טיימר שינה"), tint = if (ui.sleepMin > 0) Color(0xFFFFC94A) else Color.White)

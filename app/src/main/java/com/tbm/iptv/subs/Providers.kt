@@ -282,7 +282,7 @@ object PodnapisiProvider : SubProvider {
         }
         throw java.io.IOException(L("האתר לא זמין ברשת שלך"), last)
     }
-    override fun enabled() = Prefs.bool("p_podnapisi", true)
+    override fun enabled() = Prefs.bool("p_podnapisi", false)
 
     override suspend fun search(q: SubQuery): List<SubResult> {
         val out = ArrayList<SubResult>()
@@ -361,7 +361,7 @@ object YifyProvider : SubProvider {
     private const val HOST = "https://yts-subs.com"
     private val names = mapOf("he" to "hebrew", "en" to "english", "ar" to "arabic", "ru" to "russian",
         "fr" to "french", "es" to "spanish", "de" to "german")
-    override fun enabled() = Prefs.bool("p_yify", true)
+    override fun enabled() = Prefs.bool("p_yify", false)
 
     override suspend fun search(q: SubQuery): List<SubResult> {
         if (q.isSeries) return emptyList()
@@ -417,6 +417,27 @@ object OpenSubtitlesOrgProvider : SubProvider {
             val rel = o.optString("MovieReleaseName").ifBlank { o.optString("SubFileName") }
             val pop = (o.optString("SubDownloadsCnt").toIntOrNull() ?: 0) / 5000
             SubResult(name, lang, rel, pop.coerceAtMost(2)) { RawSub(Http.getBytes(zip, hdr), "osorg.zip") }
+        }
+    }
+}
+
+// ======================= OpenSubtitles v3 (נקודת הקצה של Stremio) – ללא מפתח =======================
+object OpenSubtitlesV3Provider : SubProvider {
+    override val name = "OpenSubtitles v3"
+    private val iso3 = mapOf("heb" to "he", "eng" to "en", "ara" to "ar", "rus" to "ru", "fre" to "fr", "fra" to "fr",
+        "spa" to "es", "ger" to "de", "deu" to "de", "ita" to "it", "por" to "pt", "pob" to "pt", "tur" to "tr")
+    override fun enabled() = Prefs.bool("p_os3", true)
+
+    override suspend fun search(q: SubQuery): List<SubResult> {
+        val imdb = q.imdb ?: throw java.io.IOException(L("לא נמצא מזהה IMDb"))
+        val path = if (q.isSeries) "series/$imdb:${q.season}:${q.episode}" else "movie/$imdb"
+        val o = JSONObject(Http.get("https://opensubtitles-v3.strem.io/subtitles/$path.json"))
+        val a = o.optJSONArray("subtitles") ?: return emptyList()
+        return (0 until a.length()).mapNotNull { i ->
+            val s = a.optJSONObject(i) ?: return@mapNotNull null
+            val url = s.optString("url").ifBlank { return@mapNotNull null }
+            val lang = iso3[s.optString("lang").lowercase()] ?: return@mapNotNull null
+            SubResult(name, lang, s.optString("id"), 1) { RawSub(Http.getBytes(url), "os3.srt") }
         }
     }
 }
