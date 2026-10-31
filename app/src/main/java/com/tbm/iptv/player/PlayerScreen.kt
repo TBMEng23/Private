@@ -553,6 +553,9 @@ private fun TopBar(a: PlayerActivity, modifier: Modifier) {
         IconButton(onClick = { a.touched(); ui.showSubs = true }) {
             Icon(Icons.Filled.Subtitles, L("שמע וכתוביות"), tint = Color.White)
         }
+        IconButton(onClick = { a.touched(); a.openExternal() }) {
+            Icon(Icons.AutoMirrored.Filled.OpenInNew, L("פתח בנגן חיצוני"), tint = Color.White)
+        }
         IconButton(onClick = { a.touched(); ui.options = "main" }) {
             Icon(Icons.Filled.Settings, L("אפשרויות"), tint = Color.White)
         }
@@ -594,6 +597,12 @@ private fun OptionsSheet(a: PlayerActivity) {
                     LazyColumn {
                         when (page) {
                             "main" -> {
+                                item {
+                                    val ctx = androidx.compose.ui.platform.LocalContext.current
+                                    val p = ExternalPlayer.pkg
+                                    OptRow(Icons.AutoMirrored.Filled.OpenInNew, L("פתח בנגן חיצוני"),
+                                        if (p.isBlank()) L("VLC / MX – בחירה") else ExternalPlayer.appName(ctx, p)) { ui.options = null; a.openExternal() }
+                                }
                                 val aud = ui.audio.firstOrNull { it.selected }?.name ?: ui.audio.firstOrNull()?.name ?: L("ברירת מחדל")
                                 item { OptRow(Icons.Filled.MusicNote, L("רצועת שמע"), aud) { ui.options = "audio" } }
                                 val sub = ui.subLabel ?: ui.embedded.firstOrNull { it.selected }?.name ?: L("כבוי")
@@ -610,12 +619,6 @@ private fun OptionsSheet(a: PlayerActivity) {
                                         ui.options = null
                                         if (ok) a.enterPip() else a.openPipSettings()
                                     }
-                                }
-                                item {
-                                    val ctx = androidx.compose.ui.platform.LocalContext.current
-                                    val p = ExternalPlayer.pkg
-                                    OptRow(Icons.AutoMirrored.Filled.OpenInNew, L("פתח בנגן חיצוני"),
-                                        if (p.isBlank()) L("VLC / MX – בחירה") else ExternalPlayer.appName(ctx, p)) { ui.options = null; a.openExternal() }
                                 }
                             }
                             "audio" -> {
