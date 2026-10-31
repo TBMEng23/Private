@@ -12,15 +12,28 @@ android {
         applicationId = "com.tbm.iptv"
         minSdk = 24
         targetSdk = 35
-        versionCode = 6
-        versionName = "2.1.1"
+        versionCode = 7
+        versionName = "2.1.2"
+    }
+
+    // מפתח חתימה קבוע – כל גרסה מתעדכנת מעל הקודמת בלי להסיר.
+    // הסיסמה מגיעה מ-GitHub Secret בשם TBM_KS_PASS (לא נשמרת בקוד)
+    val ksPass: String? = System.getenv("TBM_KS_PASS")
+    signingConfigs {
+        if (ksPass != null && file("tbm-release.jks").exists()) {
+            create("tbm") {
+                storeFile = file("tbm-release.jks")
+                storePassword = ksPass
+                keyAlias = "tbm"
+                keyPassword = ksPass
+            }
+        }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = false
-            // חתום במפתח debug כדי שה-APK יהיה ניתן להתקנה ישירה
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.findByName("tbm") ?: signingConfigs.getByName("debug")
         }
     }
     compileOptions {

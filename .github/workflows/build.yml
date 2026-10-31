@@ -22,7 +22,15 @@ jobs:
         with:
           gradle-version: '8.11.1'
 
+      - name: Signing key
+        env:
+          TBM_KS_B64: ${{ secrets.TBM_KS_B64 }}
+        run: |
+          if [ -n "$TBM_KS_B64" ]; then echo "$TBM_KS_B64" | base64 -d > app/tbm-release.jks; echo "signing with TBM key"; else echo "::warning::TBM_KS_B64 secret missing – debug signing"; fi
+
       - name: Build
+        env:
+          TBM_KS_PASS: ${{ secrets.TBM_KS_PASS }}
         run: |
           set -o pipefail
           gradle assembleRelease --no-daemon --stacktrace 2>&1 | tee build.log
