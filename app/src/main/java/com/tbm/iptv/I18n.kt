@@ -48,6 +48,8 @@ object I18n {
         "כתוביות מובנות בקובץ:" to "Built-in subtitles:", "רקע שחור (מכסה כתוביות צרובות בתמונה)" to "Black box (covers burned-in subtitles)",
         "כתובית חיצונית מחליפה כתוביות מובנות בקובץ" to "External subtitle replaces built-in subtitles",
         "גובה הכתוביות" to "Subtitle height",
+        "קטגוריה" to "Category", "קטגוריות – {0}" to "Categories – {0}", "חיפוש קטגוריה…" to "Search category…",
+        "לא נמצאה קטגוריה" to "No category found", "הכל" to "All",
         "ללא סימון = כל הארצות מוצגות." to "Nothing selected = all countries shown.", "OpenSubtitles v3 – ללא מפתח" to "OpenSubtitles v3 – no key needed",
     )
 }

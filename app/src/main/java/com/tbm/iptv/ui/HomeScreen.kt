@@ -19,6 +19,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -417,6 +419,7 @@ private fun BrowseSection(kind: Kind, all: List<Entry>, ver: Int, nav: (Screen) 
     var group by rememberSaveable(kind) { mutableStateOf<String?>(null) }
     var query by rememberSaveable(kind) { mutableStateOf("") }
     var menu by remember { mutableStateOf<MenuTarget?>(null) }
+    var pickGroup by remember { mutableStateOf(false) }
 
     val shownItems = remember(filtered, group, query, favs, recentKeys) {
         val base = when (group) {
@@ -472,11 +475,23 @@ private fun BrowseSection(kind: Kind, all: List<Entry>, ver: Int, nav: (Screen) 
                         placeholder = { Text(L("חיפוש ב{0}", kind.label)) })
                     if (!Prefs.isKids) IconButton(onClick = { nav(Screen.Groups(kind)) }) { Icon(Icons.Filled.FilterList, L("ניהול קבוצות")) }
                 }
-                LazyRow(contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    items(specials) { (g, label, _) -> FilterChip(group == g, { selectGroup(g) }, { Text(label) }) }
-                    items(view.groups) { g ->
-                        val lock = g in view.lockedGroups && !Parental.unlocked
-                        FilterChip(group == g, { selectGroup(g) }, { Text((if (lock) "🔒 " else "") + "$g (${counts[g] ?: 0})", maxLines = 1) })
+                // כפתור קטגוריה אחד – פותח רשימה אנכית עם חיפוש (במקום גלילה לצדדים)
+                val curLabel = specials.firstOrNull { it.first == group }?.second ?: group ?: L("הכל")
+                val curCount = if (group != null && specials.none { it.first == group }) counts[group] ?: 0 else shownItems.size
+                FocusItem(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 6.dp), onClick = { pickGroup = true }) {
+                    Row(
+                        Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(12.dp))
+                            .padding(horizontal = 14.dp, vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(Icons.Filled.FilterList, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
+                        Spacer(Modifier.width(10.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text(L("קטגוריה"), fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(curLabel, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        }
+                        Text("$curCount", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("  ▾", fontSize = 18.sp)
                     }
                 }
                 ContentArea(kind, shownItems, favs, all, false, nav, Modifier.weight(1f)) { menu = MenuTarget(kind, it, all) }
@@ -484,12 +499,53 @@ private fun BrowseSection(kind: Kind, all: List<Entry>, ver: Int, nav: (Screen) 
         }
     }
     menu?.let { ItemMenu(it) { menu = null } }
+    if (pickGroup) CategoryPicker(
+        title = kind.label, specials = specials, groups = view.groups, counts = counts, current = group,
+        locked = if (Parental.unlocked) emptySet() else view.lockedGroups,
+        onPick = { g -> pickGroup = false; selectGroup(g) }, onDismiss = { pickGroup = false },
+    )
 }
+
+/** בחירת קטגוריה – רשימה אנכית במסך מלא עם חיפוש */
+@Composable
+private fun CategoryPicker(
+    title: String, specials: List<Triple<String?, String, Int>>, groups: List<String>, counts: Map<String, Int>,
+    current: String?, locked: Set<String>, onPick: (String?) -> Unit, onDismiss: () -> Unit,
+) {
+    var q by remember { mutableStateOf("") }
+    val shown = remember(q, groups) { if (q.isBlank()) groups else groups.filter { it.contains(q, true) } }
+    androidx.compose.ui.window.Dialog(
+        onDismissRequest = onDismiss,
+        properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false),
+    ) {
+        androidx.compose.material3.Surface(color = MaterialTheme.colorScheme.background, modifier = Modifier.fillMaxSize()) {
+            Column(Modifier.fillMaxSize().systemBarsPaddingCompat()) {
+                ScreenHeader(L("קטגוריות – {0}", title), onDismiss)
+                OutlinedTextField(q, { q = it }, singleLine = true, placeholder = { Text(L("חיפוש קטגוריה…")) },
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp))
+                LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(8.dp)) {
+                    if (q.isBlank()) items(specials) { (g, label, n) ->
+                        CategoryRow(label, n, current == g, false) { onPick(g) }
+                    }
+                    items(shown) { g ->
+                        CategoryRow(g, counts[g] ?: 0, current == g, g in locked) { onPick(g) }
+                    }
+                    if (shown.isEmpty()) item {
+                        Text(L("לא נמצאה קטגוריה"), Modifier.padding(16.dp), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun Modifier.systemBarsPaddingCompat(): Modifier = this.then(Modifier.windowInsetsPadding(androidx.compose.foundation.layout.WindowInsets.systemBars))
 
 @Composable
 private fun CategoryRow(name: String, count: Int, selected: Boolean, locked: Boolean, onClick: () -> Unit) {
     FocusItem(Modifier.fillMaxWidth().padding(vertical = 1.dp), selected = selected, onClick = onClick) {
-        Row(Modifier.padding(horizontal = 10.dp, vertical = 9.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.padding(horizontal = 12.dp, vertical = 13.dp), verticalAlignment = Alignment.CenterVertically) {
             if (locked) Icon(Icons.Filled.Lock, null, Modifier.size(14.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
             Text(name, Modifier.weight(1f).padding(horizontal = 4.dp), maxLines = 1, overflow = TextOverflow.Ellipsis, fontSize = 14.sp)
             if (!locked) Text("$count", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
