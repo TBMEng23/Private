@@ -74,6 +74,8 @@ import com.tbm.iptv.data.toPlay
 
 private val DetailBg = Color(0xFF0E0F13)
 private val NetRed = Color(0xFFE50914)
+/** כיוון טקסט לפי התוכן: אנגלית משמאל לימין, עברית מימין לשמאל */
+private val ContentDir = androidx.compose.ui.text.TextStyle(textDirection = androidx.compose.ui.text.style.TextDirection.Content)
 
 /** "45m" / "1h 33m" */
 fun fmtMin(sec: Int): String {
@@ -125,7 +127,7 @@ private fun MetaLine(info: MediaInfo?, rating: Float, extra: String?) {
             }
             Spacer(Modifier.width(10.dp))
         }
-        Text(parts.joinToString(" • "), color = Color(0xFFB8B9C0), fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(parts.joinToString(" • ") { "\u2068$it\u2069" }, color = Color(0xFFB8B9C0), fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
 
@@ -164,7 +166,7 @@ private fun Plot(text: String?) {
     if (text.isNullOrBlank()) return
     var open by remember { mutableStateOf(false) }
     Column(Modifier.padding(horizontal = 16.dp, vertical = 10.dp).clickable { open = !open }) {
-        Text(text, color = Color(0xFFE4E4E8), fontSize = 14.sp, lineHeight = 20.sp,
+        Text(text, color = Color(0xFFE4E4E8), fontSize = 14.sp, lineHeight = 20.sp, style = ContentDir,
             maxLines = if (open) Int.MAX_VALUE else 3, overflow = TextOverflow.Ellipsis)
         if (text.length > 140) Text(if (open) L("פחות") else L("עוד"), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp)
     }
@@ -437,7 +439,7 @@ private fun EpisodeRow(e: Episode, s: SeriesItem, info: MediaInfo?, ver: Int, cu
                 }
             }
             e.plot?.takeIf { it.isNotBlank() }?.let { p ->
-                Text(p, color = Color(0xFFB8B9C0), fontSize = 13.sp, lineHeight = 18.sp,
+                Text(p, color = Color(0xFFB8B9C0), fontSize = 13.sp, lineHeight = 18.sp, style = ContentDir,
                     maxLines = if (open) Int.MAX_VALUE else 3, overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.padding(top = 8.dp).clickable { open = !open })
                 if (!open && p.length > 150) Text(L("עוד"), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp,
