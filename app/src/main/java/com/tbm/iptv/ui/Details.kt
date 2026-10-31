@@ -347,9 +347,9 @@ fun SeriesScreen(s: SeriesItem, onBack: () -> Unit) {
         val list = all.filter { it.season == season && it.key !in epLoc }
         if (list.isEmpty() || !Localize.enabled) return@LaunchedEffect
         val tr = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-            Localize.texts(list.map { cleanEpTitle(it.title, s.name).ifBlank { null } } + list.map { it.plot })
+            Localize.texts(list.map { it.plot })
         }
-        epLoc = epLoc + list.mapIndexed { i, e -> e.key to (tr[i] to tr[list.size + i]) }
+        epLoc = epLoc + list.mapIndexed { i, e -> e.key to (null to tr[i]) }
     }
     LaunchedEffect(lang) { epLoc = emptyMap() }
 
@@ -492,11 +492,9 @@ private suspend fun localizeInfo(name: String, i: MediaInfo, fallbackPlot: Strin
         if (!Localize.enabled) return@withContext null to i
         runCatching {
             val tm = Localize.tmdb(i.tmdbId, tv)
-            val base = Localize.cleanTitle(name)
             val plot0 = i.plot ?: fallbackPlot
-            val tr = Localize.texts(listOf(if (tm?.first == null) base else null, if (tm?.second == null) plot0 else null, i.cast, i.director))
-            val title = tm?.first ?: tr[0]
-            (if (title != null && title != base) title else null) to
-                i.copy(plot = tm?.second ?: tr[1] ?: plot0, genre = Localize.genre(i.genre), cast = tr[2], director = tr[3])
+            // שם הסרט/הסדרה נשאר מקורי – מתרגמים רק תקציר, ז'אנר ושמות
+            val tr = Localize.texts(listOf(if (tm?.second == null) plot0 else null, i.cast, i.director))
+            null to i.copy(plot = tm?.second ?: tr[0] ?: plot0, genre = Localize.genre(i.genre), cast = tr[1], director = tr[2])
         }.getOrDefault(null to i)
     }
