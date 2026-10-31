@@ -5,6 +5,24 @@ import com.tbm.iptv.L
 import android.view.ContextThemeWrapper
 import android.view.View
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Forward10
+import androidx.compose.material.icons.filled.LiveTv
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Replay10
+import androidx.compose.material.icons.filled.ScreenRotation
+import androidx.compose.material.icons.filled.Speed
+import androidx.compose.material.icons.filled.Subtitles
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -95,19 +113,22 @@ fun applySubStyle(pv: PlayerView) {
 fun PlayerScreen(a: PlayerActivity) {
     val ui = a.ui
     val styleVer = Prefs.version.intValue
+    // הסתרה אוטומטית של הפקדים (כמו נטפליקס)
+    LaunchedEffect(ui.controlsVisible, ui.touchedAt, ui.showGuide, ui.showList) {
+        if (ui.controlsVisible && !ui.showGuide && !ui.showList) {
+            kotlinx.coroutines.delay(Prefs.osdTimeout * 1000L)
+            if (a.player.isPlaying) ui.controlsVisible = false
+        }
+    }
+    LaunchedEffect(ui.gesture) { if (ui.gesture != null) { kotlinx.coroutines.delay(900); ui.gesture = null } }
+
     Box(Modifier.fillMaxSize().background(Color.Black)) {
         AndroidView(
             factory = { ctx ->
                 PlayerView(ctx).apply {
                     player = a.player
                     keepScreenOn = true
-                    setShowSubtitleButton(true)
-                    setShowNextButton(false)
-                    setShowPreviousButton(false)
-                    controllerShowTimeoutMs = Prefs.osdTimeout * 1000
-                    setControllerVisibilityListener(PlayerView.ControllerVisibilityListener { v ->
-                        ui.controlsVisible = v == View.VISIBLE
-                    })
+                    useController = false
                     a.playerView = this
                 }
             },
@@ -119,7 +140,23 @@ fun PlayerScreen(a: PlayerActivity) {
             modifier = Modifier.fillMaxSize(),
         )
 
-        if (ui.controlsVisible && !ui.pip) TopBar(a)
+        if (!ui.pip) GestureLayer(a)
+
+        if (ui.controlsVisible && !ui.pip) {
+            if (ui.locked) LockedOverlay(a) else Controls(a)
+        }
+
+        if (ui.boosting) Text("2× ⏩", color = Color.White, fontWeight = FontWeight.Bold,
+            modifier = Modifier.align(Alignment.TopCenter).padding(top = 24.dp)
+                .background(Color(0x99000000), RoundedCornerShape(20.dp)).padding(horizontal = 14.dp, vertical = 6.dp))
+
+        ui.gesture?.let {
+            Text(it, color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.Bold,
+                modifier = Modifier.align(Alignment.Center).background(Color(0x99000000), RoundedCornerShape(14.dp))
+                    .padding(horizontal = 18.dp, vertical = 10.dp))
+        }
+
+        if (!ui.pip) NetflixExtras(a, Modifier.align(Alignment.BottomEnd))
 
         if (ui.casting) Text(
             L("משדר לטלוויזיה (Chromecast)"), color = Color.White,
@@ -143,15 +180,23 @@ fun PlayerScreen(a: PlayerActivity) {
         ui.message?.let {
             Text(
                 it, color = Color.White, fontSize = 14.sp,
-                modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 90.dp)
+                modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 110.dp)
                     .background(Color(0xCC1C263C), RoundedCornerShape(20.dp))
                     .padding(horizontal = 16.dp, vertical = 8.dp),
             )
         }
 
         if (ui.showList && !ui.pip) ChannelOverlay(a, Modifier.align(Alignment.CenterStart))
+        if (ui.showGuide && !ui.pip) ChannelGuidePanel(a, Modifier.align(Alignment.CenterEnd))
         if (ui.showSubs) SubtitleDialog(a)
         if (ui.showRecord) RecordDialog(a)
+        if (ui.stillWatching) androidx.compose.material3.AlertDialog(
+            onDismissRequest = { },
+            title = { Text(L("עדיין צופה?")) },
+            text = { Text(L("ניגנו 3 פרקים ברצף. להמשיך לפרק הבא?")) },
+            confirmButton = { TextButton(onClick = { a.continueWatching() }) { Text(L("המשך לצפות")) } },
+            dismissButton = { TextButton(onClick = { ui.stillWatching = false; a.exit() }) { Text(L("יציאה")) } },
+        )
         ui.mtOffer?.let { offer ->
             androidx.compose.material3.AlertDialog(
                 onDismissRequest = { ui.mtOffer = null },
@@ -169,15 +214,285 @@ fun PlayerScreen(a: PlayerActivity) {
     }
 }
 
+/** ג'סטות: הקשה = פקדים, הקשה כפולה בצדדים = ±10 שנ', לחיצה ארוכה = 2×, גרירה אנכית = בהירות/עוצמה */
 @Composable
-private fun TopBar(a: PlayerActivity) {
+private fun GestureLayer(a: PlayerActivity) {
+    val ui = a.ui
+    var width by androidx.compose.runtime.remember { androidx.compose.runtime.mutableIntStateOf(1) }
+    var height by androidx.compose.runtime.remember { androidx.compose.runtime.mutableIntStateOf(1) }
+    Box(
+        Modifier.fillMaxSize()
+            .onSizeChanged { width = it.width; height = it.height }
+            .pointerInput(ui.isLive, ui.locked) {
+                detectTapGestures(
+                    onTap = { a.touched(); ui.controlsVisible = !ui.controlsVisible },
+                    onDoubleTap = { o ->
+                        if (!ui.locked) {
+                            a.touched()
+                            val right = o.x > width / 2f
+                            // כמו יוטיוב: צד ימין = קדימה
+                            if (ui.isLive) { if (right) a.next() else a.prev() }
+                            else { a.seekBy(if (right) 10_000 else -10_000); ui.gesture = if (right) "⏩ 10" else "⏪ 10" }
+                        }
+                    },
+                    onLongPress = { if (!ui.locked) a.boost(true) },
+                    onPress = {
+                        tryAwaitRelease()
+                        if (ui.boosting) a.boost(false)
+                    },
+                )
+            }
+            .pointerInput(ui.locked) {
+                var side = 0
+                detectVerticalDragGestures(
+                    onDragStart = { o -> side = if (o.x < width / 2f) -1 else 1 },
+                    onVerticalDrag = { change, dy ->
+                        if (!ui.locked) {
+                            change.consume()
+                            val d = -dy / height * 1.6f
+                            if (side < 0) a.adjustBrightness(d) else a.adjustVolume(d)
+                        }
+                    },
+                )
+            }
+    )
+}
+
+@Composable
+private fun LockedOverlay(a: PlayerActivity) {
+    Box(Modifier.fillMaxSize()) {
+        IconButton(
+            onClick = { a.ui.locked = false; a.touched() },
+            modifier = Modifier.align(Alignment.CenterStart).padding(24.dp).size(56.dp)
+                .background(Color(0x99000000), androidx.compose.foundation.shape.CircleShape),
+        ) { Icon(Icons.Filled.Lock, L("ביטול נעילה"), tint = Color.White) }
+    }
+}
+
+/** פקדים בסגנון נטפליקס */
+@Composable
+private fun Controls(a: PlayerActivity) {
+    val ui = a.ui
+    var pos by androidx.compose.runtime.remember { androidx.compose.runtime.mutableLongStateOf(0L) }
+    var dur by androidx.compose.runtime.remember { androidx.compose.runtime.mutableLongStateOf(0L) }
+    var playing by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(true) }
+    var dragging by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<Float?>(null) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            pos = a.player.currentPosition; dur = a.player.duration.coerceAtLeast(0); playing = a.player.isPlaying
+            kotlinx.coroutines.delay(400)
+        }
+    }
+    Box(Modifier.fillMaxSize().background(Color(0x55000000))) {
+        TopBar(a, Modifier.align(Alignment.TopCenter))
+
+        // מרכז: ‹ערוץ  ⏪10  ▶  ⏩10  ערוץ›
+        Row(Modifier.align(Alignment.Center), verticalAlignment = Alignment.CenterVertically) {
+            if (ui.isLive || ui.inCatchup) {
+                if (ui.hasPrev) BigBtn(Icons.AutoMirrored.Filled.KeyboardArrowLeft, L("ערוץ קודם"), 56) { a.touched(); a.prev() }
+                Spacer(Modifier.width(40.dp))
+            } else {
+                BigBtn(Icons.Filled.Replay10, L("10 שניות אחורה"), 48) { a.touched(); a.seekBy(-10_000) }
+                Spacer(Modifier.width(36.dp))
+            }
+            BigBtn(if (playing) Icons.Filled.Pause else Icons.Filled.PlayArrow, L("ניגון/השהיה"), 72, filled = true) {
+                a.touched(); a.togglePlay()
+            }
+            if (ui.isLive || ui.inCatchup) {
+                Spacer(Modifier.width(40.dp))
+                if (ui.hasNext) BigBtn(Icons.AutoMirrored.Filled.KeyboardArrowRight, L("ערוץ הבא"), 56) { a.touched(); a.next() }
+            } else {
+                Spacer(Modifier.width(36.dp))
+                BigBtn(Icons.Filled.Forward10, L("10 שניות קדימה"), 48) { a.touched(); a.seekBy(10_000) }
+            }
+        }
+
+        // תחתית: פס זמן + כפתורים
+        Column(
+            Modifier.align(Alignment.BottomCenter).fillMaxWidth()
+                .background(Brush.verticalGradient(listOf(Color.Transparent, Color(0xDD000000))))
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+        ) {
+            if (!ui.isLive && dur > 0) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(fmtDur(dragging?.let { (it * dur).toLong() } ?: pos), color = Color.White, fontSize = 12.sp)
+                    androidx.compose.material3.Slider(
+                        value = dragging ?: (pos.toFloat() / dur).coerceIn(0f, 1f),
+                        onValueChange = { dragging = it; a.touched() },
+                        onValueChangeFinished = { dragging?.let { a.player.seekTo((it * dur).toLong()) }; dragging = null },
+                        colors = androidx.compose.material3.SliderDefaults.colors(
+                            thumbColor = Color(0xFFE50914), activeTrackColor = Color(0xFFE50914),
+                            inactiveTrackColor = Color(0x66FFFFFF)),
+                        modifier = Modifier.weight(1f).padding(horizontal = 10.dp),
+                    )
+                    Text("-" + fmtDur((dur - pos).coerceAtLeast(0)), color = Color.White, fontSize = 12.sp)
+                }
+            } else if (ui.isLive) {
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 6.dp)) {
+                    Text("● LIVE", color = Color(0xFFE50914), fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                    val item = ui.item
+                    val now = if (item != null) Epg.nowNext(item.epgId, item.channelName).first else null
+                    if (now != null && now.end > now.start) {
+                        androidx.compose.material3.LinearProgressIndicator(
+                            progress = { ((System.currentTimeMillis() - now.start).toFloat() / (now.end - now.start)).coerceIn(0f, 1f) },
+                            color = Color(0xFFE50914), trackColor = Color(0x44FFFFFF),
+                            modifier = Modifier.weight(1f).padding(horizontal = 12.dp),
+                        )
+                        Text(fmtTime(now.end), color = Color.White, fontSize = 12.sp)
+                    }
+                }
+            }
+            Row(
+                Modifier.fillMaxWidth().horizontalScroll(androidx.compose.foundation.rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically,
+            ) {
+                if (ui.inCatchup) BarBtn(Icons.Filled.LiveTv, L("חזרה לשידור חי")) { a.backToLive() }
+                if (ui.isLive || ui.inCatchup) {
+                    BarBtn(Icons.Filled.DateRange, L("לוח שידורים")) { ui.showGuide = true }
+                    BarBtn(Icons.AutoMirrored.Filled.List, L("ערוצים")) { ui.showList = true }
+                }
+                if (!ui.isLive) BarBtn(Icons.Filled.Speed, if (ui.speed == 1f) L("מהירות") else "${ui.speed}×") { a.touched(); a.cycleSpeed() }
+                BarBtn(Icons.Filled.Subtitles, L("שמע וכתוביות")) {
+                    ui.showSubs = true
+                    if (!ui.isLive && ui.subResults.isEmpty() && !ui.subSearching) a.searchSubtitles(auto = false)
+                }
+                BarBtn(Icons.Filled.AspectRatio, L("יחס תצוגה")) { a.touched(); a.cycleResize() }
+                BarBtn(Icons.Filled.ScreenRotation, if (ui.landscape) L("לאורך") else L("לרוחב")) { a.touched(); a.toggleRotate() }
+                BarBtn(Icons.Filled.Lock, L("נעילה")) { ui.locked = true }
+                if (!ui.isLive && ui.hasNext) BarBtn(Icons.Filled.SkipNext, L("הפרק הבא")) { a.next() }
+            }
+        }
+    }
+}
+
+@Composable
+private fun BigBtn(icon: androidx.compose.ui.graphics.vector.ImageVector, desc: String, size: Int, filled: Boolean = false, onClick: () -> Unit) {
+    IconButton(
+        onClick = onClick,
+        modifier = Modifier.size(size.dp).then(
+            if (filled) Modifier.background(Color(0x33FFFFFF), androidx.compose.foundation.shape.CircleShape) else Modifier
+        ),
+    ) { Icon(icon, desc, tint = Color.White, modifier = Modifier.size((size * 0.7f).dp)) }
+}
+
+@Composable
+private fun BarBtn(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, onClick: () -> Unit) {
+    FocusItem(onClick = onClick) {
+        Column(Modifier.padding(horizontal = 10.dp, vertical = 4.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            Icon(icon, label, tint = Color.White, modifier = Modifier.size(22.dp))
+            Text(label, color = Color.White, fontSize = 10.sp, maxLines = 1)
+        }
+    }
+}
+
+private fun fmtDur(ms: Long): String {
+    val s = ms / 1000
+    return if (s >= 3600) "%d:%02d:%02d".format(s / 3600, (s / 60) % 60, s % 60) else "%d:%02d".format(s / 60, s % 60)
+}
+
+/** "דלג על פתיח" ו"הפרק הבא בעוד…" – כמו נטפליקס */
+@Composable
+private fun NetflixExtras(a: PlayerActivity, modifier: Modifier) {
+    val ui = a.ui
+    val item = ui.item ?: return
+    if (item.kind != com.tbm.iptv.data.Kind.SERIES || item.isLocal) return
+    var pos by androidx.compose.runtime.remember { androidx.compose.runtime.mutableLongStateOf(0L) }
+    var dur by androidx.compose.runtime.remember { androidx.compose.runtime.mutableLongStateOf(0L) }
+    LaunchedEffect(item.key) {
+        while (true) { pos = a.player.currentPosition; dur = a.player.duration; kotlinx.coroutines.delay(500) }
+    }
+    Column(modifier.padding(end = 24.dp, bottom = 120.dp), horizontalAlignment = Alignment.End) {
+        if (!ui.introSkipped && pos in 15_000..240_000) {
+            androidx.compose.material3.OutlinedButton(
+                onClick = { a.seekBy(85_000); ui.introSkipped = true },
+                colors = androidx.compose.material3.ButtonDefaults.outlinedButtonColors(containerColor = Color(0xCC000000)),
+            ) { Text(L("דלג על הפתיח"), color = Color.White) }
+        }
+        val left = dur - pos
+        if (ui.hasNext && dur > 120_000 && left in 1..30_000) {
+            androidx.compose.material3.Button(
+                onClick = { a.next() },
+                colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = Color.White),
+            ) { Text(L("הפרק הבא בעוד {0}", left / 1000), color = Color.Black, fontWeight = FontWeight.Bold) }
+        }
+    }
+}
+
+/** לוח שידורים של הערוץ הנוכחי בתוך הנגן – כולל צפייה לאחור */
+@Composable
+private fun ChannelGuidePanel(a: PlayerActivity, modifier: Modifier) {
+    val ui = a.ui
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+    val c = androidx.compose.runtime.remember(Repo.queueIndex) { a.currentChannel() }
+    Epg.version.intValue
+    val progs = androidx.compose.runtime.remember(c?.key, Epg.version.intValue) { if (c != null) Epg.forChannel(c) else emptyList() }
+    val now = System.currentTimeMillis()
+    val curIdx = progs.indexOfFirst { now in it.start until it.end }.coerceAtLeast(0)
+    val state = rememberLazyListState(initialFirstVisibleItemIndex = (curIdx - 2).coerceAtLeast(0))
+    Surface(color = Color(0xF00B1220), modifier = modifier.fillMaxHeight().widthIn(max = 460.dp).fillMaxWidth(0.7f)) {
+        Column(Modifier.padding(10.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text(c?.name ?: "", color = Color.White, fontWeight = FontWeight.Bold, maxLines = 1)
+                    Text(if (c?.hasCatchup == true) L("⏪ צפייה לאחור זמינה – {0} ימים", (c?.archiveDays ?: 1).coerceAtLeast(1)) else L("אין ארכיון לערוץ הזה"),
+                        color = Color(0xFF8899AA), fontSize = 12.sp)
+                }
+                IconButton(onClick = { ui.showGuide = false }) { Icon(Icons.Filled.Close, L("סגור"), tint = Color.White) }
+            }
+            if (progs.isEmpty()) Text(L("אין מידע לוח שידורים לערוץ הזה"), color = Color(0xFF8899AA), modifier = Modifier.padding(16.dp))
+            LazyColumn(state = state) {
+                itemsIndexed(progs) { i, e ->
+                    val day = com.tbm.iptv.ui.fmtDay(e.start)
+                    val newDay = i == 0 || com.tbm.iptv.ui.fmtDay(progs[i - 1].start) != day
+                    val live = now in e.start until e.end
+                    val past = e.end <= now
+                    val cu = c != null && com.tbm.iptv.data.Catchup.available(c, e, now)
+                    Column {
+                        if (newDay) {
+                            Text(day, color = Color(0xFF3A9BFF), fontWeight = FontWeight.Bold, fontSize = 12.sp,
+                                modifier = Modifier.padding(top = 8.dp, bottom = 2.dp))
+                        }
+                        FocusItem(Modifier.fillMaxWidth(), selected = live, onClick = {
+                            val ch = c
+                            if (ch != null) {
+                                if ((past || live) && cu) a.playCatchup(ch, e)
+                                else if (live) { ui.showGuide = false; if (ui.inCatchup) a.backToLive() }
+                                else if (!past) {
+                                    com.tbm.iptv.rec.Scheduler.add(ctx, com.tbm.iptv.rec.Sched("r${e.start}${ch.key.hashCode()}", "remind",
+                                        e.title, ch.url, e.start, e.end, ch.epgId, ch.name))
+                                    a.toast(L("תזכורת נקבעה: {0}", e.title))
+                                }
+                            }
+                        }) {
+                            Row(Modifier.padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                                Text(fmtTime(e.start), color = Color(0xFF8899AA), fontSize = 12.sp, modifier = Modifier.width(48.dp))
+                                Column(Modifier.weight(1f)) {
+                                    Text(e.title, color = if (past && !cu) Color(0xFF8899AA) else Color.White, fontSize = 14.sp,
+                                        fontWeight = if (live) FontWeight.Bold else FontWeight.Normal, maxLines = 2)
+                                    if (live && e.desc.isNotBlank()) Text(e.desc, color = Color(0xFF8899AA), fontSize = 11.sp, maxLines = 2)
+                                }
+                                Text(
+                                    when { live && cu -> "⏮"; live -> "●"; past && cu -> "▶"; !past -> "🔔"; else -> "" },
+                                    color = if (live) Color(0xFFE50914) else Color.White, fontSize = 16.sp,
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun TopBar(a: PlayerActivity, modifier: Modifier) {
     val ui = a.ui
     val item = ui.item
     Epg.version.intValue
     val nowNext = if (ui.isLive && item != null) Epg.nowNext(item.epgId, item.channelName) else null to null
     Row(
-        Modifier.fillMaxWidth()
-            .background(Brush.verticalGradient(listOf(Color(0xCC000000), Color.Transparent)))
+        modifier.fillMaxWidth()
+            .background(Brush.verticalGradient(listOf(Color(0xDD000000), Color.Transparent)))
             .padding(horizontal = 8.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -194,11 +509,6 @@ private fun TopBar(a: PlayerActivity) {
             }
             ui.subLabel?.let { Text(L("כתובית: {0}", it), color = Color(0xFFB0C4DE), fontSize = 12.sp, maxLines = 1) }
         }
-        if (ui.subLabel != null) {
-            TextButton(onClick = { a.shiftSubtitle(-500) }) { Text("−0.5", color = Color.White) }
-            Text("%+.1f".format(ui.subOffset / 1000.0), color = Color.White, fontSize = 12.sp)
-            TextButton(onClick = { a.shiftSubtitle(500) }) { Text("+0.5", color = Color.White) }
-        }
         if (ui.castAvailable) {
             AndroidView(
                 factory = { ctx ->
@@ -209,16 +519,8 @@ private fun TopBar(a: PlayerActivity) {
                 modifier = Modifier.size(48.dp),
             )
         }
-        if (ui.isLive) {
-            IconButton(onClick = { ui.showList = true }) { Icon(Icons.AutoMirrored.Filled.List, L("רשימת ערוצים"), tint = Color.White) }
-            if (!Prefs.isKids) IconButton(onClick = { ui.showRecord = true }) {
-                Icon(Icons.Filled.FiberManualRecord, L("הקלטה"), tint = Color(0xFFFF5252))
-            }
-        } else {
-            IconButton(onClick = {
-                ui.showSubs = true
-                if (ui.subResults.isEmpty() && !ui.subSearching) a.searchSubtitles(auto = false)
-            }) { Icon(Icons.Filled.ClosedCaption, L("חיפוש כתוביות"), tint = Color.White) }
+        if (ui.isLive && !Prefs.isKids) IconButton(onClick = { ui.showRecord = true }) {
+            Icon(Icons.Filled.FiberManualRecord, L("הקלטה"), tint = Color(0xFFFF5252))
         }
         if (!ui.isLive) IconButton(onClick = { a.toggleVoice() }) {
             Icon(Icons.Filled.RecordVoiceOver, L("קריינות AI"), tint = if (ui.voiceOn) Color(0xFFFFC94A) else Color.White)
@@ -226,9 +528,6 @@ private fun TopBar(a: PlayerActivity) {
         IconButton(onClick = { a.cycleSleep() }) {
             Icon(Icons.Filled.Bedtime, L("טיימר שינה"), tint = if (ui.sleepMin > 0) Color(0xFFFFC94A) else Color.White)
         }
-        IconButton(onClick = { a.cycleResize() }) { Icon(Icons.Filled.AspectRatio, L("יחס תצוגה"), tint = Color.White) }
-        if (ui.hasPrev) IconButton(onClick = { a.prev() }) { Icon(Icons.Filled.SkipPrevious, L("הקודם"), tint = Color.White) }
-        if (ui.hasNext) IconButton(onClick = { a.next() }) { Icon(Icons.Filled.SkipNext, L("הבא"), tint = Color.White) }
     }
 }
 
@@ -310,6 +609,25 @@ private fun SubtitleDialog(a: PlayerActivity) {
                     OutlinedButton(onClick = { a.disableSubtitles(); ui.showSubs = false }) { Text(L("כבה")) }
                 }
                 Spacer(Modifier.size(8.dp))
+                // שמע (שפות) – כמו נטפליקס: שמע וכתוביות באותו חלון
+                if (ui.audio.size > 1) {
+                    Text(L("שמע:"), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    androidx.compose.foundation.lazy.LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        items(ui.audio) { e ->
+                            androidx.compose.material3.FilterChip(selected = e.selected, onClick = { a.selectAudio(e) },
+                                label = { Text(e.name, fontSize = 12.sp) })
+                        }
+                    }
+                }
+                if (ui.subLabel != null) Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(L("סנכרון כתובית:"), fontSize = 12.sp, modifier = Modifier.weight(1f))
+                    TextButton(onClick = { a.shiftSubtitle(-500) }) { Text("−0.5") }
+                    Text("%+.1f".format(ui.subOffset / 1000.0), fontSize = 12.sp)
+                    TextButton(onClick = { a.shiftSubtitle(500) }) { Text("+0.5") }
+                }
+                if (ui.isLive) {
+                    Text(L("חיפוש כתוביות זמין לסרטים וסדרות"), fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
                 var manual by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(a.currentQueryTitle()) }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     androidx.compose.material3.OutlinedTextField(

@@ -78,6 +78,23 @@ class PlayerUi {
     var voiceOn by mutableStateOf(false)
     /** כתוביות מובנות בקובץ (לא כולל החיצונית שלנו) */
     var embedded by mutableStateOf<List<EmbeddedSub>>(emptyList())
+    /** רצועות שמע (שפות) */
+    var audio by mutableStateOf<List<EmbeddedSub>>(emptyList())
+    var speed by mutableStateOf(1f)
+    /** מהירות זמנית בלחיצה ארוכה */
+    var boosting by mutableStateOf(false)
+    var locked by mutableStateOf(false)
+    var landscape by mutableStateOf(true)
+    var stillWatching by mutableStateOf(false)
+    var introSkipped by mutableStateOf(false)
+    /** חיווי ג'סטות: "⏩ 10" / "🔆 60%" / "🔊 40%" */
+    var gesture by mutableStateOf<String?>(null)
+    /** זמן הנגיעה האחרונה – להסתרת הפקדים */
+    var touchedAt by mutableStateOf(System.currentTimeMillis())
+    /** לוח שידורים של הערוץ בתוך הנגן */
+    var showGuide by mutableStateOf(false)
+    /** צופה כרגע בתוכנית מהעבר (catch-up) של הערוץ הנוכחי */
+    var inCatchup by mutableStateOf(false)
     var casting by mutableStateOf(false)
 }
 
@@ -123,6 +140,16 @@ class PlayerActivity : FragmentActivity() {
                 list += EmbeddedSub(gi, name, g.isSelected)
             }
             ui.embedded = list
+            val al = ArrayList<EmbeddedSub>()
+            tracks.groups.forEachIndexed { gi, g ->
+                if (g.type != C.TRACK_TYPE_AUDIO) return@forEachIndexed
+                val f = g.getTrackFormat(0)
+                val ch = if (f.channelCount > 2) " ${f.channelCount}ch" else ""
+                val name = (listOfNotNull(f.label, f.language?.let { langLabel(it.take(2)) }).joinToString(" · ")
+                    .ifBlank { L("שמע {0}", al.size + 1) }) + ch
+                al += EmbeddedSub(gi, name, g.isSelected)
+            }
+            ui.audio = al
             // כתובית חיצונית נטענה – לבחור אותה ולכבות את המובנות
             val og = ourGroup
             if (og != null && subFile != null && Prefs.replaceEmbedded && !og.isSelected) {
@@ -135,6 +162,7 @@ class PlayerActivity : FragmentActivity() {
 
         override fun onIsPlayingChanged(isPlaying: Boolean) {
             if (!isPlaying) voice?.stop()
+            updatePip()
         }
     }
 
@@ -158,6 +186,8 @@ class PlayerActivity : FragmentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        ui.landscape = Prefs.bool("player_landscape", true)
+        applyOrientation()
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         WindowCompat.setDecorFitsSystemWindows(window, false)
         WindowInsetsControllerCompat(window, window.decorView).apply {
@@ -185,6 +215,8 @@ class PlayerActivity : FragmentActivity() {
         })
 
         setupCast()
+        androidx.core.content.ContextCompat.registerReceiver(this, pipReceiver, android.content.IntentFilter(pipAction),
+            androidx.core.content.ContextCompat.RECEIVER_NOT_EXPORTED)
         setContent { AppTheme { PlayerScreen(this) } }
 
         if (intent.getBooleanExtra("resume", false) && Repo.queue.isNotEmpty()) attach(Repo.queueIndex)
@@ -215,6 +247,9 @@ class PlayerActivity : FragmentActivity() {
     fun playIndex(i: Int) {
         val q = Repo.queue
         if (i !in q.indices) return
+        ui.introSkipped = false
+        ui.stillWatching = false
+        ui.inCatchup = false
         saveProgress()
         if (i != Repo.queueIndex) lastIndex = Repo.queueIndex
         attach(i)
@@ -264,7 +299,9 @@ class PlayerActivity : FragmentActivity() {
         if (item.kind != Kind.LIVE && !item.isCatchup && player.duration > 0)
             Prefs.saveResume(item, player.duration, player.duration)
         if (item.kind == Kind.SERIES && Prefs.autoNext && ui.hasNext) {
-            toast(L("עובר לפרק הבא…")); next()
+            autoCount++
+            if (autoCount >= 3) { ui.stillWatching = true; return }
+            next()
         } else if (item.kind != Kind.LIVE || item.isCatchup) {
             finish()
         }
@@ -291,6 +328,112 @@ class PlayerActivity : FragmentActivity() {
         val dur = player.duration
         val pos = player.currentPosition
         if (dur > 0 && pos > 5_000) Prefs.saveResume(item, pos, dur)
+    }
+
+    private var autoCount = 0
+
+    /** הערוץ (Channel) של הפריט הנוכחי – ל-EPG ול-catch-up */
+    fun currentChannel(): com.tbm.iptv.data.Channel? {
+        val q = Repo.queue.getOrNull(Repo.queueIndex) ?: return null
+        return Repo.content?.live?.firstOrNull { it.key == q.key }
+    }
+
+    /** צפייה בתוכנית שכבר שודרה, בלי לעזוב את הערוץ */
+    fun playCatchup(c: com.tbm.iptv.data.Channel, e: com.tbm.iptv.data.EpgEntry) {
+        val url = com.tbm.iptv.data.Catchup.url(Prefs.activePlaylist(), c, e.start, e.end)
+        if (url == null) { toast(L("הערוץ לא תומך בצפייה לאחור")); return }
+        val it = PlayItem("cu:${c.key}:${e.start}", "${c.name} · ${e.title}", url, Kind.LIVE,
+            c.logo, epgId = c.epgId, channelName = c.name, isCatchup = true)
+        current = it
+        ui.item = it
+        ui.title = it.title
+        ui.isLive = false
+        ui.inCatchup = true
+        ui.showGuide = false
+        ui.error = null
+        player.setMediaItem(PlayerFactory.mediaItem(url, it.title))
+        player.prepare(); player.play()
+        toast(L("צפייה לאחור: {0}", e.title))
+    }
+
+    /** חזרה לשידור חי מצפייה לאחור */
+    fun backToLive() { ui.inCatchup = false; playIndex(Repo.queueIndex) }
+
+    /** המשך אחרי "עדיין צופה?" */
+    fun continueWatching() { ui.stillWatching = false; autoCount = 0; next() }
+
+    /** פעולת משתמש (לא אוטומטית) – מאפס מונה "עדיין צופה?" */
+    fun touched() { ui.touchedAt = System.currentTimeMillis(); autoCount = 0 }
+
+    fun applyOrientation() {
+        requestedOrientation = if (ui.landscape) android.content.pm.ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+        else android.content.pm.ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+    }
+
+    fun toggleRotate() {
+        ui.landscape = !ui.landscape
+        Prefs.setBool("player_landscape", ui.landscape)
+        applyOrientation()
+    }
+
+    fun seekBy(ms: Long) {
+        if (ui.isLive) return
+        val d = player.duration
+        var p = player.currentPosition + ms
+        if (d > 0) p = p.coerceAtMost(d - 1000)
+        player.seekTo(p.coerceAtLeast(0))
+    }
+
+    fun togglePlay() { if (player.isPlaying) player.pause() else player.play() }
+
+    fun setSpeed(s: Float) {
+        ui.speed = s
+        player.setPlaybackSpeed(s)
+    }
+
+    fun cycleSpeed() {
+        val steps = listOf(0.75f, 1f, 1.25f, 1.5f, 2f)
+        setSpeed(steps[(steps.indexOf(ui.speed).coerceAtLeast(0) + 1) % steps.size])
+        toast(L("מהירות: {0}×", ui.speed))
+    }
+
+    /** לחיצה ארוכה = 2× זמני, כמו ביוטיוב */
+    fun boost(on: Boolean) {
+        if (ui.isLive) return
+        ui.boosting = on
+        player.setPlaybackSpeed(if (on) 2f else ui.speed)
+    }
+
+    fun selectAudio(e: EmbeddedSub) {
+        val g = player.currentTracks.groups.getOrNull(e.groupIndex) ?: return
+        player.trackSelectionParameters = player.trackSelectionParameters.buildUpon()
+            .setOverrideForType(androidx.media3.common.TrackSelectionOverride(g.mediaTrackGroup, 0))
+            .build()
+        toast(L("שמע: {0}", e.name))
+    }
+
+    /** בהירות: שינוי יחסי (-1..1) */
+    fun adjustBrightness(delta: Float) {
+        val lp = window.attributes
+        val cur = if (lp.screenBrightness < 0) 0.5f else lp.screenBrightness
+        lp.screenBrightness = (cur + delta).coerceIn(0.02f, 1f)
+        window.attributes = lp
+        ui.gesture = "🔆 ${(lp.screenBrightness * 100).toInt()}%"
+    }
+
+    private var volAcc = 0f
+    fun adjustVolume(delta: Float) {
+        val am = getSystemService(AUDIO_SERVICE) as android.media.AudioManager
+        val max = am.getStreamMaxVolume(android.media.AudioManager.STREAM_MUSIC)
+        volAcc += delta * max
+        val steps = volAcc.toInt()
+        if (steps != 0) {
+            volAcc -= steps
+            val v = (am.getStreamVolume(android.media.AudioManager.STREAM_MUSIC) + steps).coerceIn(0, max)
+            am.setStreamVolume(android.media.AudioManager.STREAM_MUSIC, v, 0)
+        }
+        val v = am.getStreamVolume(android.media.AudioManager.STREAM_MUSIC)
+        ui.gesture = "🔊 ${v * 100 / max.coerceAtLeast(1)}%"
     }
 
     fun cycleResize() {
@@ -537,6 +680,18 @@ class PlayerActivity : FragmentActivity() {
         if (event.action == KeyEvent.ACTION_DOWN && !ui.showSubs && !ui.showList && !ui.showRecord) {
             val live = ui.isLive
             val code = event.keyCode
+            touched()
+            when (code) {
+                KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE, KeyEvent.KEYCODE_SPACE -> { togglePlay(); ui.controlsVisible = true; return true }
+                KeyEvent.KEYCODE_MEDIA_PLAY -> { player.play(); return true }
+                KeyEvent.KEYCODE_MEDIA_PAUSE -> { player.pause(); ui.controlsVisible = true; return true }
+                KeyEvent.KEYCODE_MEDIA_FAST_FORWARD -> { seekBy(30_000); return true }
+                KeyEvent.KEYCODE_MEDIA_REWIND -> { seekBy(-10_000); return true }
+                KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER ->
+                    if (!ui.controlsVisible) { ui.controlsVisible = true; return true }
+                KeyEvent.KEYCODE_DPAD_LEFT -> if (!live && !ui.controlsVisible) { seekBy(-10_000); ui.gesture = "⏪ 10"; return true }
+                KeyEvent.KEYCODE_DPAD_RIGHT -> if (!live && !ui.controlsVisible) { seekBy(10_000); ui.gesture = "⏩ 10"; return true }
+            }
             if (live && code >= KeyEvent.KEYCODE_0 && code <= KeyEvent.KEYCODE_9) {
                 zapDigit(code - KeyEvent.KEYCODE_0); return true
             }
@@ -561,17 +716,64 @@ class PlayerActivity : FragmentActivity() {
         return super.dispatchKeyEvent(event)
     }
 
+    // ------------------------------------------------------------------ PiP עם כפתורים (כמו יוטיוב)
+    private val pipAction = "com.tbm.iptv.PIP"
+    private val pipReceiver = object : android.content.BroadcastReceiver() {
+        override fun onReceive(c: android.content.Context, i: Intent) {
+            when (i.getIntExtra("cmd", 0)) {
+                1 -> prev()
+                2 -> togglePlay()
+                3 -> next()
+                4 -> seekBy(-10_000)
+                5 -> seekBy(10_000)
+            }
+            updatePip()
+        }
+    }
+
+    private fun pipSupported() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
+        packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)
+
+    @android.annotation.TargetApi(26)
+    private fun action(cmd: Int, icon: Int, title: String): android.app.RemoteAction {
+        val pi = android.app.PendingIntent.getBroadcast(
+            this, cmd, Intent(pipAction).setPackage(packageName).putExtra("cmd", cmd),
+            android.app.PendingIntent.FLAG_IMMUTABLE or android.app.PendingIntent.FLAG_UPDATE_CURRENT,
+        )
+        return android.app.RemoteAction(android.graphics.drawable.Icon.createWithResource(this, icon), title, title, pi)
+    }
+
+    @android.annotation.TargetApi(26)
+    private fun pipParams(): PictureInPictureParams {
+        val playing = player.isPlaying
+        val live = ui.isLive || ui.inCatchup
+        val actions = listOf(
+            if (live) action(1, android.R.drawable.ic_media_previous, L("ערוץ קודם")) else action(4, android.R.drawable.ic_media_rew, L("10 שניות אחורה")),
+            action(2, if (playing) android.R.drawable.ic_media_pause else android.R.drawable.ic_media_play, L("ניגון/השהיה")),
+            if (live) action(3, android.R.drawable.ic_media_next, L("ערוץ הבא")) else action(5, android.R.drawable.ic_media_ff, L("10 שניות קדימה")),
+        )
+        val b = PictureInPictureParams.Builder().setAspectRatio(Rational(16, 9)).setActions(actions)
+        if (Build.VERSION.SDK_INT >= 31) {
+            b.setAutoEnterEnabled(Prefs.systemPip && playing)
+            b.setSeamlessResizeEnabled(true)
+        }
+        return b.build()
+    }
+
+    fun updatePip() {
+        if (!pipSupported()) return
+        runCatching { setPictureInPictureParams(pipParams()) }
+    }
+
+    fun enterPip() {
+        if (!pipSupported()) return
+        runCatching { enterPictureInPictureMode(pipParams()) }
+    }
+
     override fun onUserLeaveHint() {
         super.onUserLeaveHint()
-        if (Prefs.systemPip && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && player.isPlaying &&
-            packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)
-        ) {
-            runCatching {
-                enterPictureInPictureMode(
-                    PictureInPictureParams.Builder().setAspectRatio(Rational(16, 9)).build()
-                )
-            }
-        }
+        // באנדרואיד 12+ הכניסה אוטומטית (setAutoEnterEnabled); בגרסאות ישנות – ידנית
+        if (Prefs.systemPip && player.isPlaying && Build.VERSION.SDK_INT < 31) enterPip()
     }
 
     override fun onStop() {
@@ -581,6 +783,7 @@ class PlayerActivity : FragmentActivity() {
     }
 
     override fun onDestroy() {
+        runCatching { unregisterReceiver(pipReceiver) }
         saveProgress()
         player.removeListener(listener)
         playerView?.player = null

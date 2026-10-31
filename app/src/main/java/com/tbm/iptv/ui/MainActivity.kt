@@ -26,6 +26,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Forward10
+import androidx.compose.material.icons.filled.OpenInFull
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Replay10
+import androidx.compose.material.icons.filled.SkipNext
+import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -148,19 +155,54 @@ fun AppRoot() {
 private fun MiniPlayer(modifier: Modifier) {
     val ctx = LocalContext.current
     val p = PlayerHolder.current() ?: return
+    var playing by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(p.isPlaying) }
+    var showCtl by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(true) }
+    LaunchedEffect(Unit) { while (true) { playing = p.isPlaying; kotlinx.coroutines.delay(400) } }
+    LaunchedEffect(showCtl) { if (showCtl) { kotlinx.coroutines.delay(4000); showCtl = false } }
+    val item = com.tbm.iptv.data.Repo.queue.getOrNull(com.tbm.iptv.data.Repo.queueIndex)
+    val live = item?.kind == com.tbm.iptv.data.Kind.LIVE
+    fun go(d: Int) {
+        val q = com.tbm.iptv.data.Repo.queue
+        val i = com.tbm.iptv.data.Repo.queueIndex + d
+        if (i !in q.indices) return
+        com.tbm.iptv.data.Repo.queueIndex = i
+        PlayerHolder.miniTitle = q[i].title
+        p.setMediaItem(com.tbm.iptv.player.PlayerFactory.mediaItem(q[i].url, q[i].title)); p.prepare(); p.play()
+        if (q[i].kind == com.tbm.iptv.data.Kind.LIVE) Prefs.addRecentChannel(q[i].key)
+    }
     Box(
-        modifier.padding(12.dp).size(220.dp, 124.dp).clip(RoundedCornerShape(10.dp))
-            .border(2.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(10.dp))
+        modifier.padding(12.dp).size(260.dp, 146.dp).clip(RoundedCornerShape(12.dp))
+            .border(2.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(12.dp))
             .background(Color.Black)
-            .clickable { Launcher.resumeMini(ctx) },
+            .clickable { showCtl = !showCtl },
     ) {
         AndroidView(
             factory = { PlayerView(it).apply { useController = false; player = p } },
             update = { it.player = p },
             modifier = Modifier.fillMaxSize(),
         )
-        IconButton(onClick = { PlayerHolder.release() }, modifier = Modifier.align(Alignment.TopEnd).size(32.dp)) {
-            Icon(Icons.Filled.Close, L("סגור"), tint = Color.White)
+        if (showCtl) {
+            Box(Modifier.fillMaxSize().background(Color(0x77000000))) {
+                IconButton(onClick = { Launcher.resumeMini(ctx) }, modifier = Modifier.align(Alignment.TopStart).size(36.dp)) {
+                    Icon(Icons.Filled.OpenInFull, L("הגדל"), tint = Color.White)
+                }
+                IconButton(onClick = { PlayerHolder.release() }, modifier = Modifier.align(Alignment.TopEnd).size(36.dp)) {
+                    Icon(Icons.Filled.Close, L("סגור"), tint = Color.White)
+                }
+                androidx.compose.foundation.layout.Row(Modifier.align(Alignment.Center), verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = { showCtl = true; if (live) go(-1) else p.seekTo((p.currentPosition - 10_000).coerceAtLeast(0)) }) {
+                        Icon(if (live) Icons.Filled.SkipPrevious else Icons.Filled.Replay10, null, tint = Color.White)
+                    }
+                    IconButton(onClick = { showCtl = true; if (p.isPlaying) p.pause() else p.play() }, modifier = Modifier.size(52.dp)) {
+                        Icon(if (playing) Icons.Filled.Pause else Icons.Filled.PlayArrow, null, tint = Color.White, modifier = Modifier.size(40.dp))
+                    }
+                    IconButton(onClick = { showCtl = true; if (live) go(1) else p.seekTo(p.currentPosition + 10_000) }) {
+                        Icon(if (live) Icons.Filled.SkipNext else Icons.Filled.Forward10, null, tint = Color.White)
+                    }
+                }
+                androidx.compose.material3.Text(PlayerHolder.miniTitle, color = Color.White, fontSize = androidx.compose.ui.unit.TextUnit(11f, androidx.compose.ui.unit.TextUnitType.Sp),
+                    maxLines = 1, modifier = Modifier.align(Alignment.BottomCenter).padding(4.dp))
+            }
         }
     }
 }
