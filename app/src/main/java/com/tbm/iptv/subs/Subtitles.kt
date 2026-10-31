@@ -208,6 +208,7 @@ object SubtitleManager {
 
     /** מתקן פיסוק בכתוביות עבריות (נקודה בתחילת שורה וכו') ע"י סימון כיווניות RTL */
     private const val PUNCT = ".,!?:;…"
+    private val nikud = Regex("[\\u0591-\\u05BD\\u05BF\\u05C1\\u05C2\\u05C4\\u05C5\\u05C7]")
     private val tagRx = Regex("<[^>]*>|\\{[^}]*\\}")
 
     /**
@@ -217,7 +218,8 @@ object SubtitleManager {
      * 2. עוטפים כל שורה עברית ב-RLE…PDF כדי שתוצג תמיד מימין לשמאל.
      */
     fun fixRtl(text: String): String {
-        val lines = text.lines().map { it.replace("\u202B", "").replace("\u202C", "") }
+        // ניקוד לא מוצג על המסך (אם ינוקד – רק ברקע לקריינות)
+        val lines = text.lines().map { it.replace("\u202B", "").replace("\u202C", "").replace(nikud, "") }
         val heb = lines.filter { rtlChars.containsMatchIn(it) }.map { tagRx.replace(it, "").trim() }.filter { it.isNotEmpty() }
         val startP = heb.count { it[0] in PUNCT }
         val endP = heb.count { it.last() in PUNCT }
