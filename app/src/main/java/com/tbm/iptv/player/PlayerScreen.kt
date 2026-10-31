@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.Subtitles
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.foundation.layout.Arrangement
@@ -601,6 +602,12 @@ private fun OptionsSheet(a: PlayerActivity) {
                                 item { OptRow(Icons.Filled.Bedtime, L("טיימר שינה"), if (ui.sleepMin > 0) L("{0} דק׳", ui.sleepMin) else L("כבוי")) { ui.options = "sleep" } }
                                 if (!ui.isLive) item { OptRow(Icons.Filled.RecordVoiceOver, L("קריינות AI"), if (ui.voiceOn) L("פעילה") else L("כבויה")) { a.toggleVoice() } }
                                 item { OptRow(Icons.Filled.ScreenRotation, L("סובב מסך"), if (ui.landscape) L("לרוחב") else L("לאורך")) { a.toggleRotate() } }
+                                item {
+                                    val ctx = androidx.compose.ui.platform.LocalContext.current
+                                    val p = ExternalPlayer.pkg
+                                    OptRow(Icons.AutoMirrored.Filled.OpenInNew, L("פתח בנגן חיצוני"),
+                                        if (p.isBlank()) L("VLC / MX – בחירה") else ExternalPlayer.appName(ctx, p)) { ui.options = null; a.openExternal() }
+                                }
                             }
                             "audio" -> {
                                 if (ui.audio.isEmpty()) item { Text(L("אין רצועות שמע נוספות"), color = Color(0xFFAAAAAA), modifier = Modifier.padding(20.dp)) }

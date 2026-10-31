@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
+import kotlinx.coroutines.launch
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
@@ -134,18 +135,29 @@ object Launcher {
         Repo.queue = queue
         Repo.queueIndex = index
         val item = queue[index]
-        if (Prefs.externalPlayer) {
-            try {
-                ctx.startActivity(
-                    Intent(Intent.ACTION_VIEW)
-                        .setDataAndType(Uri.parse(item.url), "video/*")
-                        .putExtra("title", item.title)
-                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                )
+        if (com.tbm.iptv.player.ExternalPlayer.useFor(item.kind)) {
+            val app = ctx.applicationContext
+            // סרט/סדרה בלי כתובית שמורה – מחפש כתובית עברית לפני הפתיחה בנגן החיצוני
+            if (item.kind != com.tbm.iptv.data.Kind.LIVE && !item.isCatchup && Prefs.autoSubs &&
+                com.tbm.iptv.subs.SubtitleManager.loadCache(item.key) == null) {
+                Toast.makeText(ctx, L("מחפש כתוביות לנגן החיצוני…"), Toast.LENGTH_SHORT).show()
+                Repo.scope.launch {
+                    val sf = kotlinx.coroutines.withTimeoutOrNull(15_000) {
+                        runCatching {
+                            val sm = com.tbm.iptv.subs.SubtitleManager
+                            val q = sm.buildQuery(item)
+                            val best = sm.searchAll(q).first.firstOrNull { !it.provider.startsWith(sm.MT_NAME) }
+                            best?.let { r -> sm.download(r, q).also { sm.saveCache(item.key, it, r.provider) } }
+                        }.getOrNull()
+                    }
+                    kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                        if (!com.tbm.iptv.player.ExternalPlayer.open(app, item, sf))
+                            app.startActivity(Intent(app, PlayerActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                    }
+                }
                 return
-            } catch (e: ActivityNotFoundException) {
-                Toast.makeText(ctx, L("לא נמצא נגן חיצוני – משתמש בנגן המובנה"), Toast.LENGTH_SHORT).show()
             }
+            if (com.tbm.iptv.player.ExternalPlayer.open(ctx, item)) return
         }
         ctx.startActivity(Intent(ctx, PlayerActivity::class.java))
     }

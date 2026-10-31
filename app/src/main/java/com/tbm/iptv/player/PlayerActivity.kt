@@ -453,6 +453,13 @@ class PlayerActivity : FragmentActivity() {
 
     fun setResize(m: Int) { ui.resize = m }
 
+    /** מעבר לנגן חיצוני (VLC/MX) מהמיקום הנוכחי, עם הכתובית שנטענה */
+    fun openExternal() {
+        val item = current ?: return
+        val pos = if (ui.isLive) 0L else player.currentPosition
+        if (ExternalPlayer.open(this, item, subFile, pos)) { player.pause(); exit() }
+    }
+
     fun cycleResize() {
         ui.resize = when (ui.resize) {
             AspectRatioFrameLayout.RESIZE_MODE_FIT -> AspectRatioFrameLayout.RESIZE_MODE_ZOOM

@@ -528,7 +528,7 @@ private fun PlayerPage() {
             Slider(value = Prefs.voiceDuck, onValueChange = { Prefs.voiceDuck = it }, valueRange = 0f..1f)
             Hint(L("הכפתור 🗣 בנגן מפעיל ומכבה. דורש קול עברי מותקן: הגדרות אנדרואיד ← שפה וקלט ← המרת טקסט לדיבור ← Google ← עברית."))
             HorizontalDivider(Modifier.padding(vertical = 8.dp))
-            SwitchRow(L("נגן חיצוני (VLC / MX)"), Prefs.externalPlayer) { Prefs.externalPlayer = it }
+            ExternalPlayerSettings()
             Text(L("זמן הצגת פקדים: {0} שניות", Prefs.osdTimeout), fontSize = 13.sp, modifier = Modifier.padding(top = 8.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 listOf(3, 5, 8, 12).forEach { s ->
@@ -1036,4 +1036,51 @@ private fun SubTestPanel() {
         }
     }
     HorizontalDivider(Modifier.padding(vertical = 6.dp))
+}
+
+
+/** בחירת נגן: מובנה/חיצוני לכל סוג תוכן + נגן חיצוני מועדף */
+@Composable
+private fun ExternalPlayerSettings() {
+    val ctx = LocalContext.current
+    Prefs.version.intValue
+    var pick by remember { mutableStateOf(false) }
+    Text(L("בחירת נגן"), fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 4.dp))
+    listOf(Kind.LIVE to L("ערוצים"), Kind.MOVIE to L("סרטים"), Kind.SERIES to L("סדרות")).forEach { (k, label) ->
+        val ext = com.tbm.iptv.player.ExternalPlayer.useFor(k)
+        Row(Modifier.fillMaxWidth().padding(vertical = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text(label, Modifier.weight(1f))
+            FilterChipSimple(L("מובנה"), !ext) { com.tbm.iptv.player.ExternalPlayer.setFor(k, false) }
+            Spacer(Modifier.width(6.dp))
+            FilterChipSimple(L("חיצוני"), ext) { com.tbm.iptv.player.ExternalPlayer.setFor(k, true) }
+        }
+    }
+    val p = com.tbm.iptv.player.ExternalPlayer.pkg
+    FocusItem(Modifier.fillMaxWidth(), onClick = { pick = true }) {
+        Column(Modifier.padding(vertical = 10.dp, horizontal = 4.dp)) {
+            Text(L("נגן חיצוני מועדף"))
+            Text(if (p.isBlank()) L("לשאול בכל פעם") else com.tbm.iptv.player.ExternalPlayer.appName(ctx, p),
+                fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
+    Hint(L("בנגן החיצוני מצורפת כתובית עברית (מהמטמון או מחיפוש אוטומטי) והצפייה ממשיכה מהמקום שעצרת. בנגן המובנה: ⚙ ← \"פתח בנגן חיצוני\"."))
+    if (pick) {
+        val apps = remember { com.tbm.iptv.player.ExternalPlayer.installed(ctx) }
+        AlertDialog(
+            onDismissRequest = { pick = false },
+            title = { Text(L("נגן חיצוני מועדף")) },
+            text = {
+                Column(Modifier.verticalScroll(rememberScrollState())) {
+                    (listOf(com.tbm.iptv.player.ExternalPlayer.App("", L("לשאול בכל פעם"))) + apps).forEach { a ->
+                        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                            RadioButton(selected = p == a.pkg, onClick = { com.tbm.iptv.player.ExternalPlayer.pkg = a.pkg; pick = false })
+                            Text(a.name)
+                        }
+                    }
+                    if (apps.isEmpty()) Hint(L("לא נמצאו נגנים מותקנים – התקן VLC או MX Player מחנות Play"))
+                }
+            },
+            confirmButton = { TextButton(onClick = { pick = false }) { Text(L("סגור")) } },
+        )
+    }
 }

@@ -90,7 +90,7 @@ object I18n {
         "אין מידע על השחקנים" to "No cast information",
         "לא נמצא טריילר" to "No trailer found",
         "טריילר" to "Trailer",
-        "ייפתח ב-YouTube" to "Opens in YouTube", "פתח ב-YouTube" to "Open in YouTube", "תרגום תקצירים, ז'אנרים ושמות" to "Translate plots, genres and names", "פעיל – לשפת הממשק (TMDB / Google)" to "On – to the app language (TMDB / Google)",
+        "ייפתח ב-YouTube" to "Opens in YouTube", "פתח ב-YouTube" to "Open in YouTube", "פתח באמצעות" to "Open with", "הנגן החיצוני לא נמצא – משתמש בנגן המובנה" to "External player not found – using the built-in player", "מחפש כתוביות לנגן החיצוני…" to "Finding subtitles for the external player…", "פתח בנגן חיצוני" to "Open in external player", "VLC / MX – בחירה" to "VLC / MX – choose", "בחירת נגן" to "Player selection", "מובנה" to "Built-in", "חיצוני" to "External", "נגן חיצוני מועדף" to "Preferred external player", "לשאול בכל פעם" to "Ask every time", "בנגן החיצוני מצורפת כתובית עברית (מהמטמון או מחיפוש אוטומטי) והצפייה ממשיכה מהמקום שעצרת. בנגן המובנה: ⚙ ← \"פתח בנגן חיצוני\"." to "Hebrew subtitles (cached or auto-found) are passed to the external player and playback resumes where you stopped. In the built-in player: ⚙ → \"Open in external player\".", "לא נמצאו נגנים מותקנים – התקן VLC או MX Player מחנות Play" to "No players installed – install VLC or MX Player from Google Play", "תרגום תקצירים, ז'אנרים ושמות" to "Translate plots, genres and names", "פעיל – לשפת הממשק (TMDB / Google)" to "On – to the app language (TMDB / Google)",
         "אין תמונות" to "No images",
         "{0} עונות" to "{0} seasons",
         "פרקים" to "Episodes",
