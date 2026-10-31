@@ -37,6 +37,7 @@ import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Lock
@@ -773,6 +774,8 @@ fun PlaylistsScreen(onDone: () -> Unit, onBack: (() -> Unit)?) {
     val lists = remember(ver) { Prefs.playlists() }
     val active = remember(ver) { Prefs.activePlaylist()?.id }
     var dialog by remember { mutableStateOf<String?>(null) }
+    var editing by remember { mutableStateOf<Playlist?>(null) }
+    var deleting by remember { mutableStateOf<Playlist?>(null) }
     val df = remember { SimpleDateFormat("dd/MM/yyyy", Locale.US) }
 
     fun activate(p: Playlist, force: Boolean = false) {
@@ -832,12 +835,14 @@ fun PlaylistsScreen(onDone: () -> Unit, onBack: (() -> Unit)?) {
                                     fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 upd?.let { Text(L("עדכון אחרון: {0}", it), fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant) }
                                 exp?.let { Text(L("תוקף: {0}", it), fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                                if (p.isXtream && p.user.isNotBlank()) Text(L("משתמש: {0}", p.user), fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text(if (p.id == active) L("● פעיל כעת") else L("לחץ כדי לעבור למקור הזה"), fontSize = 12.sp,
+                                    color = if (p.id == active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    fontWeight = if (p.id == active) FontWeight.Bold else FontWeight.Normal)
                             }
+                            IconButton(onClick = { editing = p }) { Icon(Icons.Filled.Edit, L("עריכה")) }
                             IconButton(onClick = { activate(p, true) }) { Icon(Icons.Filled.Refresh, L("רענון")) }
-                            IconButton(onClick = {
-                                Repo.deletePlaylistCache(p)
-                                Prefs.savePlaylists(lists.filter { it.id != p.id })
-                            }) { Icon(Icons.Filled.Delete, L("מחיקה")) }
+                            IconButton(onClick = { deleting = p }) { Icon(Icons.Filled.Delete, L("מחיקה")) }
                         }
                     }
                 }
@@ -864,13 +869,45 @@ fun PlaylistsScreen(onDone: () -> Unit, onBack: (() -> Unit)?) {
         "m3u" -> M3uDialog(onAdd = add, onDismiss = { dialog = null })
         "xtream" -> XtreamDialog(onAdd = add, onDismiss = { dialog = null })
     }
+    editing?.let { old ->
+        val save: (Playlist) -> Unit = { np ->
+            val changed = np.url != old.url || np.user != old.user || np.pass != old.pass || np.type != old.type
+            Prefs.savePlaylists(lists.map { if (it.id == old.id) np else it })
+            editing = null
+            if (changed) {
+                Repo.deletePlaylistCache(old)
+                Prefs.setStrQuiet("tz_${old.id}", ""); Prefs.setStrQuiet("exp_${old.id}", "")
+                if (old.id == active) activate(np, true)
+            }
+            Toast.makeText(ctx, L("נשמר"), Toast.LENGTH_SHORT).show()
+        }
+        if (old.isXtream) XtreamDialog(onAdd = save, onDismiss = { editing = null }, edit = old)
+        else M3uDialog(onAdd = save, onDismiss = { editing = null }, edit = old)
+    }
+    deleting?.let { d ->
+        AlertDialog(
+            onDismissRequest = { deleting = null },
+            title = { Text(L("מחיקת מקור")) },
+            text = { Text(L("למחוק את \"{0}\"?", d.name)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    Repo.deletePlaylistCache(d)
+                    val rest = lists.filter { it.id != d.id }
+                    Prefs.savePlaylists(rest)
+                    deleting = null
+                    if (d.id == active) rest.firstOrNull()?.let { activate(it) }
+                }) { Text(L("מחק")) }
+            },
+            dismissButton = { TextButton(onClick = { deleting = null }) { Text(L("ביטול")) } },
+        )
+    }
 }
 
 @Composable
-private fun M3uDialog(onAdd: (Playlist) -> Unit, onDismiss: () -> Unit) {
+private fun M3uDialog(onAdd: (Playlist) -> Unit, onDismiss: () -> Unit, edit: Playlist? = null) {
     val ctx = LocalContext.current
-    var name by remember { mutableStateOf("") }
-    var url by remember { mutableStateOf("") }
+    var name by remember { mutableStateOf(edit?.name ?: "") }
+    var url by remember { mutableStateOf(edit?.url ?: "") }
     val pick = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
         if (uri != null) {
             try {
@@ -885,7 +922,7 @@ private fun M3uDialog(onAdd: (Playlist) -> Unit, onDismiss: () -> Unit) {
     }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(L("הוספת רשימת M3U")) },
+        title = { Text(if (edit != null) L("עריכת רשימת M3U") else L("הוספת רשימת M3U")) },
         text = {
             Column {
                 OutlinedTextField(name, { name = it }, label = { Text(L("שם")) }, singleLine = true, modifier = Modifier.fillMaxWidth())
@@ -902,26 +939,27 @@ private fun M3uDialog(onAdd: (Playlist) -> Unit, onDismiss: () -> Unit) {
                 val parsed = runCatching { Uri.parse(u) }.getOrNull()
                 val user = parsed?.getQueryParameter("username")
                 val pass = parsed?.getQueryParameter("password")
-                val id = UUID.randomUUID().toString().take(8)
+                val id = edit?.id ?: UUID.randomUUID().toString().take(8)
                 val p = if (u.contains("get.php") && !user.isNullOrBlank() && !pass.isNullOrBlank())
                     Playlist(id, name.ifBlank { parsed?.host ?: "Xtream" }, "xtream", u, user, pass)
                 else Playlist(id, name.ifBlank { L("רשימה") }, "m3u", u)
                 onAdd(p)
-            }) { Text(L("הוסף")) }
+            }) { Text(if (edit != null) L("שמור") else L("הוסף")) }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text(L("ביטול")) } },
     )
 }
 
 @Composable
-private fun XtreamDialog(onAdd: (Playlist) -> Unit, onDismiss: () -> Unit) {
-    var name by remember { mutableStateOf("") }
-    var server by remember { mutableStateOf("") }
-    var user by remember { mutableStateOf("") }
-    var pass by remember { mutableStateOf("") }
+private fun XtreamDialog(onAdd: (Playlist) -> Unit, onDismiss: () -> Unit, edit: Playlist? = null) {
+    var name by remember { mutableStateOf(edit?.name ?: "") }
+    var server by remember { mutableStateOf(edit?.url ?: "") }
+    var user by remember { mutableStateOf(edit?.user ?: "") }
+    var pass by remember { mutableStateOf(edit?.pass ?: "") }
+    var showPass by remember { mutableStateOf(false) }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(L("חשבון Xtream Codes")) },
+        title = { Text(if (edit != null) L("עריכת חשבון Xtream") else L("חשבון Xtream Codes")) },
         text = {
             Column {
                 OutlinedTextField(name, { name = it }, label = { Text(L("שם")) }, singleLine = true, modifier = Modifier.fillMaxWidth())
@@ -929,14 +967,20 @@ private fun XtreamDialog(onAdd: (Playlist) -> Unit, onDismiss: () -> Unit) {
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri), modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(user, { user = it }, label = { Text(L("שם משתמש")) }, singleLine = true, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(pass, { pass = it }, label = { Text(L("סיסמה")) }, singleLine = true,
-                    visualTransformation = PasswordVisualTransformation(), modifier = Modifier.fillMaxWidth())
+                    visualTransformation = if (showPass) VisualTransformation.None else PasswordVisualTransformation(),
+                    trailingIcon = {
+                        IconButton(onClick = { showPass = !showPass }) {
+                            Icon(if (showPass) Icons.Filled.VisibilityOff else Icons.Filled.Visibility, L("הצג סיסמה"))
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth())
             }
         },
         confirmButton = {
             TextButton(enabled = server.isNotBlank() && user.isNotBlank() && pass.isNotBlank(), onClick = {
-                onAdd(Playlist(UUID.randomUUID().toString().take(8), name.ifBlank { "Xtream" }, "xtream",
+                onAdd(Playlist(edit?.id ?: UUID.randomUUID().toString().take(8), name.ifBlank { "Xtream" }, "xtream",
                     server.trim(), user.trim(), pass.trim()))
-            }) { Text(L("התחבר")) }
+            }) { Text(if (edit != null) L("שמור") else L("התחבר")) }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text(L("ביטול")) } },
     )
