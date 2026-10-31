@@ -14,6 +14,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.getValue
@@ -125,7 +126,7 @@ fun AppRoot() {
 
     BackHandler(enabled = stack.size > 1) { back() }
 
-    Box(Modifier.fillMaxSize()) {
+    Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).systemBarsPadding()) {
         when (val top = stack.last()) {
             Screen.Home -> HomeScreen(nav)
             Screen.Playlists -> PlaylistsScreen(onDone = goHome, onBack = if (stack.size > 1) back else null)
@@ -134,7 +135,7 @@ fun AppRoot() {
             is Screen.Groups -> ManageGroupsScreen(top.kind, back)
             is Screen.Series -> SeriesScreen(top.item, back)
         }
-        if (PlayerHolder.miniActive) MiniPlayer(Modifier.align(Alignment.BottomEnd))
+        if (PlayerHolder.miniActive) MiniPlayer(Modifier.align(Alignment.BottomEnd).padding(bottom = 64.dp))
         PinDialog()
         CrashReport()
     }

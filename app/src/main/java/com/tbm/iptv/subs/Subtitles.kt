@@ -71,11 +71,23 @@ fun langLabel(code: String) = when (code) {
 
 object SubtitleManager {
     val providers: List<SubProvider> = listOf(
-        WizdomProvider, KtuvitProvider, OpenSubtitlesProvider, SubDlProvider,
+        WizdomProvider, KtuvitProvider, OpenSubtitlesProvider, OpenSubtitlesOrgProvider, SubDlProvider,
         SubSourceProvider, PodnapisiProvider, YifyProvider,
     )
 
     const val MT_NAME = "תרגום מכונה"
+
+    /** חיפוש לפי שם שהמשתמש הקליד (למשל שם מקורי בשפה אחרת) */
+    suspend fun buildQueryFor(title: String, item: PlayItem): SubQuery = withContext(Dispatchers.IO) {
+        val p = TitleParser.parse(title)
+        val base = TitleParser.parse(item.seriesName ?: item.title)
+        val season = item.season ?: base.season
+        val ep = item.episode ?: base.episode
+        val year = p.year ?: base.year
+        val imdb = if (p.title.matches(Regex("tt\\d{5,}"))) p.title
+        else runCatching { Imdb.find(p.title, year, season != null) }.getOrNull()
+        SubQuery(p.title, year, season, ep, imdb, Prefs.subLangs(), item.title)
+    }
 
     suspend fun buildQuery(item: PlayItem): SubQuery = withContext(Dispatchers.IO) {
         val p = TitleParser.parse(item.seriesName ?: item.title)
@@ -249,7 +261,21 @@ object Imdb {
         if (title.isBlank()) return null
         val key = "$title|$year|$series"
         cache[key]?.let { return it }
-        val q = title.lowercase().trim()
+        val clean = title.lowercase().replace(Regex("[^\\p{L}0-9 ]"), " ").replace(Regex("\\s+"), " ").trim()
+        val variants = linkedSetOf(clean)
+        listOf(':', '-', '–', '(').forEach { c ->
+            val i = title.indexOf(c)
+            if (i > 2) variants += title.substring(0, i).lowercase().replace(Regex("[^\\p{L}0-9 ]"), " ").replace(Regex("\\s+"), " ").trim()
+        }
+        for (v in variants) {
+            if (v.isBlank()) continue
+            val id = runCatching { findOne(v, title, year, series) }.getOrNull()
+            if (id != null) { cache[key] = id; return id }
+        }
+        return null
+    }
+
+    private fun findOne(q: String, title: String, year: Int?, series: Boolean): String? {
         val first = q.first().let { if (it in 'a'..'z') it else 'x' }
         val url = "https://v3.sg.media-imdb.com/suggestion/$first/${Http.enc(q)}.json"
         val arr = JSONObject(Http.get(url)).optJSONArray("d") ?: return null
@@ -269,7 +295,6 @@ object Imdb {
             sc -= i
             if (sc > bestScore) { bestScore = sc; best = id }
         }
-        best?.let { cache[key] = it }
         return best
     }
 }

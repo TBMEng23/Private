@@ -509,6 +509,7 @@ private fun SubsPage() {
             Field(L("מפתח API"), Prefs.str("subsource_key"), secret = true) { Prefs.setStr("subsource_key", it) }
             Hint(L("מפתח חינמי: subsource.net ← חשבון ← לשונית API."))
 
+            Provider(L("OpenSubtitles.org – ללא מפתח"), "p_osorg")
             Provider(L("Podnapisi – ללא הרשמה"), "p_podnapisi")
             Provider(L("YIFY – סרטים, ללא הרשמה"), "p_yify")
         }

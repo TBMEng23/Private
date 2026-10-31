@@ -272,16 +272,26 @@ object SubDlProvider : SubProvider {
 // ======================= Podnapisi (ללא הרשמה, יש עברית) =======================
 object PodnapisiProvider : SubProvider {
     override val name = "Podnapisi"
+    @Volatile private var host = "https://www.podnapisi.net"
+    private val hosts = listOf("https://www.podnapisi.net", "https://podnapisi.net")
+
+    private fun getAny(path: String): String {
+        var last: Exception? = null
+        for (h in listOf(host) + hosts.filter { it != host }) {
+            try { return Http.get(h + path).also { host = h } } catch (e: java.net.UnknownHostException) { last = e }
+        }
+        throw java.io.IOException(L("האתר לא זמין ברשת שלך"), last)
+    }
     override fun enabled() = Prefs.bool("p_podnapisi", true)
 
     override suspend fun search(q: SubQuery): List<SubResult> {
         val out = ArrayList<SubResult>()
         for (lang in q.langs.take(3)) {
-            val sb = StringBuilder("https://www.podnapisi.net/subtitles/search/old?sXML=1")
+            val sb = StringBuilder("/subtitles/search/old?sXML=1")
             sb.append("&sL=").append(lang).append("&sK=").append(Http.enc(q.title))
             if (q.isSeries) sb.append("&sTS=${q.season}&sTE=${q.episode}")
             q.year?.let { if (!q.isSeries) sb.append("&sY=$it") }
-            val xml = Http.get(sb.toString())
+            val xml = getAny(sb.toString())
             val doc = Jsoup.parse(xml, "", org.jsoup.parser.Parser.xmlParser())
             doc.select("subtitle").forEach { s ->
                 val pid = s.selectFirst("pid")?.text()?.trim().orEmpty()
@@ -290,7 +300,7 @@ object PodnapisiProvider : SubProvider {
                 val rls = s.selectFirst("release")?.text()?.trim().orEmpty()
                     .ifBlank { s.selectFirst("title")?.text().orEmpty() }
                 out += SubResult(name, l, rls, 1) {
-                    RawSub(Http.getBytes("https://www.podnapisi.net/subtitles/$pid/download?container=zip"), "podnapisi.zip")
+                    RawSub(Http.getBytes("$host/subtitles/$pid/download?container=zip"), "podnapisi.zip")
                 }
             }
         }
@@ -356,7 +366,10 @@ object YifyProvider : SubProvider {
     override suspend fun search(q: SubQuery): List<SubResult> {
         if (q.isSeries) return emptyList()
         val imdb = q.imdb ?: return emptyList()
-        val doc = Jsoup.parse(Http.get("$HOST/movie-imdb/$imdb"), HOST)
+        val html = try { Http.get("$HOST/movie-imdb/$imdb") } catch (e: java.io.IOException) {
+            if (e.message?.contains("404") == true) return emptyList() else throw e
+        }
+        val doc = Jsoup.parse(html, HOST)
         val out = ArrayList<SubResult>()
         doc.select("tr").forEach { tr ->
             val link = tr.selectFirst("a[href*=/subtitles/]") ?: return@forEach
@@ -372,5 +385,38 @@ object YifyProvider : SubProvider {
             }
         }
         return out
+    }
+}
+
+// ======================= OpenSubtitles.org – ה-API הישן, ללא מפתח =======================
+object OpenSubtitlesOrgProvider : SubProvider {
+    override val name = "OpenSubtitles.org"
+    private val iso3 = mapOf("he" to "heb", "en" to "eng", "ar" to "ara", "ru" to "rus", "fr" to "fre",
+        "es" to "spa", "de" to "ger", "it" to "ita", "pt" to "por", "tr" to "tur")
+    override fun enabled() = Prefs.bool("p_osorg", true)
+
+    override suspend fun search(q: SubQuery): List<SubResult> {
+        val langs = q.langs.mapNotNull { iso3[it] }.joinToString(",").ifBlank { return emptyList() }
+        val hdr = mapOf("X-User-Agent" to "TemporaryUserAgent", "User-Agent" to "TemporaryUserAgent")
+        val path = if (q.imdb != null) {
+            val num = q.imdb.removePrefix("tt").trimStart('0')
+            if (q.isSeries) "episode-${q.episode}/imdbid-$num/season-${q.season}/sublanguageid-$langs"
+            else "imdbid-$num/sublanguageid-$langs"
+        } else {
+            val t = Http.enc(q.title.lowercase())
+            if (q.isSeries) "episode-${q.episode}/query-$t/season-${q.season}/sublanguageid-$langs"
+            else "query-$t/sublanguageid-$langs"
+        }
+        val txt = Http.get("https://rest.opensubtitles.org/search/$path", hdr).trim()
+        if (!txt.startsWith("[")) return emptyList()
+        val a = JSONArray(txt)
+        return (0 until a.length()).mapNotNull { i ->
+            val o = a.optJSONObject(i) ?: return@mapNotNull null
+            val zip = o.optString("ZipDownloadLink").ifBlank { return@mapNotNull null }
+            val lang = o.optString("ISO639").ifBlank { "en" }.lowercase()
+            val rel = o.optString("MovieReleaseName").ifBlank { o.optString("SubFileName") }
+            val pop = (o.optString("SubDownloadsCnt").toIntOrNull() ?: 0) / 5000
+            SubResult(name, lang, rel, pop.coerceAtMost(2)) { RawSub(Http.getBytes(zip, hdr), "osorg.zip") }
+        }
     }
 }

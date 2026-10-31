@@ -289,11 +289,27 @@ private fun SubtitleDialog(a: PlayerActivity) {
                     OutlinedButton(onClick = { a.disableSubtitles(); ui.showSubs = false }) { Text(L("כבה")) }
                 }
                 Spacer(Modifier.size(8.dp))
+                var manual by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(a.currentQueryTitle()) }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    androidx.compose.material3.OutlinedTextField(
+                        manual, { manual = it }, singleLine = true, modifier = Modifier.weight(1f),
+                        label = { Text(L("שם לחיפוש (אפשר שם מקורי או tt1234567)")) },
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    androidx.compose.material3.Button(onClick = { a.searchManual(manual) }) { Text(L("חפש")) }
+                }
+                val active = com.tbm.iptv.subs.SubtitleManager.providers.filter { it.enabled() }.map { it.name }
+                val off = com.tbm.iptv.subs.SubtitleManager.providers.filter { !it.enabled() }.map { it.name }
+                Text(L("מקורות פעילים: {0}", active.joinToString(", ")), fontSize = 11.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp))
+                if (off.isNotEmpty()) Text(L("לא פעילים (חסר מפתח בהגדרות ← שמע וכתוביות): {0}", off.joinToString(", ")),
+                    fontSize = 11.sp, color = Color(0xFFFFB74D))
+                Spacer(Modifier.size(6.dp))
                 if (ui.subSearching) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         CircularProgressIndicator(Modifier.size(22.dp), strokeWidth = 2.dp)
                         Spacer(Modifier.width(10.dp))
-                        Text(L("מחפש ב-Wizdom, כתובית, OpenSubtitles, SubDL…"))
+                        Text(L("מחפש כתוביות…"))
                     }
                 }
                 if (!ui.subSearching && ui.subResults.isEmpty()) {

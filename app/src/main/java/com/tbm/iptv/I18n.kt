@@ -26,6 +26,11 @@ object I18n {
         "האפליקציה נסגרה בפעם הקודמת" to "The app closed unexpectedly last time",
         "לחץ \"העתק\" ושלח את הדוח כדי שאפשר יהיה לתקן." to "Tap \"Copy\" and send the report so it can be fixed.",
         "העתק" to "Copy", "הועתק" to "Copied", "סגור" to "Close",
+        "שם לחיפוש (אפשר שם מקורי או tt1234567)" to "Search name (original title or tt1234567)",
+        "חפש" to "Search", "מקורות פעילים: {0}" to "Active sources: {0}",
+        "לא פעילים (חסר מפתח בהגדרות ← שמע וכתוביות): {0}" to "Inactive (add a key in Settings → Audio & Subtitles): {0}",
+        "מחפש כתוביות…" to "Searching subtitles…", "האתר לא זמין ברשת שלך" to "Site unreachable on your network",
+        "OpenSubtitles.org – ללא מפתח" to "OpenSubtitles.org – no key needed",
     )
 }
 

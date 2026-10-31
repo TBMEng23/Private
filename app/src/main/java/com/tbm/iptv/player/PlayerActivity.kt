@@ -321,6 +321,22 @@ class PlayerActivity : FragmentActivity() {
     }
 
     // ------------------------------------------------------------------ כתוביות
+    /** חיפוש לפי שם שהמשתמש הקליד */
+    fun searchManual(title: String) {
+        val item = current ?: return
+        if (title.isBlank()) return
+        subJob?.cancel()
+        lifecycleScope.launch {
+            ui.subSearching = true
+            subQuery = runCatching { SubtitleManager.buildQueryFor(title, item) }.getOrNull()
+            searchSubtitles(auto = false)
+        }
+    }
+
+    /** השם שנשלח לחיפוש – מוצג בתיבת החיפוש */
+    fun currentQueryTitle(): String = subQuery?.title ?: com.tbm.iptv.data.TitleParser.parse(
+        current?.seriesName ?: current?.title ?: "").title
+
     fun searchSubtitles(auto: Boolean) {
         val item = current ?: return
         subJob?.cancel()
