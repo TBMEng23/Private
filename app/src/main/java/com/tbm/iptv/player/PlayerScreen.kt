@@ -301,7 +301,7 @@ private fun Controls(a: PlayerActivity) {
         TopBar(a, Modifier.align(Alignment.TopCenter))
 
         // מרכז: ‹ערוץ  ⏪10  ▶  ⏩10  ערוץ›
-        Row(Modifier.align(Alignment.Center), verticalAlignment = Alignment.CenterVertically) {
+        Box(Modifier.align(Alignment.Center)) { com.tbm.iptv.ui.Ltr { Row(verticalAlignment = Alignment.CenterVertically) {
             if (ui.isLive || ui.inCatchup) {
                 if (ui.hasPrev) BigBtn(Icons.AutoMirrored.Filled.KeyboardArrowLeft, L("ערוץ קודם"), 56) { a.touched(); a.prev() }
                 Spacer(Modifier.width(40.dp))
@@ -319,7 +319,7 @@ private fun Controls(a: PlayerActivity) {
                 Spacer(Modifier.width(36.dp))
                 BigBtn(Icons.Filled.Forward10, L("10 שניות קדימה"), 48) { a.touched(); a.seekBy(10_000) }
             }
-        }
+        } } }
 
         // תחתית: פס זמן + כפתורים
         Column(
@@ -327,7 +327,7 @@ private fun Controls(a: PlayerActivity) {
                 .background(Brush.verticalGradient(listOf(Color.Transparent, Color(0xDD000000))))
                 .padding(horizontal = 16.dp, vertical = 8.dp)
         ) {
-            if (!ui.isLive && dur > 0) {
+            if (!ui.isLive && dur > 0) com.tbm.iptv.ui.Ltr {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(fmtDur(dragging?.let { (it * dur).toLong() } ?: pos), color = Color.White, fontSize = 12.sp)
                     androidx.compose.material3.Slider(
@@ -341,7 +341,7 @@ private fun Controls(a: PlayerActivity) {
                     )
                     Text("-" + fmtDur((dur - pos).coerceAtLeast(0)), color = Color.White, fontSize = 12.sp)
                 }
-            } else if (ui.isLive) {
+            } else if (ui.isLive) com.tbm.iptv.ui.Ltr {
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 6.dp)) {
                     Text("● LIVE", color = Color(0xFFE50914), fontWeight = FontWeight.Bold, fontSize = 13.sp)
                     val item = ui.item

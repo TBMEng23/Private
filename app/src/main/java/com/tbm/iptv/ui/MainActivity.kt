@@ -191,7 +191,7 @@ private fun MiniPlayer(modifier: Modifier) {
                 IconButton(onClick = { PlayerHolder.release() }, modifier = Modifier.align(Alignment.TopEnd).size(36.dp)) {
                     Icon(Icons.Filled.Close, L("סגור"), tint = Color.White)
                 }
-                androidx.compose.foundation.layout.Row(Modifier.align(Alignment.Center), verticalAlignment = Alignment.CenterVertically) {
+                Ltr { androidx.compose.foundation.layout.Row(Modifier.align(Alignment.Center), verticalAlignment = Alignment.CenterVertically) {
                     IconButton(onClick = { showCtl = true; if (live) go(-1) else p.seekTo((p.currentPosition - 10_000).coerceAtLeast(0)) }) {
                         Icon(if (live) Icons.Filled.SkipPrevious else Icons.Filled.Replay10, null, tint = Color.White)
                     }
@@ -201,7 +201,7 @@ private fun MiniPlayer(modifier: Modifier) {
                     IconButton(onClick = { showCtl = true; if (live) go(1) else p.seekTo(p.currentPosition + 10_000) }) {
                         Icon(if (live) Icons.Filled.SkipNext else Icons.Filled.Forward10, null, tint = Color.White)
                     }
-                }
+                } }
                 androidx.compose.material3.Text(PlayerHolder.miniTitle, color = Color.White, fontSize = androidx.compose.ui.unit.TextUnit(11f, androidx.compose.ui.unit.TextUnitType.Sp),
                     maxLines = 1, modifier = Modifier.align(Alignment.BottomCenter).padding(4.dp))
             }

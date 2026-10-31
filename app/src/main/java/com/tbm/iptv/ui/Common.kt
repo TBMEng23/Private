@@ -129,6 +129,12 @@ fun ScreenHeader(title: String, onBack: () -> Unit, actions: @Composable () -> U
     }
 }
 
+/** פקדי ניגון תמיד משמאל לימין (קודם ← → הבא, פס זמן), גם בממשק עברי */
+@Composable
+fun Ltr(content: @Composable () -> Unit) {
+    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) { content() }
+}
+
 object Launcher {
     fun play(ctx: Context, queue: List<PlayItem>, index: Int) {
         if (index !in queue.indices) return
