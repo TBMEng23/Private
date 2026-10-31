@@ -118,7 +118,7 @@ private fun MetaLine(info: MediaInfo?, rating: Float, extra: String?) {
             Row(Modifier.background(Color(0xFF2A2B33), RoundedCornerShape(6.dp)).padding(horizontal = 7.dp, vertical = 2.dp),
                 verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Filled.Star, null, tint = Gold, modifier = Modifier.size(14.dp))
-                Text(" %.1f".format(r), color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                Text(" TMDb %.1f".format(r), color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold)
             }
             Spacer(Modifier.width(10.dp))
         }
