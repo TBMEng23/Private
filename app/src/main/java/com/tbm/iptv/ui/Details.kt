@@ -65,6 +65,7 @@ import coil.compose.AsyncImage
 import com.tbm.iptv.L
 import com.tbm.iptv.data.Channel
 import com.tbm.iptv.data.Episode
+import com.tbm.iptv.data.Localize
 import com.tbm.iptv.data.MediaInfo
 import com.tbm.iptv.data.Prefs
 import com.tbm.iptv.data.Repo
@@ -95,7 +96,7 @@ private fun openTrailer(ctx: android.content.Context, t: String) {
 
 // ============================================================ חלקים משותפים
 @Composable
-private fun Hero(image: String?, title: String, onBack: () -> Unit) {
+private fun Hero(image: String?, title: String, onBack: () -> Unit, original: String? = null) {
     Box(Modifier.fillMaxWidth().height(320.dp)) {
         AsyncImage(image, null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
         Box(Modifier.fillMaxSize().background(Brush.verticalGradient(
@@ -103,9 +104,11 @@ private fun Hero(image: String?, title: String, onBack: () -> Unit) {
         IconButton(onClick = onBack, modifier = Modifier.padding(4.dp)) {
             Icon(Icons.AutoMirrored.Filled.ArrowBack, L("חזרה"), tint = Color.White)
         }
-        Text(title, color = Color.White, fontSize = 30.sp, fontWeight = FontWeight.Black, lineHeight = 34.sp,
-            maxLines = 3, overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.align(Alignment.BottomStart).padding(horizontal = 16.dp, vertical = 8.dp))
+        Column(Modifier.align(Alignment.BottomStart).padding(horizontal = 16.dp, vertical = 8.dp)) {
+            Text(title, color = Color.White, fontSize = 30.sp, fontWeight = FontWeight.Black, lineHeight = 34.sp,
+                maxLines = 3, overflow = TextOverflow.Ellipsis)
+            original?.let { Text(it, color = Color(0xFFCFD0D6), fontSize = 14.sp, maxLines = 1, overflow = TextOverflow.Ellipsis) }
+        }
     }
 }
 
@@ -332,11 +335,26 @@ fun SeriesScreen(s: SeriesItem, onBack: () -> Unit) {
     var seasonMenu by remember { mutableStateOf(false) }
     val fav = remember(ver) { Prefs.isFav(s.key) }
     val play: (Episode) -> Unit = { e -> Launcher.play(ctx, all.map { it.toPlay(s) }, all.indexOf(e)) }
+    // תרגום לשפת הממשק
+    val lang = com.tbm.iptv.I18n.lang
+    var loc by remember { mutableStateOf<Pair<String?, MediaInfo>?>(null) }
+    LaunchedEffect(info, lang) { info?.let { loc = localizeInfo(s.name, it, s.plot, true) } }
+    val shown = loc?.second ?: info
+    var epLoc by remember { mutableStateOf<Map<String, Pair<String?, String?>>>(emptyMap()) }
+    LaunchedEffect(season, all, lang) {
+        val list = all.filter { it.season == season && it.key !in epLoc }
+        if (list.isEmpty() || !Localize.enabled) return@LaunchedEffect
+        val tr = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            Localize.texts(list.map { cleanEpTitle(it.title, s.name).ifBlank { null } } + list.map { it.plot })
+        }
+        epLoc = epLoc + list.mapIndexed { i, e -> e.key to (tr[i] to tr[list.size + i]) }
+    }
+    LaunchedEffect(lang) { epLoc = emptyMap() }
 
     LazyColumn(Modifier.fillMaxSize().background(DetailBg)) {
-        item { Hero(info?.backdrops?.firstOrNull() ?: s.logo, s.name, onBack) }
+        item { Hero(info?.backdrops?.firstOrNull() ?: s.logo, loc?.first ?: s.name, onBack, if (loc?.first != null) s.name else null) }
         item {
-            MetaLine(info, s.rating, if (seasons.isNotEmpty()) L("{0} עונות", seasons.size) else null)
+            MetaLine(shown, s.rating, if (seasons.isNotEmpty()) L("{0} עונות", seasons.size) else null)
             if (next != null) {
                 val started = nextResume != null && nextResume.first < nextResume.second * 0.95
                 PlayRow((if (started) L("המשך") else L("נגן")) + " S${next.season} E${next.episode}", fav, { play(next) }) { Prefs.toggleFav(s.key) }
@@ -344,7 +362,7 @@ fun SeriesScreen(s: SeriesItem, onBack: () -> Unit) {
             } else {
                 PlayRow(L("נגן"), fav, {}) { Prefs.toggleFav(s.key) }
             }
-            Plot(info?.plot ?: s.plot)
+            Plot(shown?.plot ?: s.plot)
             DetailTabs(listOf(L("פרקים"), L("טריילר"), L("שחקנים"), L("תמונות")), tab) { tab = it }
         }
         when (tab) {
@@ -373,12 +391,13 @@ fun SeriesScreen(s: SeriesItem, onBack: () -> Unit) {
                         }
                     }
                     items(list) { e ->
-                        EpisodeRow(e, s, info, ver, e.key == next?.key) { play(e) }
+                        val l = epLoc[e.key]
+                        EpisodeRow(if (l == null) e else e.copy(title = l.first ?: e.title, plot = l.second ?: e.plot), s, info, ver, e.key == next?.key) { play(e) }
                     }
                 }
             }
             1 -> item { TrailerTab(info) }
-            2 -> item { CastList(info) }
+            2 -> item { CastList(shown) }
             else -> item { MediaTab((info?.backdrops.orEmpty() + all.mapNotNull { it.image }).distinct().take(40)) }
         }
         item { Spacer(Modifier.height(24.dp)) }
@@ -442,20 +461,40 @@ fun MovieScreen(c: Channel, onBack: () -> Unit) {
     val started = r != null && r.first < r.second * 0.95
     val fav = remember(ver) { Prefs.isFav(c.key) }
     var tab by remember { mutableIntStateOf(0) }
+    val lang = com.tbm.iptv.I18n.lang
+    var loc by remember { mutableStateOf<Pair<String?, MediaInfo>?>(null) }
+    LaunchedEffect(info, lang) { loc = localizeInfo(c.name, info ?: MediaInfo(), null, false) }
+    val shown = loc?.second ?: info
     LazyColumn(Modifier.fillMaxSize().background(DetailBg)) {
-        item { Hero(info?.backdrops?.firstOrNull() ?: c.logo, c.name, onBack) }
+        item { Hero(info?.backdrops?.firstOrNull() ?: c.logo, loc?.first ?: c.name, onBack, if (loc?.first != null) c.name else null) }
         item {
-            MetaLine(info, c.rating, fmtMin(info?.durationSec ?: 0))
+            MetaLine(shown, c.rating, fmtMin(info?.durationSec ?: 0))
             PlayRow(if (started) L("המשך") else L("נגן"), fav, { Launcher.play(ctx, listOf(c.toPlay()), 0) }) { Prefs.toggleFav(c.key) }
             if (started) ResumeBar(r!!.first, r.second)
-            Plot(info?.plot)
+            Plot(shown?.plot)
             DetailTabs(listOf(L("שחקנים"), L("טריילר"), L("תמונות")), tab) { tab = it }
         }
         when (tab) {
-            0 -> item { CastList(info) }
+            0 -> item { CastList(shown) }
             1 -> item { TrailerTab(info) }
             else -> item { MediaTab(info?.backdrops.orEmpty()) }
         }
         item { Spacer(Modifier.height(24.dp)) }
     }
 }
+
+
+/** מתרגם שם/תקציר/ז'אנר/שחקנים לשפת הממשק. מחזיר (שם מתורגם או null, מידע מתורגם) */
+private suspend fun localizeInfo(name: String, i: MediaInfo, fallbackPlot: String?, tv: Boolean): Pair<String?, MediaInfo> =
+    kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+        if (!Localize.enabled) return@withContext null to i
+        runCatching {
+            val tm = Localize.tmdb(i.tmdbId, tv)
+            val base = Localize.cleanTitle(name)
+            val plot0 = i.plot ?: fallbackPlot
+            val tr = Localize.texts(listOf(if (tm?.first == null) base else null, if (tm?.second == null) plot0 else null, i.cast, i.director))
+            val title = tm?.first ?: tr[0]
+            (if (title != null && title != base) title else null) to
+                i.copy(plot = tm?.second ?: tr[1] ?: plot0, genre = Localize.genre(i.genre), cast = tr[2], director = tr[3])
+        }.getOrDefault(null to i)
+    }

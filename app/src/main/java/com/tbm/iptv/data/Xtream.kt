@@ -173,6 +173,7 @@ class Xtream(private val p: Playlist) {
             backdrops = bd,
             trailer = i.optString("youtube_trailer").ifBlank { null },
             durationSec = dur,
+            tmdbId = (i.optString("tmdb_id").ifBlank { i.optString("tmdb") }).takeIf { it.isNotBlank() && it != "0" && it != "null" },
         )
     }
 

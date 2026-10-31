@@ -73,6 +73,7 @@ data class MediaInfo(
     val backdrops: List<String> = emptyList(),
     val trailer: String? = null,
     val durationSec: Int = 0,
+    val tmdbId: String? = null,
 )
 
 data class Content(

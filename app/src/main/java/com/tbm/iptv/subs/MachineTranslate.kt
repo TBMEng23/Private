@@ -9,6 +9,25 @@ import org.json.JSONArray
 object MachineTranslate {
     private val tsLine = Regex("""^\d{1,2}:\d{2}:\d{2}[,.]\d{3}\s*-->""")
 
+    /** תרגום רשימת טקסטים קצרים (תיאורים, ז'אנרים, שמות). שורה ריקה נשמרת. */
+    fun texts(items: List<String>, to: String, from: String = "auto"): List<String> {
+        if (items.isEmpty()) return items
+        val clean = items.map { it.replace("\n", " ").trim() }
+        val out = ArrayList<String>()
+        var k = 0
+        while (k < clean.size) {
+            var len = 0; var e = k
+            while (e < clean.size && len + clean[e].length < 3500) { len += clean[e].length + 1; e++ }
+            if (e == k) e = k + 1
+            val batch = clean.subList(k, e)
+            var res = runCatching { translateBatch(batch, from, to) }.getOrNull()
+            if (res == null || res.size != batch.size)
+                res = batch.map { t -> if (t.isBlank()) t else runCatching { translateBatch(listOf(t), from, to).joinToString(" ") }.getOrDefault(t) }
+            out += res; k = e
+        }
+        return out
+    }
+
     private fun translateBatch(lines: List<String>, from: String, to: String): List<String> {
         val body = FormBody.Builder().add("q", lines.joinToString("\n")).build()
         val req = Request.Builder()
@@ -20,6 +39,10 @@ object MachineTranslate {
             r.body?.string() ?: ""
         }
         val segs = JSONArray(txt).optJSONArray(0) ?: return lines
+        if (lines.size == 1 && segs.length() > 1) {
+            val sb1 = StringBuilder(); for (i in 0 until segs.length()) sb1.append(segs.optJSONArray(i)?.optString(0) ?: "")
+            return listOf(sb1.toString().replace("\n", " ").trim())
+        }
         val sb = StringBuilder()
         for (i in 0 until segs.length()) sb.append(segs.optJSONArray(i)?.optString(0) ?: "")
         return sb.toString().split("\n").map { it.trim() }

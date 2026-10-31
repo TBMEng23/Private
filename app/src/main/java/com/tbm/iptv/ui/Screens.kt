@@ -327,6 +327,9 @@ private fun MainSettings(nav: (Screen) -> Unit) {
         NavRow(L("תצוגת סדרות"), Icons.Filled.VideoLibrary, sub = modeName(Kind.SERIES)) { viewPick = Kind.SERIES }
         NavRow(L("סידור והסתרת קטגוריות"), Icons.Filled.Folder, sub = L("סדר, הסתרה, הצמדה, סינון ארצות")) { nav(Screen.Groups(Kind.LIVE)) }
         NavRow(L("תוכן ופופולרי היום"), Icons.Filled.Tune, sub = L("מפתח TMDB")) { nav(Screen.Settings("content")) }
+        val trOn = Prefs.bool("translate_meta", true)
+        NavRow(L("תרגום תקצירים, ז'אנרים ושמות"), Icons.Filled.Translate, arrow = false,
+            sub = if (trOn) L("פעיל – לשפת הממשק (TMDB / Google)") else L("כבוי")) { Prefs.setBool("translate_meta", !trOn) }
     }
     GroupTitle(L("נגן"))
     Card {
