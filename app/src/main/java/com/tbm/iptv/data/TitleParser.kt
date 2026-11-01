@@ -10,7 +10,8 @@ object TitleParser {
     private val se = Regex("""[Ss](\d{1,2})\s*[ ._-]?\s*[Ee][Pp]?(\d{1,3})""")
     private val xForm = Regex("""\b(\d{1,2})x(\d{2,3})\b""")
     private val yearRx = Regex("""[(\[]?\b((?:19|20)\d{2})\b[)\]]?""")
-    private val prefix = Regex("""^\s*(?:[\[|(]\s*[\p{L}0-9+ ]{2,8}\s*[\]|)]|[A-Za-z]{2,4}\s*[|:–-]\s)\s*""")
+    // קידומות ספק: "EN - ", "|EN| ", "[4K]", "NF - ", "4K-AMZ - "
+    private val prefix = Regex("""^\s*(?:[\[|(]\s*[\p{L}0-9+ ]{2,8}\s*[\]|)]|[A-Za-z0-9]{1,4}(?:[-+][A-Za-z0-9]{1,5})?\s*[|:–-]\s)\s*""")
     private val junk = Regex(
         """(?i)\b(4k|uhd|fhd|hd|sd|hevc|h\.?26[45]|x26[45]|1080p|720p|2160p|480p|multi|multisub|vostfr|dubbed|dub|subbed|web-?dl|webrip|bluray|brrip|hdr|hdr10|dv|aac|ac3|dd5\.?1|atmos|imax)\b"""
     )

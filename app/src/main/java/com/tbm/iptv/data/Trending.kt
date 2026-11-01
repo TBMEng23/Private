@@ -10,12 +10,12 @@ object Trending {
 
     private fun fetch(type: String, key: String): List<Pair<String, Int?>> {
         val res = ArrayList<Pair<String, Int?>>()
-        for (lang in listOf("en-US", "he-IL")) {
+        for ((lang, page) in listOf("en-US" to 1, "en-US" to 2, "he-IL" to 1)) {
             val bearer = key.length > 40
-            val url = "https://api.themoviedb.org/3/trending/$type/day?language=$lang" +
+            val url = "https://api.themoviedb.org/3/trending/$type/day?language=$lang&page=$page" +
                 (if (bearer) "" else "&api_key=${Http.enc(key)}")
             val hdr = if (bearer) mapOf("Authorization" to "Bearer $key", "Accept" to "application/json") else emptyMap()
-            val a = JSONObject(Http.get(url, hdr)).optJSONArray("results") ?: continue
+            val a = runCatching { JSONObject(Http.get(url, hdr)).optJSONArray("results") }.getOrNull() ?: continue
             for (i in 0 until a.length()) {
                 val o = a.optJSONObject(i) ?: continue
                 val date = o.optString(if (type == "movie") "release_date" else "first_air_date")

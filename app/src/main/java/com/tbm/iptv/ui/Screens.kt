@@ -435,6 +435,11 @@ private fun ContentPage() {
         Column(Modifier.padding(12.dp)) {
             Text(L("פופולרי היום (TMDB)"), fontWeight = FontWeight.Bold)
             Field(L("מפתח TMDB API"), Prefs.tmdbKey, secret = true) { Prefs.tmdbKey = it }
+            Hint(L("איך משיגים מפתח חינמי (2 דקות): נרשמים ב-themoviedb.org ← הגדרות ← API ← בקשת מפתח (Developer) ← מעתיקים את \"API Key\" או את \"API Read Access Token\" ומדביקים כאן."))
+            val uctx = LocalContext.current
+            TextButton(onClick = {
+                runCatching { uctx.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, Uri.parse("https://www.themoviedb.org/settings/api"))) }
+            }) { Text(L("פתח את אתר TMDB")) }
             Hint(L("מפתח חינמי: themoviedb.org ← הרשמה ← Settings ← API ← Request an API key. מתאים לך את הסרטים והסדרות הפופולריים היום מתוך מה שיש אצל הספק."))
         }
     }

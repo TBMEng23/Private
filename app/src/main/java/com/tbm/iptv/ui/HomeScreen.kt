@@ -331,10 +331,10 @@ private fun HomeRows(content: Content, ver: Int, wide: Boolean, nav: (Screen) ->
             }
         }
         if (trendMovies.isNotEmpty()) item {
-            EntryRowStrip(L("🔥 פופולרי היום – סרטים"), trendMovies, Kind.MOVIE, ctx, nav) { menu = MenuTarget(Kind.MOVIE, it, movies) }
+            RankedStrip(L("סרטים פופולריים היום"), trendMovies, nav) { menu = MenuTarget(Kind.MOVIE, it, movies) }
         }
         if (trendSeries.isNotEmpty()) item {
-            EntryRowStrip(L("🔥 פופולרי היום – סדרות"), trendSeries, Kind.SERIES, ctx, nav) { menu = MenuTarget(Kind.SERIES, it, series) }
+            RankedStrip(L("סדרות פופולריות היום"), trendSeries, nav) { menu = MenuTarget(Kind.SERIES, it, series) }
         }
         if (newMovies.isNotEmpty()) item {
             EntryRowStrip(L("🆕 סרטים שנוספו לאחרונה"), newMovies, Kind.MOVIE, ctx, nav) { menu = MenuTarget(Kind.MOVIE, it, movies) }
@@ -343,8 +343,16 @@ private fun HomeRows(content: Content, ver: Int, wide: Boolean, nav: (Screen) ->
             EntryRowStrip(L("🆕 סדרות שעודכנו לאחרונה"), newSeries, Kind.SERIES, ctx, nav) { menu = MenuTarget(Kind.SERIES, it, series) }
         }
         if (tmdb.isBlank() && !Prefs.isKids) item {
-            Text(L("טיפ: הוסף מפתח TMDB בהגדרות ← תוכן כדי לראות מה פופולרי היום"),
-                fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(16.dp))
+            FocusItem(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp), onClick = { nav(Screen.Settings("content")) }) {
+                Column(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(12.dp)).padding(14.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(L("🔥 סרטים וסדרות פופולריים היום"), fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                        TmdbBadge()
+                    }
+                    Text(L("כדי לראות את הטרנדים של היום מתוך התוכן שלך, הוסף מפתח TMDB חינמי. לחץ כאן להגדרה."),
+                        fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp))
+                }
+            }
         }
         if (recentCh.isEmpty() && recent.isEmpty() && newMovies.isEmpty() && trendMovies.isEmpty()) item {
             Text(L("ברוך הבא! בחר ערוץ, סרט או סדרה כדי להתחיל."), modifier = Modifier.padding(24.dp))
@@ -1072,6 +1080,55 @@ private fun ChannelCard(c: Channel, fav: Boolean, onLong: () -> Unit, onClick: (
                 progress = { if (now != null && now.end > now.start) ((t - now.start).toFloat() / (now.end - now.start)).coerceIn(0f, 1f) else 0f },
                 modifier = Modifier.fillMaxWidth().padding(top = 6.dp).height(3.dp),
             )
+        }
+    }
+}
+
+
+@Composable
+private fun TmdbBadge() {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text("TMDB", color = Color(0xFF90CEA1), fontWeight = FontWeight.Black, fontSize = 15.sp)
+        Spacer(Modifier.width(5.dp))
+        Box(Modifier.size(width = 34.dp, height = 12.dp).background(
+            androidx.compose.ui.graphics.Brush.horizontalGradient(listOf(Color(0xFF90CEA1), Color(0xFF01B4E4))), RoundedCornerShape(6.dp)))
+    }
+}
+
+/** שורת טרנדים עם מספרי דירוג גדולים (כמו MyTVOnline / נטפליקס) */
+@Composable
+private fun RankedStrip(title: String, list: List<Entry>, nav: (Screen) -> Unit, onLong: (Entry) -> Unit) {
+    Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 18.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+        Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+        TmdbBadge()
+    }
+    androidx.compose.runtime.CompositionLocalProvider(androidx.compose.ui.platform.LocalLayoutDirection provides androidx.compose.ui.unit.LayoutDirection.Ltr) {
+        LazyRow(contentPadding = PaddingValues(horizontal = 8.dp), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+            itemsIndexed(list.take(20)) { i, e ->
+                FocusItem(onLongClick = { onLong(e) }, onClick = {
+                    if (e is SeriesItem) nav(Screen.Series(e)) else if (e is Channel) nav(Screen.Movie(e))
+                }) {
+                    Column(Modifier.width(168.dp).padding(4.dp)) {
+                        Row(verticalAlignment = Alignment.Top) {
+                            Text("${i + 1}", fontSize = 64.sp, fontWeight = FontWeight.Black, fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                                style = androidx.compose.ui.text.TextStyle(color = Color.White, drawStyle = androidx.compose.ui.graphics.drawscope.Stroke(width = 5f)),
+                                modifier = Modifier.width(if (i >= 9) 62.dp else 40.dp))
+                            Box(Modifier.weight(1f).aspectRatio(2f / 3f).clip(RoundedCornerShape(8.dp)).background(MaterialTheme.colorScheme.surfaceVariant)) {
+                                if (e.logo == null) Text(e.name, Modifier.align(Alignment.Center).padding(6.dp), textAlign = TextAlign.Center, fontSize = 12.sp)
+                                AsyncImage(e.logo, null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+                                if (e.rating() > 0f) Text("%.1f".format(e.rating()), color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.align(Alignment.TopEnd).padding(4.dp)
+                                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.85f), RoundedCornerShape(4.dp))
+                                        .padding(horizontal = 4.dp, vertical = 1.dp))
+                            }
+                        }
+                        Text(com.tbm.iptv.data.Localize.cleanTitle(e.name), fontWeight = FontWeight.Bold, fontSize = 14.sp, maxLines = 1,
+                            overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(start = 40.dp, top = 6.dp))
+                        Text(e.group, fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 40.dp))
+                    }
+                }
+            }
         }
     }
 }
