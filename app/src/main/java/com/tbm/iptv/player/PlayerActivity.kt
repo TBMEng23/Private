@@ -77,6 +77,8 @@ class PlayerUi {
     var subOffset by mutableLongStateOf(0L)
 
     var showList by mutableStateOf(false)
+    /** להציג כפתורי פעולה (נסה שוב / נגן חיצוני / הבא) מתחת לשגיאה */
+    var errorActions by mutableStateOf(false)
     /** חלון "אפשרויות" (⚙) – null סגור, אחרת דף: main/audio/speed/aspect/sleep */
     var options by mutableStateOf<String?>(null)
     var showRecord by mutableStateOf(false)
@@ -129,7 +131,7 @@ class PlayerActivity : FragmentActivity() {
 
     private val listener = object : Player.Listener {
         override fun onPlaybackStateChanged(state: Int) {
-            if (state == Player.STATE_READY) { retry = 0; ui.error = null }
+            if (state == Player.STATE_READY) { retry = 0; ui.error = null; ui.errorActions = false }
             if (state == Player.STATE_ENDED) onEnded()
         }
 
@@ -271,7 +273,7 @@ class PlayerActivity : FragmentActivity() {
         val item = q[i]
         subFile = null; subQuery = null; subJob?.cancel()
         ui.subLabel = null; ui.subOffset = 0; ui.subResults = emptyList(); ui.subErrors = emptyList()
-        ui.error = null; retry = 0
+        ui.error = null; retry = 0; lastGoodPos = 0L; ui.errorActions = false
 
         var start = 0L
         if (item.kind != Kind.LIVE && !item.isCatchup) {
@@ -322,19 +324,59 @@ class PlayerActivity : FragmentActivity() {
         }
     }
 
+    /** מיקום אחרון תקין – לחזרה אחרי ניתוק */
+    private var lastGoodPos = 0L
+
+    private fun httpCode(e: Throwable?): Int? {
+        var c: Throwable? = e
+        while (c != null) {
+            if (c is androidx.media3.datasource.HttpDataSource.InvalidResponseCodeException) return c.responseCode
+            c = c.cause
+        }
+        return null
+    }
+
     private fun handleError(e: PlaybackException) {
         val item = current ?: return
-        if (item.kind == Kind.LIVE && !item.isCatchup && retry < 5) {
+        val live = item.kind == Kind.LIVE && !item.isCatchup
+        if (!live && player.currentPosition > 0) lastGoodPos = player.currentPosition
+        val max = if (live) 5 else 3
+        if (retry < max) {
             retry++
-            ui.error = L("מתחבר מחדש… ({0}/5)", retry)
+            ui.errorActions = false
+            ui.error = L("מתחבר מחדש… ({0}/{1})", retry, max)
             lifecycleScope.launch {
                 delay(2000L * retry)
-                player.seekToDefaultPosition()
-                player.prepare(); player.play()
+                reload()
             }
-        } else {
-            ui.error = L("שגיאת ניגון: {0}\nנסה נגן חיצוני (הגדרות) או ערוץ אחר", e.errorCodeName)
+            return
         }
+        val code = httpCode(e)
+        val why = when (code) {
+            401, 403 -> L("הספק דחה את הבקשה (מנוי, הרשאה או יותר מדי חיבורים)")
+            404 -> L("הקובץ לא נמצא אצל הספק")
+            429, 458, 509 -> L("יותר מדי חיבורים פעילים לחשבון – סגור צפייה במכשיר אחר")
+            in 500..599 -> L("שגיאת שרת אצל הספק – נסה שוב בעוד רגע")
+            else -> e.errorCodeName
+        }
+        ui.error = L("שגיאת ניגון: {0}", why + (code?.let { " (HTTP $it)" } ?: ""))
+        ui.errorActions = true
+    }
+
+    /** טוען מחדש את הזרם מהמקום שבו נעצר (VOD) או מהשידור החי */
+    private fun reload() {
+        val item = current ?: return
+        val live = item.kind == Kind.LIVE && !item.isCatchup
+        if (live) player.seekToDefaultPosition() else if (lastGoodPos > 0) player.seekTo(lastGoodPos)
+        player.prepare(); player.play()
+    }
+
+    /** כפתור "נסה שוב" / "רענן" */
+    fun retryNow() {
+        if (player.currentPosition > 0 && !(ui.isLive)) lastGoodPos = player.currentPosition
+        retry = 0; ui.error = null; ui.errorActions = false
+        reload()
+        toast(L("טוען מחדש…"))
     }
 
     private fun saveProgress() {

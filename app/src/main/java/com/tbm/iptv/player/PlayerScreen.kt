@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.Subtitles
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.PictureInPicture
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.ui.input.pointer.pointerInput
@@ -178,11 +179,17 @@ fun PlayerScreen(a: PlayerActivity) {
         )
 
         ui.error?.let {
-            Text(
-                it, color = Color.White, textAlign = TextAlign.Center,
-                modifier = Modifier.align(Alignment.Center)
-                    .background(Color(0xAA000000), RoundedCornerShape(10.dp)).padding(16.dp),
-            )
+            Column(
+                Modifier.align(Alignment.Center).background(Color(0xDD000000), RoundedCornerShape(12.dp)).padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Text(it, color = Color.White, textAlign = TextAlign.Center)
+                if (ui.errorActions) Row(Modifier.padding(top = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    androidx.compose.material3.Button(onClick = { a.retryNow() }) { Text(L("🔄 נסה שוב")) }
+                    OutlinedButton(onClick = { a.openExternal() }) { Text(L("נגן חיצוני"), color = Color.White) }
+                    if (ui.hasNext) OutlinedButton(onClick = { ui.error = null; a.next() }) { Text(L("הבא ⏭"), color = Color.White) }
+                }
+            }
         }
 
         if (ui.zapDigits.isNotEmpty()) Text(
@@ -603,6 +610,7 @@ private fun OptionsSheet(a: PlayerActivity) {
                                     OptRow(Icons.AutoMirrored.Filled.OpenInNew, L("פתח בנגן חיצוני"),
                                         if (p.isBlank()) L("VLC / MX – בחירה") else ExternalPlayer.appName(ctx, p)) { ui.options = null; a.openExternal() }
                                 }
+                                item { OptRow(Icons.Filled.Refresh, L("רענן / טען מחדש"), L("אם התמונה נתקעה או יש שגיאה")) { ui.options = null; a.retryNow() } }
                                 val aud = ui.audio.firstOrNull { it.selected }?.name ?: ui.audio.firstOrNull()?.name ?: L("ברירת מחדל")
                                 item { OptRow(Icons.Filled.MusicNote, L("רצועת שמע"), aud) { ui.options = "audio" } }
                                 val sub = ui.subLabel ?: ui.embedded.firstOrNull { it.selected }?.name ?: L("כבוי")
