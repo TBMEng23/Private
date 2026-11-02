@@ -217,7 +217,9 @@ class PlayerActivity : FragmentActivity() {
 
         addOnPictureInPictureModeChangedListener { info ->
             ui.pip = info.isInPictureInPictureMode
-            playerView?.useController = !info.isInPictureInPictureMode
+            // הפקדים שלנו בלבד – אף פעם לא הפקדים המובנים של ExoPlayer (אחרת יש שני נגנים זה על זה)
+            playerView?.useController = false
+            playerView?.hideController()
         }
 
         onBackPressedDispatcher.addCallback(this, object : androidx.activity.OnBackPressedCallback(true) {
