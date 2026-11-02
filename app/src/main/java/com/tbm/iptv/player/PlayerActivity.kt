@@ -133,6 +133,15 @@ class PlayerActivity : FragmentActivity() {
         override fun onPlaybackStateChanged(state: Int) {
             if (state == Player.STATE_READY) { retry = 0; ui.error = null; ui.errorActions = false }
             if (state == Player.STATE_ENDED) onEnded()
+            // נתקע בטעינה יותר מ-20 שניות (למשל אחרי מעבר Wi-Fi ⇄ סלולר) – טוען מחדש מאותו מקום
+            stallJob?.cancel()
+            if (state == Player.STATE_BUFFERING) stallJob = lifecycleScope.launch {
+                delay(20_000)
+                if (player.playbackState == Player.STATE_BUFFERING && player.playWhenReady) {
+                    toast(L("החיבור נתקע – מתחבר מחדש…"))
+                    retryNow()
+                }
+            }
         }
 
         override fun onPlayerError(error: PlaybackException) = handleError(error)
@@ -215,6 +224,7 @@ class PlayerActivity : FragmentActivity() {
         player.addListener(listener)
         PlayerHolder.miniActive = false
 
+        watchNetwork()
         addOnPictureInPictureModeChangedListener { info ->
             ui.pip = info.isInPictureInPictureMode
             // הפקדים שלנו בלבד – אף פעם לא הפקדים המובנים של ExoPlayer (אחרת יש שני נגנים זה על זה)
@@ -324,6 +334,27 @@ class PlayerActivity : FragmentActivity() {
         } else if (item.kind != Kind.LIVE || item.isCatchup) {
             finish()
         }
+    }
+
+    private var stallJob: kotlinx.coroutines.Job? = null
+    private var netCb: android.net.ConnectivityManager.NetworkCallback? = null
+    private var netReady = false
+
+    /** מעבר רשת (Wi-Fi ⇄ סלולר): סוגר חיבורים ישנים ומתחבר מחדש מאותו מקום */
+    private fun watchNetwork() {
+        val cm = getSystemService(CONNECTIVITY_SERVICE) as android.net.ConnectivityManager
+        val cb = object : android.net.ConnectivityManager.NetworkCallback() {
+            override fun onAvailable(network: android.net.Network) {
+                runOnUiThread {
+                    // הקריאה הראשונה היא הרשת הנוכחית – לא מעבר
+                    if (!netReady) { netReady = true; return@runOnUiThread }
+                    runCatching { com.tbm.iptv.data.Http.client.connectionPool.evictAll() }
+                    val stuck = player.playbackState == Player.STATE_BUFFERING || player.playerError != null || ui.error != null
+                    if (stuck || player.playWhenReady) { toast(L("הרשת השתנתה – מתחבר מחדש…")); retryNow() }
+                }
+            }
+        }
+        runCatching { cm.registerDefaultNetworkCallback(cb); netCb = cb }
     }
 
     /** מיקום אחרון תקין – לחזרה אחרי ניתוק */
@@ -932,6 +963,8 @@ class PlayerActivity : FragmentActivity() {
     }
 
     override fun onDestroy() {
+        netCb?.let { cb -> runCatching { (getSystemService(CONNECTIVITY_SERVICE) as android.net.ConnectivityManager).unregisterNetworkCallback(cb) } }
+        stallJob?.cancel()
         runCatching { unregisterReceiver(pipReceiver) }
         saveProgress()
         player.removeListener(listener)
