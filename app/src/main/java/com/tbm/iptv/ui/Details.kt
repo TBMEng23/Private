@@ -131,6 +131,29 @@ private fun MetaLine(info: MediaInfo?, rating: Float, extra: String?) {
     }
 }
 
+/** "זמין ב-": תווית מהספק + פלטפורמות מ-TMDB */
+@Composable
+private fun PlatformLine(e: com.tbm.iptv.data.Entry, info: MediaInfo?, tv: Boolean) {
+    val local = remember(e.key) { com.tbm.iptv.data.Platforms.detect(e) }
+    var names by remember(info) { mutableStateOf<List<String>>(emptyList()) }
+    LaunchedEffect(info) {
+        val id = info?.tmdbId ?: return@LaunchedEffect
+        names = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { com.tbm.iptv.data.Platforms.tmdbProviders(id, tv) }
+    }
+    val list = (listOfNotNull(local?.name) + names).distinctBy { com.tbm.iptv.data.Platforms.find(it)?.id ?: it }.take(5)
+    if (list.isEmpty()) return
+    Row(Modifier.padding(horizontal = 16.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+        Text(L("זמין ב-"), color = Color(0xFF9A9BA3), fontSize = 12.sp)
+        Spacer(Modifier.width(6.dp))
+        list.forEach { n ->
+            val p = com.tbm.iptv.data.Platforms.find(n)
+            Text(p?.name ?: n, color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(end = 6.dp).background(Color(p?.color ?: 0xFF333333), RoundedCornerShape(4.dp))
+                    .padding(horizontal = 6.dp, vertical = 2.dp))
+        }
+    }
+}
+
 @Composable
 private fun PlayRow(label: String, fav: Boolean, onPlay: () -> Unit, onFav: () -> Unit) {
     Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -358,6 +381,7 @@ fun SeriesScreen(s: SeriesItem, onBack: () -> Unit) {
         item { Hero(info?.backdrops?.firstOrNull() ?: s.logo, loc?.first ?: s.name, onBack, if (loc?.first != null) s.name else null) }
         item {
             MetaLine(shown, s.rating, if (seasons.isNotEmpty()) L("{0} עונות", seasons.size) else null)
+            PlatformLine(s, info, true)
             if (next != null) {
                 val started = nextResume != null && nextResume.first < nextResume.second * 0.95
                 PlayRow((if (started) L("המשך") else L("נגן")) + " S${next.season} E${next.episode}", fav, { play(next) }) { Prefs.toggleFav(s.key) }
@@ -473,6 +497,7 @@ fun MovieScreen(c: Channel, onBack: () -> Unit) {
         item { Hero(info?.backdrops?.firstOrNull() ?: c.logo, loc?.first ?: c.name, onBack, if (loc?.first != null) c.name else null) }
         item {
             MetaLine(shown, c.rating, fmtMin(info?.durationSec ?: 0))
+            PlatformLine(c, info, false)
             PlayRow(if (started) L("המשך") else L("נגן"), fav, { Launcher.play(ctx, listOf(c.toPlay()), 0) }) { Prefs.toggleFav(c.key) }
             if (started) ResumeBar(r!!.first, r.second)
             Plot(shown?.plot)

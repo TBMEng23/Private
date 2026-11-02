@@ -400,7 +400,8 @@ private fun EntryRowStrip(
 @Composable
 private fun Poster(
     name: String, logo: String?, fav: Boolean, progress: Float?, sub: String? = null,
-    width: androidx.compose.ui.unit.Dp? = 118.dp, rating: Float = 0f, onLong: (() -> Unit)? = null, onClick: () -> Unit,
+    width: androidx.compose.ui.unit.Dp? = 118.dp, rating: Float = 0f, platform: com.tbm.iptv.data.Platforms.P? = null,
+    onLong: (() -> Unit)? = null, onClick: () -> Unit,
 ) {
     FocusItem(onLongClick = onLong, onClick = onClick) {
         Column((if (width != null) Modifier.width(width) else Modifier.fillMaxWidth()).padding(4.dp)) {
@@ -412,6 +413,7 @@ private fun Poster(
                     modifier = Modifier.align(Alignment.TopStart).padding(4.dp)
                         .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.85f), RoundedCornerShape(4.dp))
                         .padding(horizontal = 4.dp, vertical = 1.dp))
+                if (platform != null) PlatformBadge(platform, Modifier.align(Alignment.BottomStart).padding(4.dp))
                 if (progress != null && progress > 0f) LinearProgressIndicator(
                     progress = { progress.coerceIn(0f, 1f) },
                     modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth(),
@@ -782,7 +784,7 @@ fun PosterGrid(items: List<Entry>, favs: Set<String>, modifier: Modifier, onLong
         gridItemsIndexed(items) { _, e ->
             val r = remember(e.key, ver) { Prefs.resume(e.key) }
             Poster(e.name, e.logo, e.key in favs, r?.let { it.first.toFloat() / it.second.coerceAtLeast(1) },
-                width = null, rating = e.rating(), onLong = { onLong(e) }) { onClick(e) }
+                width = null, rating = e.rating(), platform = com.tbm.iptv.data.Platforms.detect(e), onLong = { onLong(e) }) { onClick(e) }
         }
     }
 }
@@ -995,6 +997,15 @@ private fun RowsView(
         }
     }
     val newest = remember(pref) { pref.filter { it.addedAt() > 0 }.sortedByDescending { it.addedAt() }.take(40) }
+    // שורה לכל פלטפורמה (Netflix, Prime, Disney+…) לפי מה שהספק מסמן
+    val platformRows = remember(pref) {
+        if (kind == Kind.LIVE) emptyList() else {
+            val g = pref.groupBy { com.tbm.iptv.data.Platforms.detect(it) }
+            com.tbm.iptv.data.Platforms.all.mapNotNull { p ->
+                g[p]?.takeIf { it.size >= 6 }?.let { l -> L("ב-{0}", p.name) to l.sortedByDescending { it.addedAt() }.take(40) }
+            }
+        }
+    }
     val topRated = remember(pref) { pref.filter { it.rating() >= 7.5f }.sortedByDescending { it.rating() }.take(40) }
     val resume = remember(items, Prefs.version.intValue) {
         items.mapNotNull { e -> Prefs.resume(e.key)?.let { r -> if (r.first < r.second * 0.95) e else null } }.take(30)
@@ -1021,6 +1032,7 @@ private fun RowsView(
             if (newest.isNotEmpty()) item { CategoryStrip(if (kind == Kind.MOVIE) L("🆕 סרטים חדשים") else L("🆕 סדרות חדשות"), newest, kind, favs, nav, { onSeeAll(NEW_GROUP) }, onLong) }
             if (favItems.isNotEmpty()) item { CategoryStrip(L("★ הרשימה שלי"), favItems, kind, favs, nav, { onSeeAll(FAV_GROUP) }, onLong) }
             if (topRated.size >= 4) item { CategoryStrip(L("⭐ הכי מדורגים"), topRated, kind, favs, nav, null, onLong) }
+            items(platformRows, key = { "p:" + it.first }) { (name, list) -> CategoryStrip(name, list, kind, favs, nav, null, onLong) }
             items(genreRows, key = { "g:" + it.first }) { (name, list) -> CategoryStrip(name, list, kind, favs, nav, null, onLong) }
             if (Prefs.tmdbKey.isBlank()) item {
                 Text(L("💡 עם מפתח TMDB חינמי (הגדרות ← תצוגה) יופיעו כאן גם Top 10 של היום ושורות ז'אנר מדויקות יותר."),
@@ -1111,7 +1123,7 @@ private fun CategoryStrip(
         } else items(shown) { e ->
             val r = remember(e.key) { Prefs.resume(e.key) }
             Poster(e.name, e.logo, e.key in favs, r?.let { it.first.toFloat() / it.second.coerceAtLeast(1) },
-                width = 124.dp, rating = e.rating(), onLong = { onLong(e) }) {
+                width = 124.dp, rating = e.rating(), platform = com.tbm.iptv.data.Platforms.detect(e), onLong = { onLong(e) }) {
                 if (e is SeriesItem) nav(Screen.Series(e)) else if (e is Channel) nav(Screen.Movie(e))
             }
         }
@@ -1173,6 +1185,7 @@ private fun RankedStrip(title: String, list: List<Entry>, nav: (Screen) -> Unit,
                             Box(Modifier.weight(1f).aspectRatio(2f / 3f).clip(RoundedCornerShape(8.dp)).background(MaterialTheme.colorScheme.surfaceVariant)) {
                                 if (e.logo == null) Text(e.name, Modifier.align(Alignment.Center).padding(6.dp), textAlign = TextAlign.Center, fontSize = 12.sp)
                                 AsyncImage(e.logo, null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+                                com.tbm.iptv.data.Platforms.detect(e)?.let { PlatformBadge(it, Modifier.align(Alignment.BottomStart).padding(4.dp)) }
                                 if (e.rating() > 0f) Text("%.1f".format(e.rating()), color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold,
                                     modifier = Modifier.align(Alignment.TopEnd).padding(4.dp)
                                         .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.85f), RoundedCornerShape(4.dp))
@@ -1188,4 +1201,12 @@ private fun RankedStrip(title: String, list: List<Entry>, nav: (Screen) -> Unit,
             }
         }
     }
+}
+
+
+/** תווית פלטפורמה על פוסטר (טקסט בצבעי המותג, בלי לוגו) */
+@Composable
+fun PlatformBadge(p: com.tbm.iptv.data.Platforms.P, modifier: Modifier = Modifier) {
+    Text(p.short, color = Color.White, fontSize = 9.sp, fontWeight = FontWeight.Black, maxLines = 1,
+        modifier = modifier.background(Color(p.color), RoundedCornerShape(3.dp)).padding(horizontal = 4.dp, vertical = 1.dp))
 }
