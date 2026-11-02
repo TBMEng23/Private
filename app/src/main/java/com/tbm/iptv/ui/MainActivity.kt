@@ -8,6 +8,10 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.compose.BackHandler
+import androidx.compose.material.icons.filled.AspectRatio
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.foundation.layout.offset
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -146,7 +150,7 @@ fun AppRoot() {
             is Screen.Series -> SeriesScreen(top.item, back)
             is Screen.Movie -> MovieScreen(top.item, back)
         }
-        if (PlayerHolder.miniActive) MiniPlayer(Modifier.align(Alignment.BottomEnd).padding(bottom = 64.dp))
+        if (PlayerHolder.miniActive) DraggableMini()
         PinDialog()
         CrashReport()
     }
@@ -154,7 +158,39 @@ fun AppRoot() {
 
 /** In-App PiP – חלון צף שממשיך לנגן בזמן דפדוף */
 @Composable
-private fun MiniPlayer(modifier: Modifier) {
+private fun DraggableMini() {
+    Ltr {
+        androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxSize()) {
+            val density = androidx.compose.ui.platform.LocalDensity.current
+            var big by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(Prefs.str("mini_big") == "1") }
+            val w = if (big) 340.dp else 260.dp
+            val h = w * 9f / 16f
+            val maxX = with(density) { (maxWidth - w - 24.dp).toPx() }.coerceAtLeast(0f)
+            val maxY = with(density) { (maxHeight - h - 24.dp).toPx() }.coerceAtLeast(0f)
+            val saved = Prefs.str("mini_pos", "1,0.8").split(",").mapNotNull { it.toFloatOrNull() }
+            var x by androidx.compose.runtime.remember(maxX) { androidx.compose.runtime.mutableFloatStateOf((saved.getOrNull(0) ?: 1f) * maxX) }
+            var y by androidx.compose.runtime.remember(maxY) { androidx.compose.runtime.mutableFloatStateOf((saved.getOrNull(1) ?: 0.8f) * maxY) }
+            MiniPlayer(
+                Modifier.offset { androidx.compose.ui.unit.IntOffset(x.toInt(), y.toInt()) }
+                    .pointerInput(maxX, maxY) {
+                        detectDragGestures(onDragEnd = {
+                            // נצמד לצד הקרוב (כמו ביוטיוב)
+                            x = if (x < maxX / 2) 0f else maxX
+                            Prefs.setStrQuiet("mini_pos", "${if (maxX > 0) x / maxX else 1f},${if (maxY > 0) y / maxY else 0.8f}")
+                        }) { ch, d ->
+                            ch.consume()
+                            x = (x + d.x).coerceIn(0f, maxX)
+                            y = (y + d.y).coerceIn(0f, maxY)
+                        }
+                    },
+                w, h,
+            ) { big = !big; Prefs.setStrQuiet("mini_big", if (big) "1" else "0") }
+        }
+    }
+}
+
+@Composable
+private fun MiniPlayer(modifier: Modifier, w: androidx.compose.ui.unit.Dp, h: androidx.compose.ui.unit.Dp, onToggleSize: () -> Unit) {
     val ctx = LocalContext.current
     val p = PlayerHolder.current() ?: return
     var playing by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(p.isPlaying) }
@@ -173,7 +209,7 @@ private fun MiniPlayer(modifier: Modifier) {
         if (q[i].kind == com.tbm.iptv.data.Kind.LIVE) Prefs.addRecentChannel(q[i].key)
     }
     Box(
-        modifier.padding(12.dp).size(260.dp, 146.dp).clip(RoundedCornerShape(12.dp))
+        modifier.padding(12.dp).size(w, h).clip(RoundedCornerShape(12.dp))
             .border(2.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(12.dp))
             .background(Color.Black)
             .clickable { showCtl = !showCtl },
@@ -202,6 +238,9 @@ private fun MiniPlayer(modifier: Modifier) {
                         Icon(if (live) Icons.Filled.SkipNext else Icons.Filled.Forward10, null, tint = Color.White)
                     }
                 } }
+                IconButton(onClick = { showCtl = true; onToggleSize() }, modifier = Modifier.align(Alignment.BottomStart).size(34.dp)) {
+                    Icon(Icons.Filled.AspectRatio, L("שנה גודל"), tint = Color.White, modifier = Modifier.size(18.dp))
+                }
                 androidx.compose.material3.Text(PlayerHolder.miniTitle, color = Color.White, fontSize = androidx.compose.ui.unit.TextUnit(11f, androidx.compose.ui.unit.TextUnitType.Sp),
                     maxLines = 1, modifier = Modifier.align(Alignment.BottomCenter).padding(4.dp))
             }
