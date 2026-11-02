@@ -325,3 +325,88 @@ private fun ProfileTile(p: Profile, onClick: () -> Unit) {
         }
     }
 }
+
+/**
+ * ניהול התוכן של פרופיל ילדים: גיל, סינון אוטומטי, ולכל קבוצה (ערוצים/סרטים/סדרות) – אוטומטי / מאושר / חסום.
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun KidsContentScreen(profileId: String, onBack: () -> Unit) {
+    val ver = Prefs.version.intValue
+    val prof = remember(ver) { Prefs.profiles().firstOrNull { it.id == profileId } } ?: return
+    val content = com.tbm.iptv.data.Repo.content
+    var kind by remember { mutableStateOf(com.tbm.iptv.data.Kind.LIVE) }
+    var q by remember { mutableStateOf("") }
+    var onlyAllowed by remember { mutableStateOf(false) }
+    fun saveProf(p: Profile) = Prefs.saveProfiles(Prefs.profiles().map { if (it.id == p.id) p else it })
+    val all: List<com.tbm.iptv.data.Entry> = when (kind) {
+        com.tbm.iptv.data.Kind.LIVE -> content?.live.orEmpty()
+        com.tbm.iptv.data.Kind.MOVIE -> content?.movies.orEmpty()
+        com.tbm.iptv.data.Kind.SERIES -> content?.series.orEmpty()
+    }
+    val groups = remember(all) { all.groupingBy { it.group }.eachCount().toList() }
+    val inc = remember(ver) { Prefs.kidsInc(profileId) }
+    val exc = remember(ver) { Prefs.kidsExc(profileId) }
+    val legacy = remember(ver) { Prefs.kidsGroups() }
+    // מצב כל קבוצה: 1 מאושר ידנית, -1 חסום, 2 אוטומטי (מוצג), 0 לא מוצג
+    fun state(g: String): Int {
+        val k = "${kind.name}|$g"
+        return when {
+            k in exc || com.tbm.iptv.data.Catalog.isAdult(g) -> -1
+            k in inc || k in legacy -> 1
+            com.tbm.iptv.data.KidsFilter.blocked(g, prof.age) -> 0
+            prof.auto && com.tbm.iptv.data.KidsFilter.matches(g, prof.age) -> 2
+            else -> 0
+        }
+    }
+    val shown = groups.filter { (g, _) -> (q.isBlank() || g.contains(q, true)) && (!onlyAllowed || state(g) > 0) }
+    Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+        ScreenHeader(L("תוכן לפרופיל {0}", prof.name), onBack)
+        Column(Modifier.padding(horizontal = 14.dp)) {
+            Text(L("גיל מקסימלי:"), fontSize = 13.sp)
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                listOf(3, 5, 7, 10, 13, 16).forEach { a ->
+                    androidx.compose.material3.FilterChip(selected = prof.age == a, onClick = { saveProf(prof.copy(age = a)) }, label = { Text(L("עד {0}", a)) })
+                }
+            }
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(L("סינון אוטומטי לפי שמות קטגוריות וערוצים"), modifier = Modifier.weight(1f), fontSize = 14.sp)
+                androidx.compose.material3.Switch(checked = prof.auto, onCheckedChange = { saveProf(prof.copy(auto = it)) })
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                listOf(com.tbm.iptv.data.Kind.LIVE, com.tbm.iptv.data.Kind.MOVIE, com.tbm.iptv.data.Kind.SERIES).forEach { k ->
+                    androidx.compose.material3.FilterChip(selected = kind == k, onClick = { kind = k }, label = { Text(k.label) })
+                }
+                Spacer(Modifier.weight(1f))
+                androidx.compose.material3.FilterChip(selected = onlyAllowed, onClick = { onlyAllowed = !onlyAllowed }, label = { Text(L("רק מה שמוצג")) })
+            }
+            OutlinedTextField(q, { q = it }, singleLine = true, placeholder = { Text(L("חיפוש קטגוריה…")) }, modifier = Modifier.fillMaxWidth())
+            val allowedCount = groups.filter { state(it.first) > 0 }.sumOf { it.second }
+            Text(L("יוצגו לילד: {0} פריטים מתוך {1}. לחיצה על קטגוריה מחליפה: מוצג ⇄ חסום.", allowedCount, all.size), fontSize = 12.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(vertical = 6.dp))
+        }
+        if (content == null) Text(L("התוכן עדיין נטען…"), Modifier.padding(16.dp))
+        androidx.compose.foundation.lazy.LazyColumn(Modifier.fillMaxSize()) {
+            items(shown.size) { i ->
+                val (g, n) = shown[i]
+                val st = state(g)
+                val key = "${kind.name}|$g"
+                FocusItem(Modifier.fillMaxWidth(), onClick = {
+                    if (com.tbm.iptv.data.Catalog.isAdult(g)) return@FocusItem
+                    Prefs.setKidsGroupState(profileId, key, if (st > 0) -1 else 1)
+                    if (st > 0 && key in legacy) Prefs.setKidsGroup(kind, g, false)
+                }) {
+                    Row(Modifier.padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Text(when (st) { 1 -> "✅"; 2 -> "🟢"; -1 -> "⛔"; else -> "⚪" }, fontSize = 18.sp)
+                        Spacer(Modifier.width(12.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text(g, maxLines = 1)
+                            Text(when (st) { 1 -> L("מאושר ידנית"); 2 -> L("מוצג אוטומטית (מתאים לגיל)"); -1 -> L("חסום")
+                                else -> L("לא מוצג") } + " · $n", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

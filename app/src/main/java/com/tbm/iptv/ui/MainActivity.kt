@@ -74,6 +74,7 @@ sealed interface Screen {
     data class Series(val item: SeriesItem) : Screen
     data class Movie(val item: com.tbm.iptv.data.Channel) : Screen
     data object Account : Screen
+    data class KidsContent(val profileId: String) : Screen
 }
 
 class MainActivity : FragmentActivity() {
@@ -151,6 +152,7 @@ fun AppRoot() {
             is Screen.Series -> SeriesScreen(top.item, back)
             is Screen.Movie -> MovieScreen(top.item, back)
             Screen.Account -> AccountScreen(back)
+            is Screen.KidsContent -> KidsContentScreen(top.profileId, back)
         }
         if (PlayerHolder.miniActive) DraggableMini()
         PinDialog()

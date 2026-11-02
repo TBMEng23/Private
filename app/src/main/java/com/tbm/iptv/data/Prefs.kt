@@ -86,6 +86,14 @@ object Prefs {
         val s = set(k).toMutableSet(); if (on) s.add(item) else s.remove(item); putSet(k, s)
     }
 
+    /** תוכן לפרופיל ילדים מסוים: קבוצות שאושרו / נחסמו ידנית ("KIND|group") */
+    fun kidsInc(pid: String): Set<String> = set("kinc_$pid")
+    fun kidsExc(pid: String): Set<String> = set("kexc_$pid")
+    fun setKidsGroupState(pid: String, item: String, state: Int) {   // 1 = מאושר, -1 = חסום, 0 = אוטומטי
+        toggle("kinc_$pid", item, state == 1)
+        toggle("kexc_$pid", item, state == -1)
+    }
+
     private fun obj(k: String): JSONObject = runCatching { JSONObject(str(k, "{}")) }.getOrDefault(JSONObject())
 
     // ================= רשימות השמעה =================

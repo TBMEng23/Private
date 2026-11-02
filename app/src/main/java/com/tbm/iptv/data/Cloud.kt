@@ -66,8 +66,17 @@ object Cloud {
                 status = L("מסנכרן…")
                 val snap = d.get().await()
                 val remote = snap.getString("data")
-                if (remote != null && (snap.getLong("updated") ?: 0L) > lastSync) applyRemote(remote, snap.getLong("updated") ?: 0L)
-                else if (remote == null) upload()
+                val uid = user?.uid ?: ""
+                val prevUid = Prefs.str("cloud_uid")
+                when {
+                    // חשבון אחר מזה שסונכרן קודם במכשיר – תמיד לוקחים את הנתונים של החשבון הנוכחי
+                    remote != null && prevUid != uid -> applyRemote(remote, snap.getLong("updated") ?: 0L)
+                    remote != null && (snap.getLong("updated") ?: 0L) > lastSync -> applyRemote(remote, snap.getLong("updated") ?: 0L)
+                    // חשבון חדש וריק: מעלים את מה שבמכשיר רק אם המכשיר לא היה שייך לחשבון אחר
+                    remote == null && (prevUid.isBlank() || prevUid == uid) -> upload()
+                    remote == null -> { clearLocal(); upload() }
+                }
+                Prefs.setStrQuiet("cloud_uid", uid)
                 status = L("מסונכרן ✓")
             } catch (e: Exception) { status = L("שגיאת סנכרון: {0}", e.message ?: "") }
             // עדכונים חיים ממכשירים אחרים
@@ -116,10 +125,20 @@ object Cloud {
     suspend fun resetPassword(email: String) { auth!!.sendPasswordResetEmail(email.trim()).await() }
     suspend fun signInGoogle(idToken: String) { auth!!.signInWithCredential(GoogleAuthProvider.getCredential(idToken, null)).await() }
 
-    fun signOut() {
+    /** התנתקות: הנתונים נשארים בחשבון בענן, ונמחקים מהמכשיר כדי שמשתמש אחר לא יראה אותם */
+    fun signOut(clear: Boolean = true) {
         listener?.remove(); listener = null
+        uploadJob?.cancel()
         auth?.signOut()
+        if (clear) clearLocal()
+        Prefs.setStrQuiet("cloud_uid", "")
+        setLast(0)
         status = ""
+    }
+
+    private fun clearLocal() {
+        applying = true
+        try { Prefs.importCloud("{\"_tbm_backup\":1}") } finally { applying = false }
     }
 
     /** מזהה לקוח Web (נוצר אוטומטית מ-google-services.json כשכניסת Google מופעלת) */

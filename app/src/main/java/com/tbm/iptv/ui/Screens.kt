@@ -298,7 +298,7 @@ fun SettingsScreen(page: String, nav: (Screen) -> Unit, onBack: () -> Unit) {
                 "epg" -> EpgPage()
                 "subs" -> SubsPage()
                 "player" -> PlayerPage()
-                "parental" -> ParentalPage()
+                "parental" -> ParentalPage(nav)
                 "content" -> ContentPage()
                 "backup" -> BackupPage()
                 "about" -> AboutPage()
@@ -565,7 +565,7 @@ private fun FilterChipSimple(label: String, selected: Boolean, onClick: () -> Un
 }
 
 @Composable
-private fun ParentalPage() {
+private fun ParentalPage(nav: (Screen) -> Unit = {}) {
     val ctx = LocalContext.current
     var pinDialog by remember { mutableStateOf(false) }
     var newProfile by remember { mutableStateOf<Boolean?>(null) }
@@ -609,7 +609,7 @@ private fun ParentalPage() {
                     Icon(if (p.kids) Icons.Filled.ChildCare else Icons.Filled.Lock, null,
                         tint = if (p.kids) Color(0xFF00A86B) else MaterialTheme.colorScheme.primary)
                     Text(p.name + if (p.kids) L(" (ילדים)") else L(" (מבוגר)"), Modifier.weight(1f).padding(horizontal = 8.dp))
-                    if (p.kids) Text(L("עד גיל {0}", p.age), fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    if (p.kids) TextButton(onClick = { nav(Screen.KidsContent(p.id)) }) { Text(L("תוכן · עד {0}", p.age)) }
                     IconButton(onClick = { editProfile = p }) { Icon(Icons.Filled.Edit, L("עריכה")) }
                 }
             }

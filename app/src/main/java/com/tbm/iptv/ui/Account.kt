@@ -107,9 +107,21 @@ fun AccountScreen(onBack: () -> Unit) {
                     Spacer(Modifier.height(8.dp))
                     OutlinedButton(onClick = { pairTv = true }, modifier = Modifier.fillMaxWidth()) { Text(L("📺 חבר טלוויזיה / סטרימר בקוד")) }
                     Spacer(Modifier.height(8.dp))
-                    TextButton(onClick = { Cloud.signOut() }, modifier = Modifier.fillMaxWidth()) {
+                    var confirmOut by remember { mutableStateOf(false) }
+                    TextButton(onClick = { confirmOut = true }, modifier = Modifier.fillMaxWidth()) {
                         Text(L("התנתק"), color = MaterialTheme.colorScheme.error)
                     }
+                    if (confirmOut) AlertDialog(
+                        onDismissRequest = { confirmOut = false },
+                        title = { Text(L("להתנתק?")) },
+                        text = { Text(L("כל ההגדרות שמורות בחשבון שלך ויחזרו כשתתחבר שוב. מהמכשיר הזה הן יימחקו, כדי שמי שיתחבר אחריך לא יראה אותן.")) },
+                        confirmButton = { TextButton(onClick = {
+                            confirmOut = false
+                            Cloud.signOut()
+                            (ctx as? android.app.Activity)?.recreate()
+                        }) { Text(L("התנתק"), color = MaterialTheme.colorScheme.error) } },
+                        dismissButton = { TextButton(onClick = { confirmOut = false }) { Text(L("ביטול")) } },
+                    )
                 } else {
                     SignInForm(busy, ::run)
                     Spacer(Modifier.height(18.dp))

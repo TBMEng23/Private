@@ -118,10 +118,14 @@ object Catalog {
         if (Prefs.isKids) {
             val kg = Prefs.kidsGroups(); val ki = Prefs.kidsItems()
             val prof = Prefs.profile()
+            val inc = Prefs.kidsInc(prof.id); val exc = Prefs.kidsExc(prof.id)
             val autoOk = HashMap<String, Boolean>()
             base = all.filter { e ->
-                if (isAdult(e.group) || KidsFilter.blocked(e.group, prof.age) || KidsFilter.blocked(e.name, prof.age)) return@filter false
-                e.key in ki || "${kind.name}|${e.group}" in kg ||
+                val gk = "${kind.name}|${e.group}"
+                if (gk in exc || isAdult(e.group)) return@filter false
+                if (e.key in ki || gk in inc) return@filter true
+                if (KidsFilter.blocked(e.group, prof.age) || KidsFilter.blocked(e.name, prof.age)) return@filter false
+                gk in kg ||
                     (prof.auto && (autoOk.getOrPut(e.group) { KidsFilter.matches(e.group, prof.age) } ||
                         (kind == Kind.LIVE && KidsFilter.matches(e.name, prof.age))))
             }
