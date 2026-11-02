@@ -133,8 +133,9 @@ fun AppRoot() {
         if (Repo.state.value is LoadState.Idle) Prefs.activePlaylist()?.let { Repo.loadAsync(it) }
     }
     val nav: (Screen) -> Unit = { s ->
-        val needsPin = (s is Screen.Settings || s is Screen.Playlists || s is Screen.Groups) &&
-            (Prefs.settingsLock || Prefs.isKids)
+        // כל מסך עריכה / הגדרות / חשבון דורש קוד הורים בפרופיל ילדים
+        val needsPin = (s is Screen.Settings || s is Screen.Playlists || s is Screen.Groups ||
+            s is Screen.KidsContent || s is Screen.Account) && (Prefs.settingsLock || Prefs.isKids)
         if (needsPin) Parental.requireAlways(L("כניסה להגדרות")) { stack.add(s) } else stack.add(s)
     }
     val back: () -> Unit = { if (stack.size > 1) stack.removeAt(stack.lastIndex) }
@@ -148,7 +149,7 @@ fun AppRoot() {
             Screen.Playlists -> PlaylistsScreen(onDone = goHome, onBack = if (stack.size > 1) back else null)
             Screen.Profiles -> ProfilesScreen(onDone = goHome, onManage = { stack.add(Screen.Settings("parental")) })
             is Screen.Settings -> SettingsScreen(top.page, nav, back)
-            is Screen.Groups -> ManageGroupsScreen(top.kind, back) { pid -> stack.add(Screen.KidsContent(pid)) }
+            is Screen.Groups -> ManageGroupsScreen(top.kind, back) { pid -> nav(Screen.KidsContent(pid)) }
             is Screen.Series -> SeriesScreen(top.item, back)
             is Screen.Movie -> MovieScreen(top.item, back)
             Screen.Account -> AccountScreen(back)
