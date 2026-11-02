@@ -4,6 +4,7 @@ import com.tbm.iptv.L
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -210,31 +211,35 @@ private fun BottomNav(section: Section, onSelect: (Section) -> Unit) {
 
 @Composable
 private fun SideRail(section: Section, kids: Boolean, onSelect: (Section) -> Unit, nav: (Screen) -> Unit) {
-    Column(
-        Modifier.width(92.dp).fillMaxHeight().background(MaterialTheme.colorScheme.surface)
-            .padding(vertical = 8.dp, horizontal = 6.dp),
-        verticalArrangement = Arrangement.spacedBy(2.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Text("TBM", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Black, fontSize = 18.sp)
-        Section.entries.filter { !kids || (it != Section.RECORDINGS && it != Section.MULTI) }.forEach { s ->
-            RailItem(s.label, s.icon, s == section) { onSelect(s) }
-        }
-        Spacer(Modifier.weight(1f))
-        RailItem(Prefs.profile().name, Icons.Filled.Person, false) { nav(Screen.Profiles) }
-        if (!kids) {
-            RailItem(L("רשימות"), Icons.AutoMirrored.Filled.PlaylistPlay, false) { nav(Screen.Playlists) }
-            RailItem(L("הגדרות"), Icons.Filled.Settings, false) { nav(Screen.Settings()) }
+    val sections = Section.entries.filter { !kids || (it != Section.RECORDINGS && it != Section.MULTI) }
+    val extra = if (kids) 1 else 3
+    BoxWithConstraints(Modifier.width(84.dp).fillMaxHeight().background(MaterialTheme.colorScheme.surface)) {
+        // גובה לכל פריט כך שכולם ייכנסו במסך (בטלוויזיה); אם עדיין צפוף – גלילה
+        val itemH = ((maxHeight - 36.dp) / (sections.size + extra)).coerceIn(38.dp, 58.dp)
+        Column(
+            Modifier.fillMaxSize().verticalScroll(androidx.compose.foundation.rememberScrollState()).padding(vertical = 4.dp, horizontal = 4.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Text("TBM", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Black, fontSize = 16.sp,
+                modifier = Modifier.height(28.dp))
+            sections.forEach { s -> RailItem(s.label, s.icon, s == section, itemH) { onSelect(s) } }
+            androidx.compose.material3.HorizontalDivider(Modifier.padding(vertical = 2.dp))
+            RailItem(Prefs.profile().name, Icons.Filled.Person, false, itemH) { nav(Screen.Profiles) }
+            if (!kids) {
+                RailItem(L("רשימות"), Icons.AutoMirrored.Filled.PlaylistPlay, false, itemH) { nav(Screen.Playlists) }
+                RailItem(L("הגדרות"), Icons.Filled.Settings, false, itemH) { nav(Screen.Settings()) }
+            }
         }
     }
 }
 
 @Composable
-private fun RailItem(label: String, icon: ImageVector, selected: Boolean, onClick: () -> Unit) {
-    FocusItem(Modifier.fillMaxWidth(), selected = selected, onClick = onClick) {
-        Column(Modifier.fillMaxWidth().padding(vertical = 6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            Icon(icon, label, tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
-            Text(label, fontSize = 10.sp, maxLines = 1, textAlign = TextAlign.Center)
+private fun RailItem(label: String, icon: ImageVector, selected: Boolean, h: androidx.compose.ui.unit.Dp = 52.dp, onClick: () -> Unit) {
+    FocusItem(Modifier.fillMaxWidth().height(h), selected = selected, onClick = onClick) {
+        Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+            Icon(icon, label, tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(if (h < 46.dp) 20.dp else 24.dp))
+            Text(label, fontSize = if (h < 46.dp) 9.sp else 10.sp, maxLines = 1, textAlign = TextAlign.Center, lineHeight = 11.sp)
         }
     }
 }
@@ -269,8 +274,8 @@ private fun HomeRows(content: Content, ver: Int, wide: Boolean, nav: (Screen) ->
     val allowedKeys = remember(movies, series) { (movies.map { it.key } + series.map { it.key }).toHashSet() }
     val recentMovies = remember(recent, allowedKeys) { recent.filter { it.item.kind == Kind.MOVIE && it.item.key in allowedKeys } }
     val recentEps = remember(recent) { recent.filter { it.item.kind == Kind.SERIES }.distinctBy { it.item.seriesName } }
-    val newMovies = remember(movies) { movies.filterIsInstance<Channel>().filter { it.added > 0 }.sortedByDescending { it.added }.take(30) }
-    val newSeries = remember(series) { series.filterIsInstance<SeriesItem>().filter { it.added > 0 }.sortedByDescending { it.added }.take(30) }
+    val newMovies = remember(movies) { movies.filterIsInstance<Channel>().filter { it.added > 0 && isPreferred(it) }.sortedByDescending { it.added }.take(30) }
+    val newSeries = remember(series) { series.filterIsInstance<SeriesItem>().filter { it.added > 0 && isPreferred(it) }.sortedByDescending { it.added }.take(30) }
     var trendMovies by remember { mutableStateOf<List<Entry>>(emptyList()) }
     var trendSeries by remember { mutableStateOf<List<Entry>>(emptyList()) }
     val tmdb = Prefs.tmdbKey
