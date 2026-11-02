@@ -96,6 +96,7 @@ import com.tbm.iptv.data.Catalog
 import com.tbm.iptv.data.Catchup
 import com.tbm.iptv.data.Channel
 import com.tbm.iptv.data.Content
+import com.tbm.iptv.data.Countries
 import com.tbm.iptv.data.Entry
 import com.tbm.iptv.data.Epg
 import com.tbm.iptv.data.EpgEntry
@@ -444,7 +445,7 @@ private fun BrowseSection(kind: Kind, all: List<Entry>, ver: Int, nav: (Screen) 
             }
         }
     }
-    var mode by remember(kind, ver) { mutableStateOf(Prefs.str("view_${kind.name}", "grid")) }
+    var mode by remember(kind, ver) { mutableStateOf(Prefs.str("view_${kind.name}", if (kind == Kind.LIVE) "grid" else "rows")) }
     var drill by rememberSaveable(kind) { mutableStateOf(false) }
     var modeMenu by remember { mutableStateOf(false) }
     var group by rememberSaveable(kind) { mutableStateOf<String?>(null) }
@@ -977,18 +978,73 @@ private fun RowsView(
     val byGroup = remember(items) { items.groupBy { it.group } }
     val shownGroups = remember(groups, byGroup, locked) { groups.filter { it !in locked && byGroup[it] != null } }
     val favItems = remember(items, favs) { items.filter { it.key in favs } }
-    val heroes = remember(items) {
+    // תוכן "מומלץ": רק בשפות שהמשתמש מבין (בלי ערבית וכו')
+    val pref = remember(items) { items.filter { isPreferred(it) } }
+    var curated by remember(kind) { mutableStateOf(kind != Kind.LIVE && Prefs.str("rows_src_${kind.name}", "curated") == "curated") }
+    var top by remember(items) { mutableStateOf<List<Entry>>(emptyList()) }
+    var genreRows by remember(items) { mutableStateOf<List<Pair<String, List<Entry>>>>(emptyList()) }
+    LaunchedEffect(items, kind) {
+        if (kind == Kind.LIVE) return@LaunchedEffect
+        withContext(Dispatchers.IO) {
+            top = runCatching { if (kind == Kind.MOVIE) Trending.movies(pref) else Trending.series(pref) }.getOrDefault(emptyList())
+            val rows = ArrayList<Pair<String, List<Entry>>>()
+            for (g in Trending.genres) {
+                val l = runCatching { Trending.byGenre(g, kind == Kind.SERIES, pref) }.getOrDefault(emptyList())
+                if (l.size >= 4) { rows += L(g.he) to l; genreRows = rows.toList() }
+            }
+        }
+    }
+    val newest = remember(pref) { pref.filter { it.addedAt() > 0 }.sortedByDescending { it.addedAt() }.take(40) }
+    val topRated = remember(pref) { pref.filter { it.rating() >= 7.5f }.sortedByDescending { it.rating() }.take(40) }
+    val resume = remember(items, Prefs.version.intValue) {
+        items.mapNotNull { e -> Prefs.resume(e.key)?.let { r -> if (r.first < r.second * 0.95) e else null } }.take(30)
+    }
+    val heroes = remember(pref, top) {
         if (kind == Kind.LIVE) emptyList()
-        else items.filter { it.logo != null }.sortedByDescending { it.addedAt() * 10 + (it.rating() * 1).toLong() }.take(8)
+        else (top.ifEmpty { newest.ifEmpty { topRated } }).filter { it.logo != null }.take(8)
     }
     LazyColumn(modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 16.dp)) {
+        if (kind != Kind.LIVE) item {
+            Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                androidx.compose.material3.FilterChip(selected = curated, onClick = { curated = true; Prefs.setStrQuiet("rows_src_${kind.name}", "curated") },
+                    label = { Text(L("✨ מומלץ")) })
+                androidx.compose.material3.FilterChip(selected = !curated, onClick = { curated = false; Prefs.setStrQuiet("rows_src_${kind.name}", "provider") },
+                    label = { Text(L("📂 קטגוריות הספק")) })
+            }
+        }
         if (heroes.isNotEmpty()) item { FeaturedHero(heroes, kind, favs, nav) }
-        if (favItems.isNotEmpty()) item { CategoryStrip(L("★ מועדפים"), favItems, kind, favs, nav, { onSeeAll(FAV_GROUP) }, onLong) }
+        if (curated) {
+            if (top.isNotEmpty()) item {
+                RankedStrip(if (kind == Kind.MOVIE) L("Top 10 סרטים היום") else L("Top 10 סדרות היום"), top.take(10), nav, onLong)
+            }
+            if (resume.isNotEmpty()) item { CategoryStrip(L("המשך צפייה"), resume, kind, favs, nav, null, onLong) }
+            if (newest.isNotEmpty()) item { CategoryStrip(if (kind == Kind.MOVIE) L("🆕 סרטים חדשים") else L("🆕 סדרות חדשות"), newest, kind, favs, nav, { onSeeAll(NEW_GROUP) }, onLong) }
+            if (favItems.isNotEmpty()) item { CategoryStrip(L("★ הרשימה שלי"), favItems, kind, favs, nav, { onSeeAll(FAV_GROUP) }, onLong) }
+            if (topRated.size >= 4) item { CategoryStrip(L("⭐ הכי מדורגים"), topRated, kind, favs, nav, null, onLong) }
+            items(genreRows, key = { "g:" + it.first }) { (name, list) -> CategoryStrip(name, list, kind, favs, nav, null, onLong) }
+            if (Prefs.tmdbKey.isBlank()) item {
+                Text(L("💡 עם מפתח TMDB חינמי (הגדרות ← תצוגה) יופיעו כאן גם Top 10 של היום ושורות ז'אנר מדויקות יותר."),
+                    fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(16.dp))
+            }
+            item { Text(L("קטגוריות הספק"), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(start = 16.dp, top = 22.dp)) }
+        } else if (favItems.isNotEmpty()) item { CategoryStrip(L("★ מועדפים"), favItems, kind, favs, nav, { onSeeAll(FAV_GROUP) }, onLong) }
         items(shownGroups, key = { it }) { g ->
             CategoryStrip(g, byGroup[g].orEmpty(), kind, favs, nav, { onSeeAll(g) }, onLong)
         }
         if (shownGroups.isEmpty()) item { Text(L("אין פריטים"), Modifier.padding(24.dp)) }
     }
+}
+
+private val arabicRx = Regex("[\\u0600-\\u06FF]")
+private val okCountries = setOf("IL", "EN", "US", "GB", "CA", "AU", "IE", "NZ", Countries.OTHER)
+
+/** תוכן בשפה שהמשתמש קורא (עברית/אנגלית או מדינות שבחר בסינון) – לבאנר ולשורות "מומלץ" */
+private fun isPreferred(e: Entry): Boolean {
+    if (arabicRx.containsMatchIn(e.name) || arabicRx.containsMatchIn(e.group)) return false
+    val c = Countries.of(e.group)
+    val chosen = Prefs.str("pref_countries").split(",").filter { it.isNotBlank() }.toSet()
+    return c in (if (chosen.isEmpty()) okCountries else chosen + Countries.OTHER)
 }
 
 @Composable
@@ -1035,14 +1091,15 @@ private fun FeaturedHero(list: List<Entry>, kind: Kind, favs: Set<String>, nav: 
 
 @Composable
 private fun CategoryStrip(
-    title: String, list: List<Entry>, kind: Kind, favs: Set<String>, nav: (Screen) -> Unit, onSeeAll: () -> Unit, onLong: (Entry) -> Unit,
+    title: String, list: List<Entry>, kind: Kind, favs: Set<String>, nav: (Screen) -> Unit, onSeeAll: (() -> Unit)?, onLong: (Entry) -> Unit,
 ) {
     val ctx = LocalContext.current
     val shown = remember(list) { list.take(30) }
     Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp, top = 14.dp), verticalAlignment = Alignment.CenterVertically) {
         Text("$title (${list.size})", fontSize = 17.sp, fontWeight = FontWeight.Bold, maxLines = 1,
             overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
-        androidx.compose.material3.TextButton(onClick = onSeeAll) { Text(L("הכל ›"), fontWeight = FontWeight.Bold) }
+        if (onSeeAll != null) androidx.compose.material3.TextButton(onClick = onSeeAll) { Text(L("הכל ›"), fontWeight = FontWeight.Bold) }
+        else Spacer(Modifier.height(44.dp))
     }
     LazyRow(contentPadding = PaddingValues(horizontal = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         if (kind == Kind.LIVE) {

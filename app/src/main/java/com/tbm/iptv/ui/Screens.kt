@@ -327,7 +327,7 @@ private fun MainSettings(nav: (Screen) -> Unit) {
     var confirm by remember { mutableStateOf<String?>(null) }
     var viewPick by remember { mutableStateOf<Kind?>(null) }
     val modeName: (Kind) -> String = { k ->
-        when (Prefs.str("view_${k.name}", "grid")) { "rows" -> L("שורות לפי קטגוריה"); "cats" -> L("רשימת קטגוריות"); else -> L("רשת + בחירת קטגוריה") }
+        when (Prefs.str("view_${k.name}", if (k == Kind.LIVE) "grid" else "rows")) { "rows" -> L("שורות לפי קטגוריה"); "cats" -> L("רשימת קטגוריות"); else -> L("רשת + בחירת קטגוריה") }
     }
     val p = Prefs.activePlaylist()
     GroupTitle(L("חשבון"))
@@ -382,7 +382,7 @@ private fun MainSettings(nav: (Screen) -> Unit) {
                 Column {
                     listOf("grid" to L("רשת + בחירת קטגוריה"), "rows" to L("שורות לפי קטגוריה"), "cats" to L("רשימת קטגוריות")).forEach { (m, t) ->
                         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                            RadioButton(selected = Prefs.str("view_${k.name}", "grid") == m, onClick = { Prefs.setStr("view_${k.name}", m); viewPick = null })
+                            RadioButton(selected = Prefs.str("view_${k.name}", if (k == Kind.LIVE) "grid" else "rows") == m, onClick = { Prefs.setStr("view_${k.name}", m); viewPick = null })
                             Text(t)
                         }
                     }
