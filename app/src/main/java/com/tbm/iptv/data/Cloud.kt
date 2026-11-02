@@ -39,6 +39,9 @@ object Cloud {
     var lastSync by mutableStateOf(0L)
 
     val signedIn get() = user?.let { !it.isAnonymous } == true
+
+    /** בדיקה מיידית (לפני שהמאזין עדכן את user) */
+    fun signedInNow(): Boolean = runCatching { auth?.currentUser?.isAnonymous == false }.getOrDefault(false)
     val email get() = user?.email ?: ""
 
     private var applying = false

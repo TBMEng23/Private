@@ -131,6 +131,11 @@ fun AppRoot() {
     }
     LaunchedEffect(Unit) {
         if (Repo.state.value is LoadState.Idle) Prefs.activePlaylist()?.let { Repo.loadAsync(it) }
+        // פעם ראשונה אחרי העדכון: מציעים להתחבר לחשבון (אפשר לדלג)
+        if (!com.tbm.iptv.data.Cloud.signedInNow() && Prefs.str("cloud_prompted").isBlank() && Prefs.activePlaylist() != null && !Prefs.isKids) {
+            Prefs.setStrQuiet("cloud_prompted", "1")
+            stack.add(Screen.Account)
+        }
     }
     val nav: (Screen) -> Unit = { s ->
         // כל מסך עריכה / הגדרות / חשבון דורש קוד הורים בפרופיל ילדים

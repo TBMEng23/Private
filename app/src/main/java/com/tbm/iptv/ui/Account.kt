@@ -124,6 +124,7 @@ fun AccountScreen(onBack: () -> Unit) {
                     )
                 } else {
                     SignInForm(busy, ::run)
+                    TextButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) { Text(L("אולי אחר כך")) }
                     Spacer(Modifier.height(18.dp))
                     HorizontalDivider()
                     Spacer(Modifier.height(18.dp))
