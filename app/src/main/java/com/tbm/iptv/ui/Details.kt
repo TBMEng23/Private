@@ -320,6 +320,7 @@ fun SeriesScreen(s: SeriesItem, onBack: () -> Unit) {
         if (p == null) { err = L("אין רשימה פעילה"); return@LaunchedEffect }
         try { val (i, e) = Repo.details(p, s); info = i; eps = e } catch (e: Exception) { err = e.message ?: L("שגיאה") }
     }
+    if (AgeGate(info, true, s.name, onBack)) return
     val all = eps ?: emptyList()
     val seasons = remember(all) { all.map { it.season }.distinct().sorted() }
     // הפרק להמשך: האחרון שנצפה – אם לא הסתיים אותו, אחרת הבא אחריו
@@ -459,6 +460,7 @@ fun MovieScreen(c: Channel, onBack: () -> Unit) {
         val p = Prefs.activePlaylist() ?: return@LaunchedEffect
         info = runCatching { Repo.vodInfo(p, c) }.getOrNull()
     }
+    if (AgeGate(info, false, c.name, onBack)) return
     val r = remember(ver) { Prefs.resume(c.key) }
     val started = r != null && r.first < r.second * 0.95
     val fav = remember(ver) { Prefs.isFav(c.key) }
@@ -498,3 +500,28 @@ private suspend fun localizeInfo(name: String, i: MediaInfo, fallbackPlot: Strin
             null to i.copy(plot = tm?.second ?: tr[0] ?: plot0, genre = Localize.genre(i.genre), cast = tr[1], director = tr[2])
         }.getOrDefault(null to i)
     }
+
+
+/** בפרופיל ילדים: בודק סיווג גיל ב-TMDB. מחזיר true (ומציג מסך חסימה) אם התוכן מעל גיל הפרופיל */
+@Composable
+private fun AgeGate(info: MediaInfo?, tv: Boolean, title: String, onBack: () -> Unit): Boolean {
+    if (!Prefs.isKids) return false
+    val prof = Prefs.profile()
+    var rated by remember(info) { mutableStateOf<Int?>(null) }
+    LaunchedEffect(info) {
+        val id = info?.tmdbId ?: return@LaunchedEffect
+        rated = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { com.tbm.iptv.data.KidsFilter.tmdbAge(id, tv) }
+    }
+    val r = rated ?: return false
+    if (r <= prof.age) return false
+    Column(Modifier.fillMaxSize().background(DetailBg).padding(32.dp), horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center) {
+        Text("🔒", fontSize = 56.sp)
+        Text(L("לא מתאים לגיל"), color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 8.dp))
+        Text(title, color = Color(0xFFB8B9C0), modifier = Modifier.padding(top = 4.dp))
+        Text(L("התוכן הזה מסווג לגיל {0}+ ולכן לא זמין בפרופיל {1}.", r, prof.name), color = Color(0xFFB8B9C0),
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center, modifier = Modifier.padding(top = 12.dp))
+        Button(onClick = onBack, modifier = Modifier.padding(top = 20.dp)) { Text(L("חזרה")) }
+    }
+    return true
+}

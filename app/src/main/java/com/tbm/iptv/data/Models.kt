@@ -108,11 +108,16 @@ data class Playlist(
     }
 }
 
-data class Profile(val id: String, val name: String, val kids: Boolean) {
+/**
+ * פרופיל צופה. ילדים: age = גיל מקסימלי לתוכן, auto = סינון אוטומטי לפי קטגוריות ילדים (בנוסף לאישורים ידניים)
+ */
+data class Profile(val id: String, val name: String, val kids: Boolean, val age: Int = 7, val auto: Boolean = true, val color: Int = 0) {
     fun toJson(): JSONObject = JSONObject().put("id", id).put("name", name).put("kids", kids)
+        .put("age", age).put("auto", auto).put("color", color)
 
     companion object {
-        fun fromJson(o: JSONObject) = Profile(o.optString("id"), o.optString("name"), o.optBoolean("kids"))
+        fun fromJson(o: JSONObject) = Profile(o.optString("id"), o.optString("name"), o.optBoolean("kids"),
+            o.optInt("age", 7), o.optBoolean("auto", true), o.optInt("color", 0))
     }
 }
 

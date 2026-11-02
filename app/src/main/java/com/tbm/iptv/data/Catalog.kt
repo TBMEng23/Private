@@ -33,6 +33,55 @@ object Parental {
     }
 }
 
+/** סינון אוטומטי לפרופיל ילדים לפי גיל: קטגוריות/ערוצי ילדים מותרים, תוכן קשה חסום */
+object KidsFilter {
+    private val kidsRx = Regex("(?i)(\\bkids?\\b|child|cartoon|toon|junior|\\bjr\\b|bab(y|ies)|preschool|nick|disney|cbeebies|cbbc|boomerang|cartoonito|pbs kids|ילדים|ילד|פעוטות|(^|[^א-ת])הופ|לולי|ניקלודיאון|דיסני|זום|חינוכית|baby ?tv)")
+    private val familyRx = Regex("(?i)(anim|anime|family|משפחה|משפחתי|אנימציה|אנימה|pixar|dreamworks)")
+    private val teenRx = Regex("(?i)(teen|נוער|youth)")
+    private val hardRx = Regex("(?i)(horror|אימה|slasher|gore|thriller|מותחן|crime|פשע|war\\b|מלחמה|erotic|ארוטי)")
+
+    fun matches(s: String, age: Int): Boolean =
+        kidsRx.containsMatchIn(s) || (age >= 10 && familyRx.containsMatchIn(s)) || (age >= 13 && teenRx.containsMatchIn(s))
+
+    fun blocked(s: String, age: Int): Boolean = age < 16 && hardRx.containsMatchIn(s)
+
+    /** גיל מינימלי לפי סיווג (ארה"ב / ישראל) */
+    fun certAge(c: String): Int? = when (c.trim().uppercase()) {
+        "G", "TV-Y", "TV-G", "U", "0", "ALL" -> 0
+        "TV-Y7", "TV-Y7-FV", "7" -> 7
+        "PG", "TV-PG", "8" -> 8
+        "12", "12+" -> 12
+        "PG-13", "13" -> 13
+        "TV-14", "14", "15" -> 14
+        "16", "16+" -> 16
+        "R", "TV-MA", "17", "NC-17", "18", "18+" -> 18
+        else -> null
+    }
+
+    /** בודק ב-TMDB את סיווג הגיל של סרט/סדרה. null = לא ידוע */
+    fun tmdbAge(tmdbId: String?, tv: Boolean): Int? {
+        val key = Prefs.tmdbKey
+        if (tmdbId.isNullOrBlank() || key.isBlank()) return null
+        return runCatching {
+            val bearer = key.length > 40
+            val path = if (tv) "tv/$tmdbId/content_ratings" else "movie/$tmdbId/release_dates"
+            val url = "https://api.themoviedb.org/3/$path" + (if (bearer) "" else "?api_key=${Http.enc(key)}")
+            val hdr = if (bearer) mapOf("Authorization" to "Bearer $key") else emptyMap()
+            val arr = org.json.JSONObject(Http.get(url, hdr)).optJSONArray("results") ?: return null
+            val found = HashMap<String, Int>()
+            for (i in 0 until arr.length()) {
+                val o = arr.optJSONObject(i) ?: continue
+                val cc = o.optString("iso_3166_1")
+                if (tv) certAge(o.optString("rating"))?.let { found[cc] = it }
+                else o.optJSONArray("release_dates")?.let { rd ->
+                    for (j in 0 until rd.length()) certAge(rd.optJSONObject(j)?.optString("certification") ?: "")?.let { found[cc] = maxOf(found[cc] ?: 0, it) }
+                }
+            }
+            found["IL"] ?: found["US"] ?: found["GB"] ?: found.values.maxOrNull()
+        }.getOrNull()
+    }
+}
+
 /** בניית התצוגה של כל סוג תוכן לפי פרופיל, סינונים, נעילות, שמות וסדר */
 object Catalog {
     val adultRx = Regex("(?i)(adult|xxx|18\\+|\\+18|porn|for adults|למבוגרים|ארוטי)")
@@ -68,7 +117,14 @@ object Catalog {
 
         if (Prefs.isKids) {
             val kg = Prefs.kidsGroups(); val ki = Prefs.kidsItems()
-            base = all.filter { (it.key in ki || "${kind.name}|${it.group}" in kg) && !isAdult(it.group) }
+            val prof = Prefs.profile()
+            val autoOk = HashMap<String, Boolean>()
+            base = all.filter { e ->
+                if (isAdult(e.group) || KidsFilter.blocked(e.group, prof.age) || KidsFilter.blocked(e.name, prof.age)) return@filter false
+                e.key in ki || "${kind.name}|${e.group}" in kg ||
+                    (prof.auto && (autoOk.getOrPut(e.group) { KidsFilter.matches(e.group, prof.age) } ||
+                        (kind == Kind.LIVE && KidsFilter.matches(e.name, prof.age))))
+            }
         } else {
             val hidden = Prefs.hidden()
             val hiddenItems = Prefs.hiddenItems()

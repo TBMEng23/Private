@@ -562,6 +562,8 @@ private fun ParentalPage() {
     val ctx = LocalContext.current
     var pinDialog by remember { mutableStateOf(false) }
     var newProfile by remember { mutableStateOf<Boolean?>(null) }
+    var editProfile by remember { mutableStateOf<Profile?>(null) }
+    var addProfile by remember { mutableStateOf(false) }
     val profiles = Prefs.profiles()
 
     Card {
@@ -600,22 +602,21 @@ private fun ParentalPage() {
                     Icon(if (p.kids) Icons.Filled.ChildCare else Icons.Filled.Lock, null,
                         tint = if (p.kids) Color(0xFF00A86B) else MaterialTheme.colorScheme.primary)
                     Text(p.name + if (p.kids) L(" (ילדים)") else L(" (מבוגר)"), Modifier.weight(1f).padding(horizontal = 8.dp))
-                    if (p.id != "main") IconButton(onClick = { Prefs.saveProfiles(profiles.filter { it.id != p.id }) }) {
-                        Icon(Icons.Filled.Delete, L("מחק"))
-                    }
+                    if (p.kids) Text(L("עד גיל {0}", p.age), fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    IconButton(onClick = { editProfile = p }) { Icon(Icons.Filled.Edit, L("עריכה")) }
                 }
             }
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(onClick = { newProfile = true }) { Text(L("+ פרופיל ילדים")) }
-                OutlinedButton(onClick = { newProfile = false }) { Text(L("+ פרופיל מבוגר")) }
-            }
+            Button(onClick = { addProfile = true }) { Text(L("+ הוסף פרופיל")) }
+            SwitchRow(L("להציג \"מי צופה?\" בכל פתיחה"), Prefs.bool("profile_picker", true)) { Prefs.setBool("profile_picker", it) }
             Hint(L("פרופיל ילדים רואה רק ערוצים, סרטים וסדרות שאישרת: לחיצה ארוכה על פריט ← \"אשר לפרופיל ילדים\", או ניהול קבוצות ← לחיצה על קבוצה ← \"אשר לילדים\". מעבר מפרופיל ילדים למבוגר דורש קוד."))
             if (!Parental.hasPin() && profiles.any { it.kids }) Text(L("⚠ הגדר קוד הורים – אחרת הילדים יוכלו לעבור לפרופיל מבוגר"),
                 color = MaterialTheme.colorScheme.error, fontSize = 12.sp)
         }
     }
 
-    if (pinDialog) PinSetDialog { pinDialog = false }
+    if (pinDialog) PinSetFlow { pinDialog = false }
+    editProfile?.let { ProfileEditDialog(it) { editProfile = null } }
+    if (addProfile) ProfileEditDialog(null) { addProfile = false }
     newProfile?.let { kids ->
         var name by remember { mutableStateOf(if (kids) L("ילדים") else "") }
         AlertDialog(

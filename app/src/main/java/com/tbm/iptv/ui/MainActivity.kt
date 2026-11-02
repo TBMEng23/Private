@@ -122,7 +122,7 @@ fun AppRoot() {
         mutableStateListOf<Screen>(
             when {
                 Prefs.activePlaylist() == null -> Screen.Playlists
-                !Prefs.isKids && Prefs.profiles().size > 1 -> Screen.Profiles
+                Prefs.profiles().size > 1 && Prefs.bool("profile_picker", true) -> Screen.Profiles
                 else -> Screen.Home
             }
         )
@@ -144,7 +144,7 @@ fun AppRoot() {
         when (val top = stack.last()) {
             Screen.Home -> HomeScreen(nav)
             Screen.Playlists -> PlaylistsScreen(onDone = goHome, onBack = if (stack.size > 1) back else null)
-            Screen.Profiles -> ProfilesScreen(onDone = goHome)
+            Screen.Profiles -> ProfilesScreen(onDone = goHome, onManage = { stack.add(Screen.Settings("parental")) })
             is Screen.Settings -> SettingsScreen(top.page, nav, back)
             is Screen.Groups -> ManageGroupsScreen(top.kind, back)
             is Screen.Series -> SeriesScreen(top.item, back)
