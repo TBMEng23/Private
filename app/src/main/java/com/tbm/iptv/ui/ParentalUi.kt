@@ -367,13 +367,16 @@ fun KidsContentScreen(profileId: String, onBack: () -> Unit) {
     val exc = remember(ver) { Prefs.kidsExc(profileId) }
     val legacy = remember(ver) { Prefs.kidsGroups() }
     // מצב כל קבוצה: 1 מאושר ידנית, -1 חסום, 2 אוטומטי (מוצג), 0 לא מוצג
+    val pick = kind.name in prof.pickOnly
+    val cset = prof.countriesFor(kind.name)
     fun state(g: String): Int {
         val k = "${kind.name}|$g"
         return when {
             k in exc || com.tbm.iptv.data.Catalog.isAdult(g) -> -1
-            k in inc || k in legacy -> 1
+            k in inc || (!pick && k in legacy) -> 1
+            pick -> 0
             com.tbm.iptv.data.KidsFilter.blocked(g, prof.age) -> 0
-            prof.countries.isNotEmpty() && com.tbm.iptv.data.Countries.of(g) !in prof.countries -> 0
+            cset.isNotEmpty() && com.tbm.iptv.data.Countries.of(g) !in cset -> 0
             prof.auto && (com.tbm.iptv.data.KidsFilter.matches(g, prof.age) || com.tbm.iptv.data.KidsFilter.topicMatch(prof.topics, g)) -> 2
             else -> 0
         }
@@ -404,31 +407,6 @@ fun KidsContentScreen(profileId: String, onBack: () -> Unit) {
                     })
                 }
             }
-            // מדינות
-            var showCountries by remember { mutableStateOf(false) }
-            val countryCounts = remember(content) {
-                (content?.live.orEmpty() + content?.movies.orEmpty() + content?.series.orEmpty())
-                    .groupingBy { com.tbm.iptv.data.Countries.of(it.group) }.eachCount()
-                    .filterKeys { it != com.tbm.iptv.data.Countries.OTHER }.toList().sortedByDescending { it.second }
-            }
-            FocusItem(Modifier.fillMaxWidth(), onClick = { showCountries = !showCountries }) {
-                Row(Modifier.padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text(L("מדינות / שפות:"), fontSize = 13.sp)
-                    Spacer(Modifier.width(6.dp))
-                    Text(if (prof.countries.isEmpty()) L("כולן") else prof.countries.joinToString(", ") { com.tbm.iptv.data.Countries.label(it) },
-                        fontWeight = FontWeight.Bold, fontSize = 13.sp, maxLines = 1, modifier = Modifier.weight(1f))
-                    Text(if (showCountries) "▲" else "▼")
-                }
-            }
-            if (showCountries) FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                androidx.compose.material3.FilterChip(selected = prof.countries.isEmpty(), label = { Text(L("כולן")) },
-                    onClick = { saveProf(prof.copy(countries = emptySet())) })
-                countryCounts.take(30).forEach { (c, _) ->
-                    androidx.compose.material3.FilterChip(selected = c in prof.countries, label = { Text(com.tbm.iptv.data.Countries.label(c)) }, onClick = {
-                        saveProf(prof.copy(countries = if (c in prof.countries) prof.countries - c else prof.countries + c))
-                    })
-                }
-            }
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 listOf(com.tbm.iptv.data.Kind.LIVE, com.tbm.iptv.data.Kind.MOVIE, com.tbm.iptv.data.Kind.SERIES).forEach { k ->
                     androidx.compose.material3.FilterChip(selected = kind == k, onClick = { kind = k }, label = { Text(k.label) })
@@ -436,9 +414,61 @@ fun KidsContentScreen(profileId: String, onBack: () -> Unit) {
                 Spacer(Modifier.weight(1f))
                 androidx.compose.material3.FilterChip(selected = onlyAllowed, onClick = { onlyAllowed = !onlyAllowed }, label = { Text(L("רק מה שמוצג")) })
             }
+            // ---- הגדרות לסוג התוכן הנבחר (ערוצים / סרטים / סדרות)
+            androidx.compose.material3.Surface(shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
+                color = MaterialTheme.colorScheme.surfaceVariant, modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
+                Column(Modifier.padding(12.dp)) {
+                    val k = kind.name
+                    Text(L("הגדרות ל{0}", kind.label), fontWeight = FontWeight.Bold)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        androidx.compose.material3.RadioButton(selected = !pick, onClick = { saveProf(prof.copy(pickOnly = prof.pickOnly - k)) })
+                        Text(L("אוטומטי – תוכן ילדים לפי גיל ונושאים"), fontSize = 14.sp)
+                    }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        androidx.compose.material3.RadioButton(selected = pick, onClick = { saveProf(prof.copy(pickOnly = prof.pickOnly + k)) })
+                        Text(L("רק קטגוריות שאבחר מהשרת (ברשימה למטה)"), fontSize = 14.sp)
+                    }
+                    if (pick) Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(if (kind == com.tbm.iptv.data.Kind.LIVE) L("בתוך הקטגוריות שבחרתי – רק ערוצים שמתאימים לגיל (ילדים + הנושאים)")
+                            else L("בתוך הקטגוריות שבחרתי – לחסום תוכן שלא מתאים לגיל"), fontSize = 13.sp, modifier = Modifier.weight(1f))
+                        androidx.compose.material3.Switch(checked = k in prof.ageInside, onCheckedChange = {
+                            saveProf(prof.copy(ageInside = if (it) prof.ageInside + k else prof.ageInside - k))
+                        })
+                    }
+                    if (kind != com.tbm.iptv.data.Kind.LIVE) Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(L("רק עברית ואנגלית"), fontSize = 13.sp, modifier = Modifier.weight(1f))
+                        androidx.compose.material3.Switch(checked = k in prof.langOnly, onCheckedChange = {
+                            saveProf(prof.copy(langOnly = if (it) prof.langOnly + k else prof.langOnly - k))
+                        })
+                    }
+                    var showC by remember(kind) { mutableStateOf(false) }
+                    val countryCounts = remember(all) {
+                        all.groupingBy { com.tbm.iptv.data.Countries.of(it.group) }.eachCount()
+                            .filterKeys { it != com.tbm.iptv.data.Countries.OTHER }.toList().sortedByDescending { it.second }
+                    }
+                    FocusItem(Modifier.fillMaxWidth(), onClick = { showC = !showC }) {
+                        Row(Modifier.padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Text(L("מדינות:"), fontSize = 13.sp)
+                            Spacer(Modifier.width(6.dp))
+                            Text(if (cset.isEmpty()) L("כולן") else cset.joinToString(", ") { com.tbm.iptv.data.Countries.label(it) },
+                                fontWeight = FontWeight.Bold, fontSize = 13.sp, maxLines = 1, modifier = Modifier.weight(1f))
+                            Text(if (showC) "▲" else "▼")
+                        }
+                    }
+                    if (showC) FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        val setC: (Set<String>) -> Unit = { n -> saveProf(prof.copy(kindCountries = prof.kindCountries + (k to n))) }
+                        androidx.compose.material3.FilterChip(selected = cset.isEmpty(), label = { Text(L("כולן")) }, onClick = { setC(emptySet()) })
+                        countryCounts.take(30).forEach { (c, _) ->
+                            androidx.compose.material3.FilterChip(selected = c in cset, label = { Text(com.tbm.iptv.data.Countries.label(c)) },
+                                onClick = { setC(if (c in cset) cset - c else cset + c) })
+                        }
+                    }
+                }
+            }
             OutlinedTextField(q, { q = it }, singleLine = true, placeholder = { Text(L("חיפוש קטגוריה…")) }, modifier = Modifier.fillMaxWidth())
             val allowedCount = groups.filter { state(it.first) > 0 }.sumOf { it.second }
-            Text(L("יוצגו לילד: {0} פריטים מתוך {1}. לחיצה על קטגוריה מחליפה: מוצג ⇄ חסום.", allowedCount, all.size), fontSize = 12.sp,
+            Text(if (pick) L("סמן ✅ את הקטגוריות מהשרת שהילד יראה ({0} פריטים נבחרו מתוך {1}).", allowedCount, all.size)
+                else L("יוצגו לילד: {0} פריטים מתוך {1}. לחיצה על קטגוריה מחליפה: מוצג ⇄ חסום.", allowedCount, all.size), fontSize = 12.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(vertical = 6.dp))
         }
         }
@@ -449,7 +479,7 @@ fun KidsContentScreen(profileId: String, onBack: () -> Unit) {
                 val key = "${kind.name}|$g"
                 FocusItem(Modifier.fillMaxWidth(), onClick = {
                     if (com.tbm.iptv.data.Catalog.isAdult(g)) return@FocusItem
-                    Prefs.setKidsGroupState(profileId, key, if (st > 0) -1 else 1)
+                    Prefs.setKidsGroupState(profileId, key, if (pick) (if (st > 0) 0 else 1) else if (st > 0) -1 else 1)
                     if (st > 0 && key in legacy) Prefs.setKidsGroup(kind, g, false)
                 }) {
                     Row(Modifier.padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -457,8 +487,8 @@ fun KidsContentScreen(profileId: String, onBack: () -> Unit) {
                         Spacer(Modifier.width(12.dp))
                         Column(Modifier.weight(1f)) {
                             Text(g, maxLines = 1)
-                            Text(when (st) { 1 -> L("מאושר ידנית"); 2 -> L("מוצג אוטומטית (מתאים לגיל)"); -1 -> L("חסום")
-                                else -> L("לא מוצג") } + " · $n", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(when (st) { 1 -> if (pick) L("נבחר") else L("מאושר ידנית"); 2 -> L("מוצג אוטומטית (מתאים לגיל)"); -1 -> L("חסום")
+                                else -> if (pick) L("לא נבחר – לחץ לבחירה") else L("לא מוצג") } + " · $n", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                 }

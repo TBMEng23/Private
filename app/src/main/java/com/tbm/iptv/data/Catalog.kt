@@ -56,6 +56,13 @@ object KidsFilter {
 
     fun topicMatch(topics: Set<String>, s: String): Boolean = topics.any { topicRx[it]?.containsMatchIn(s) == true }
 
+    private val arabicRx = Regex("[\\u0600-\\u06FF]")
+    private val heEn = setOf("IL", "EN", "US", "GB", "CA", "AU", "IE", "NZ", Countries.OTHER)
+
+    /** רק עברית / אנגלית: בלי כתב ערבי ומקטגוריות של מדינות דוברות עברית/אנגלית */
+    fun langOk(e: Entry): Boolean =
+        !arabicRx.containsMatchIn(e.name) && !arabicRx.containsMatchIn(e.group) && Countries.of(e.group) in heEn
+
     /** גיל מינימלי לפי סיווג (ארה"ב / ישראל) */
     fun certAge(c: String): Int? = when (c.trim().uppercase()) {
         "G", "TV-Y", "TV-G", "U", "0", "ALL" -> 0
@@ -147,15 +154,30 @@ object Catalog {
             val prof = Prefs.profile()
             val inc = Prefs.kidsInc(prof.id); val exc = Prefs.kidsExc(prof.id)
             val autoOk = HashMap<String, Boolean>()
+            val k = kind.name
+            val cset = prof.countriesFor(k)
+            val pick = k in prof.pickOnly
+            val ageIn = k in prof.ageInside
+            val lang = k in prof.langOnly
             base = all.filter { e ->
-                val gk = "${kind.name}|${e.group}"
+                val gk = "$k|${e.group}"
                 if (gk in exc || isAdult(e.group)) return@filter false
-                if (e.key in ki || gk in inc) return@filter true
-                if (KidsFilter.blocked(e.group, prof.age) || KidsFilter.blocked(e.name, prof.age)) return@filter false
-                if (prof.countries.isNotEmpty() && Countries.of(e.group) !in prof.countries) return@filter false
-                gk in kg ||
-                    (prof.auto && (autoOk.getOrPut(e.group) { KidsFilter.matches(e.group, prof.age) || KidsFilter.topicMatch(prof.topics, e.group) } ||
-                        (kind == Kind.LIVE && (KidsFilter.matches(e.name, prof.age) || KidsFilter.topicMatch(prof.topics, e.name)))))
+                if (KidsFilter.blocked(e.name, prof.age)) return@filter false
+                if (lang && !KidsFilter.langOk(e)) return@filter false
+                val chosen = e.key in ki || gk in inc
+                val groupKids = autoOk.getOrPut(e.group) { KidsFilter.matches(e.group, prof.age) || KidsFilter.topicMatch(prof.topics, e.group) }
+                val nameKids = kind == Kind.LIVE && (KidsFilter.matches(e.name, prof.age) || KidsFilter.topicMatch(prof.topics, e.name))
+                if (pick) {
+                    // רק קטגוריות שההורה בחר מהשרת, ובתוכן – סינון לפי גיל (בערוצים: רק ערוצי ילדים/נושאים)
+                    if (!chosen) return@filter false
+                    if (!ageIn) return@filter true
+                    if (kind == Kind.LIVE) return@filter groupKids || nameKids
+                    return@filter !KidsFilter.blocked(e.group, prof.age)
+                }
+                if (chosen) return@filter true
+                if (KidsFilter.blocked(e.group, prof.age)) return@filter false
+                if (cset.isNotEmpty() && Countries.of(e.group) !in cset) return@filter false
+                gk in kg || (prof.auto && (groupKids || nameKids))
             }
         } else {
             val hidden = Prefs.hidden()

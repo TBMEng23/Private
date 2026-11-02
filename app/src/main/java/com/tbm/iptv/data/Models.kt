@@ -117,16 +117,32 @@ data class Profile(
     val countries: Set<String> = emptySet(),
     /** ילדים: נושאים נוספים שמותרים (nature, sport, docu, music, edu) */
     val topics: Set<String> = emptySet(),
+    /** ילדים: מדינות לכל סוג תוכן (LIVE/MOVIE/SERIES). חסר = לפי countries */
+    val kindCountries: Map<String, Set<String>> = emptyMap(),
+    /** ילדים: סוגים שבהם מוצגות רק קטגוריות שההורה בחר מהשרת */
+    val pickOnly: Set<String> = emptySet(),
+    /** ילדים: סוגים שבהם בתוך הקטגוריות שנבחרו מסננים גם לפי גיל (ערוצים: רק ערוצי ילדים) */
+    val ageInside: Set<String> = setOf("LIVE"),
+    /** ילדים: סוגים שבהם רק תוכן בעברית ובאנגלית */
+    val langOnly: Set<String> = emptySet(),
 ) {
+    fun countriesFor(kind: String): Set<String> = kindCountries[kind] ?: countries
     fun toJson(): JSONObject = JSONObject().put("id", id).put("name", name).put("kids", kids)
         .put("age", age).put("auto", auto).put("color", color)
         .put("countries", org.json.JSONArray(countries.toList())).put("topics", org.json.JSONArray(topics.toList()))
+        .put("kc", JSONObject().apply { kindCountries.forEach { (k, v) -> put(k, org.json.JSONArray(v.toList())) } })
+        .put("pick", org.json.JSONArray(pickOnly.toList())).put("ageIn", org.json.JSONArray(ageInside.toList()))
+        .put("lang", org.json.JSONArray(langOnly.toList()))
 
     companion object {
         private fun strSet(a: org.json.JSONArray?): Set<String> = a?.let { (0 until it.length()).map { i -> it.optString(i) }.toSet() } ?: emptySet()
         fun fromJson(o: JSONObject) = Profile(o.optString("id"), o.optString("name"), o.optBoolean("kids"),
             o.optInt("age", 7), o.optBoolean("auto", true), o.optInt("color", 0),
-            strSet(o.optJSONArray("countries")), strSet(o.optJSONArray("topics")))
+            strSet(o.optJSONArray("countries")), strSet(o.optJSONArray("topics")),
+            o.optJSONObject("kc")?.let { kc -> kc.keys().asSequence().associateWith { k -> strSet(kc.optJSONArray(k)) } } ?: emptyMap(),
+            strSet(o.optJSONArray("pick")),
+            if (o.has("ageIn")) strSet(o.optJSONArray("ageIn")) else setOf("LIVE"),
+            strSet(o.optJSONArray("lang")))
     }
 }
 
