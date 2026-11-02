@@ -128,7 +128,7 @@ import java.util.UUID
 // ============================================================ ניהול קבוצות
 @OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
 @Composable
-fun ManageGroupsScreen(startKind: Kind, onBack: () -> Unit) {
+fun ManageGroupsScreen(startKind: Kind, onBack: () -> Unit, onKids: (String) -> Unit = {}) {
     var kind by remember { mutableStateOf(startKind) }
     val content = Repo.content
     val all: List<Entry> = when (kind) {
@@ -157,6 +157,18 @@ fun ManageGroupsScreen(startKind: Kind, onBack: () -> Unit) {
 
     Column(Modifier.fillMaxSize()) {
         ScreenHeader(L("ניהול קבוצות"), onBack)
+        // ההורה עורך מכאן גם את התוכן של כל פרופיל ילדים
+        val kidsProfiles = remember(ver) { Prefs.profiles().filter { it.kids } }
+        if (kidsProfiles.isNotEmpty() && !Prefs.isKids) Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically) {
+            Text(L("עריכה עבור:"), fontSize = 13.sp)
+            Spacer(Modifier.width(6.dp))
+            FilterChip(selected = true, onClick = {}, label = { Text(Prefs.profile().name) })
+            kidsProfiles.forEach { p ->
+                Spacer(Modifier.width(6.dp))
+                FilterChip(selected = false, onClick = { onKids(p.id) }, label = { Text("🧒 " + p.name) })
+            }
+        }
         TabRow(selectedTabIndex = kind.ordinal) {
             Kind.entries.forEach { k -> Tab(selected = k == kind, onClick = { kind = k; q = "" }, text = { Text(k.label) }) }
         }

@@ -148,7 +148,7 @@ fun AppRoot() {
             Screen.Playlists -> PlaylistsScreen(onDone = goHome, onBack = if (stack.size > 1) back else null)
             Screen.Profiles -> ProfilesScreen(onDone = goHome, onManage = { stack.add(Screen.Settings("parental")) })
             is Screen.Settings -> SettingsScreen(top.page, nav, back)
-            is Screen.Groups -> ManageGroupsScreen(top.kind, back)
+            is Screen.Groups -> ManageGroupsScreen(top.kind, back) { pid -> stack.add(Screen.KidsContent(pid)) }
             is Screen.Series -> SeriesScreen(top.item, back)
             is Screen.Movie -> MovieScreen(top.item, back)
             Screen.Account -> AccountScreen(back)
