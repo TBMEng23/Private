@@ -180,6 +180,7 @@ object Catalog {
             val kg = Prefs.kidsGroups(); val ki = Prefs.kidsItems()
             val prof = Prefs.profile()
             val inc = Prefs.kidsInc(prof.id); val exc = Prefs.kidsExc(prof.id)
+            val itemExc = Prefs.kidsItemExc(prof.id)
             val autoOk = HashMap<String, Boolean>()
             val k = kind.name
             val cset = prof.countriesFor(k)
@@ -188,7 +189,7 @@ object Catalog {
             val lang = k in prof.langOnly
             base = all.filter { e ->
                 val gk = "$k|${e.group}"
-                if (gk in exc || isAdult(e.group)) return@filter false
+                if (e.key in itemExc || gk in exc || isAdult(e.group)) return@filter false
                 if (KidsFilter.blocked(e.name, prof.age)) return@filter false
                 if (lang && !KidsFilter.langOk(e)) return@filter false
                 val chosen = e.key in ki || gk in inc

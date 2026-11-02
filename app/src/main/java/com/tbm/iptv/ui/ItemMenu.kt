@@ -72,6 +72,13 @@ fun ItemMenu(t: MenuTarget, onDismiss: () -> Unit) {
                             Toast.makeText(ctx, L("קודם הגדר קוד הורים בהגדרות"), Toast.LENGTH_SHORT).show()
                         } else guarded(L("נעילה")) { Prefs.setItemLocked(e.key, !locked) }
                     }
+                    // חסימה לפרופיל ילדים מסוים
+                    Prefs.profiles().filter { it.kids }.forEach { kp ->
+                        val blocked = e.key in Prefs.kidsItemExc(kp.id)
+                        MenuRow(if (blocked) L("✓ החזר לפרופיל {0}", kp.name) else L("⛔ חסום לפרופיל {0}", kp.name)) {
+                            guarded(L("חסימה לילדים")) { Prefs.setKidsItemBlocked(kp.id, e.key, !blocked) }
+                        }
+                    }
                     val kidsOk = e.key in Prefs.kidsItems()
                     MenuRow(if (kidsOk) L("👶 בטל אישור לילדים") else L("👶 אשר לפרופיל ילדים")) {
                         guarded(L("אישור לילדים")) { Prefs.setKidsItem(e.key, !kidsOk) }

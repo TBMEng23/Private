@@ -89,6 +89,9 @@ object Prefs {
     /** תוכן לפרופיל ילדים מסוים: קבוצות שאושרו / נחסמו ידנית ("KIND|group") */
     fun kidsInc(pid: String): Set<String> = set("kinc_$pid")
     fun kidsExc(pid: String): Set<String> = set("kexc_$pid")
+    /** ערוצים / סרטים / סדרות בודדים שנחסמו לפרופיל ילדים */
+    fun kidsItemExc(pid: String): Set<String> = set("kxi_$pid")
+    fun setKidsItemBlocked(pid: String, key: String, on: Boolean) = toggle("kxi_$pid", key, on)
     fun setKidsGroupState(pid: String, item: String, state: Int) {   // 1 = מאושר, -1 = חסום, 0 = אוטומטי
         toggle("kinc_$pid", item, state == 1)
         toggle("kexc_$pid", item, state == -1)

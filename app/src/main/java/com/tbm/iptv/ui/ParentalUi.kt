@@ -381,7 +381,12 @@ fun KidsContentScreen(profileId: String, onBack: () -> Unit) {
             else -> 0
         }
     }
-    val shown = groups.filter { (g, _) -> (q.isBlank() || g.contains(q, true)) && (!onlyAllowed || state(g) > 0) }
+    val byGroup = remember(all) { all.groupBy { it.group } }
+    val itemExc = remember(ver) { Prefs.kidsItemExc(profileId) }
+    var expanded by remember(kind) { mutableStateOf<String?>(null) }
+    // חיפוש גם בשמות הערוצים/הסרטים – הקטגוריה תיפתח אוטומטית
+    val itemHit: (String) -> Boolean = { g -> q.isNotBlank() && byGroup[g].orEmpty().any { it.name.contains(q, true) } }
+    val shown = groups.filter { (g, _) -> (q.isBlank() || g.contains(q, true) || itemHit(g)) && (!onlyAllowed || state(g) > 0) }
     Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         ScreenHeader(L("תוכן לפרופיל {0}", prof.name), onBack)
         androidx.compose.foundation.lazy.LazyColumn(Modifier.fillMaxSize()) {
@@ -482,13 +487,32 @@ fun KidsContentScreen(profileId: String, onBack: () -> Unit) {
                     Prefs.setKidsGroupState(profileId, key, if (pick) (if (st > 0) 0 else 1) else if (st > 0) -1 else 1)
                     if (st > 0 && key in legacy) Prefs.setKidsGroup(kind, g, false)
                 }) {
-                    Row(Modifier.padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Row(Modifier.padding(start = 16.dp, top = 12.dp, bottom = 12.dp), verticalAlignment = Alignment.CenterVertically) {
                         Text(when (st) { 1 -> "✅"; 2 -> "🟢"; -1 -> "⛔"; else -> "⚪" }, fontSize = 18.sp)
                         Spacer(Modifier.width(12.dp))
                         Column(Modifier.weight(1f)) {
                             Text(g, maxLines = 1)
+                            val blockedHere = byGroup[g].orEmpty().count { it.key in itemExc }
                             Text(when (st) { 1 -> if (pick) L("נבחר") else L("מאושר ידנית"); 2 -> L("מוצג אוטומטית (מתאים לגיל)"); -1 -> L("חסום")
-                                else -> if (pick) L("לא נבחר – לחץ לבחירה") else L("לא מוצג") } + " · $n", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                else -> if (pick) L("לא נבחר – לחץ לבחירה") else L("לא מוצג") } + " · $n" +
+                                (if (blockedHere > 0) " · " + L("{0} חסומים", blockedHere) else ""), fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        // פתיחת הקטגוריה – חסימה של ערוץ/סרט בודד
+                        androidx.compose.material3.TextButton(onClick = { expanded = if (expanded == g) null else g }) {
+                            Text(if (expanded == g || itemHit(g)) L("סגור ▲") else L("פריטים ▼"), fontSize = 12.sp)
+                        }
+                    }
+                }
+                if (expanded == g || itemHit(g)) Column(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))) {
+                    byGroup[g].orEmpty().filter { q.isBlank() || !itemHit(g) || it.name.contains(q, true) }.take(400).forEach { e ->
+                        val blocked = e.key in itemExc
+                        FocusItem(Modifier.fillMaxWidth(), onClick = { Prefs.setKidsItemBlocked(profileId, e.key, !blocked) }) {
+                            Row(Modifier.padding(start = 44.dp, end = 16.dp, top = 9.dp, bottom = 9.dp), verticalAlignment = Alignment.CenterVertically) {
+                                Text(if (blocked) "⛔" else "✓", fontSize = 15.sp, color = if (blocked) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary)
+                                Spacer(Modifier.width(10.dp))
+                                Text(e.name, maxLines = 1, fontSize = 14.sp, modifier = Modifier.weight(1f))
+                                Text(if (blocked) L("חסום") else L("מותר"), fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
                         }
                     }
                 }
