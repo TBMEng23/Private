@@ -5,6 +5,7 @@ import com.tbm.iptv.L
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
 import androidx.compose.foundation.background
+import kotlinx.coroutines.launch
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.clickable
@@ -182,6 +183,13 @@ fun ProfilesScreen(onDone: () -> Unit, onManage: () -> Unit = {}) {
     val ver = Prefs.version.intValue
     val list = remember(ver) { Prefs.profiles() }
     var adding by remember { mutableStateOf(false) }
+    var switching by remember { mutableStateOf(false) }
+    if (switching) androidx.compose.ui.window.Dialog(onDismissRequest = {}) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            androidx.compose.material3.CircularProgressIndicator()
+            Text(L("טוען את הפרופיל…"), color = Color.White, modifier = Modifier.padding(top = 10.dp))
+        }
+    }
     Column(
         Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -192,7 +200,7 @@ fun ProfilesScreen(onDone: () -> Unit, onManage: () -> Unit = {}) {
         Text(L("מי צופה?"), style = MaterialTheme.typography.headlineSmall)
         Spacer(Modifier.height(24.dp))
         FlowRow(horizontalArrangement = Arrangement.spacedBy(18.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
-            list.forEach { p -> ProfileTile(p) { choose(p, onDone) } }
+            list.forEach { p -> ProfileTile(p) { choose(p) { switching = true; warmThen(onDone) { switching = false } } } }
             if (list.size < 6) FocusItem(onClick = { Parental.requireAlways(L("הוספת פרופיל")) { adding = true } }) {
                 Column(Modifier.padding(10.dp).width(110.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                     Box(Modifier.size(84.dp).clip(CircleShape).background(MaterialTheme.colorScheme.surfaceVariant), contentAlignment = Alignment.Center) {
@@ -209,6 +217,16 @@ fun ProfilesScreen(onDone: () -> Unit, onManage: () -> Unit = {}) {
         }
     }
     if (adding) ProfileEditDialog(null) { adding = false }
+}
+
+/** מחשב את התוכן של הפרופיל החדש ברקע ורק אז עובר למסך הבית – בלי לתקוע את המסך */
+fun warmThen(onDone: () -> Unit, after: () -> Unit) {
+    val c = com.tbm.iptv.data.Repo.content
+    if (c == null) { onDone(); after(); return }
+    com.tbm.iptv.data.Repo.scope.launch(kotlinx.coroutines.Dispatchers.Default) {
+        runCatching { com.tbm.iptv.data.Catalog.warm(c) }
+        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) { after(); onDone() }
+    }
 }
 
 fun choose(p: Profile, onDone: () -> Unit) {

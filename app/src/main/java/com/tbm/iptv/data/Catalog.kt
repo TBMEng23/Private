@@ -120,7 +120,23 @@ object Catalog {
         }
     }
 
+    /** מטמון: אותו סינון לא מחושב שוב ושוב (כמה מסכים מבקשים אותו בו-זמנית) */
+    private val cache = object : LinkedHashMap<String, View>(8, 0.75f, true) {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, View>?) = size > 9
+    }
+
     fun build(kind: Kind, all: List<Entry>): View {
+        val k = "${kind.name}|${System.identityHashCode(all)}|${all.size}|${Prefs.version.intValue}|${Parental.unlocked}|${Prefs.profileId}"
+        synchronized(cache) { cache[k] }?.let { return it }
+        val v = buildRaw(kind, all)
+        synchronized(cache) { cache[k] = v }
+        return v
+    }
+
+    /** מחשב מראש ברקע את שלושת סוגי התוכן (לפני מעבר פרופיל) */
+    fun warm(c: Content) { build(Kind.LIVE, c.live); build(Kind.MOVIE, c.movies); build(Kind.SERIES, c.series) }
+
+    private fun buildRaw(kind: Kind, all: List<Entry>): View {
         val renames = Prefs.renames()
         val order = Prefs.order()
         val base: List<Entry>
