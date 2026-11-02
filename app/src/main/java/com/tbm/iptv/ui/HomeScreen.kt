@@ -242,7 +242,7 @@ private fun RailItem(label: String, icon: ImageVector, selected: Boolean, onClic
 @Composable
 private fun SectionContent(section: Section, content: Content, ver: Int, wide: Boolean, nav: (Screen) -> Unit, go: (Section) -> Unit) {
     when (section) {
-        Section.HOME -> HomeRows(content, ver, wide, nav, go)
+        Section.HOME -> if (Prefs.isKids) KidsHome(content, ver, nav) else HomeRows(content, ver, wide, nav, go)
         Section.LIVE -> BrowseSection(Kind.LIVE, content.live, ver, nav)
         Section.GUIDE -> GuideSection(content)
         Section.MOVIES -> BrowseSection(Kind.MOVIE, content.movies, ver, nav)
@@ -1209,4 +1209,56 @@ private fun RankedStrip(title: String, list: List<Entry>, nav: (Screen) -> Unit,
 fun PlatformBadge(p: com.tbm.iptv.data.Platforms.P, modifier: Modifier = Modifier) {
     Text(p.short, color = Color.White, fontSize = 9.sp, fontWeight = FontWeight.Black, maxLines = 1,
         modifier = modifier.background(Color(p.color), RoundedCornerShape(3.dp)).padding(horizontal = 4.dp, vertical = 1.dp))
+}
+
+
+// ============================================================ מסך בית לילדים
+/** מסך פתיחה צבעוני לפרופיל ילדים: מה חדש, להמשיך לצפות, ערוצים, סרטים, סדרות ונושאים – רק מתוך התוכן המותר */
+@Composable
+private fun KidsHome(content: Content, ver: Int, nav: (Screen) -> Unit) {
+    val prof = remember(ver) { Prefs.profile() }
+    val live = remember(content, ver) { Catalog.build(Kind.LIVE, content.live).items.filterIsInstance<Channel>() }
+    val movies = remember(content, ver) { Catalog.build(Kind.MOVIE, content.movies).items }
+    val series = remember(content, ver) { Catalog.build(Kind.SERIES, content.series).items }
+    val favs = remember(ver) { Prefs.favs() }
+    val fresh = remember(movies, series) { (movies + series).filter { it.addedAt() > 0 }.sortedByDescending { it.addedAt() }.take(30) }
+    val resume = remember(movies, ver) {
+        val recent = Prefs.recent()
+        val keys = recent.map { it.item.key }.toSet()
+        movies.filter { it.key in keys } + series.filter { s -> recent.any { it.item.seriesName == s.name } }
+    }
+    val topicRows = remember(live, movies, series) {
+        prof.topics.mapNotNull { t ->
+            val rx = com.tbm.iptv.data.KidsFilter.topicRx[t] ?: return@mapNotNull null
+            val l = live.filter { rx.containsMatchIn(it.group) || rx.containsMatchIn(it.name) }.take(30)
+            val title = when (t) { "nature" -> L("🌿 טבע ובעלי חיים"); "sport" -> L("⚽ ספורט"); "docu" -> L("🔬 מדע ודוקו")
+                "music" -> L("🎵 מוזיקה"); else -> L("📚 חינוכי") }
+            if (l.isEmpty()) null else title to l
+        }
+    }
+    var menu by remember { mutableStateOf<MenuTarget?>(null) }
+    val colors = listOf(Color(0xFFFF6F91), Color(0xFFFFB300), Color(0xFF00C2A8), Color(0xFF3A9BFF), Color(0xFF8E44AD))
+    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 20.dp)) {
+        item {
+            Box(Modifier.fillMaxWidth().padding(12.dp).clip(RoundedCornerShape(22.dp))
+                .background(androidx.compose.ui.graphics.Brush.horizontalGradient(listOf(colors[prof.color % colors.size], colors[(prof.color + 2) % colors.size])))
+                .padding(20.dp)) {
+                Column {
+                    Text(L("שלום {0}! 👋", prof.name), color = Color.White, fontSize = 28.sp, fontWeight = FontWeight.Black)
+                    Text(L("מה בא לך לראות היום?"), color = Color.White.copy(alpha = 0.9f), fontSize = 16.sp)
+                }
+            }
+        }
+        if (live.isEmpty() && movies.isEmpty() && series.isEmpty()) item {
+            Text(L("עדיין אין תוכן מאושר לפרופיל הזה. בקש מאבא או אמא לבחור תוכן בהגדרות ← בקרת הורים ← תוכן."),
+                modifier = Modifier.padding(24.dp), textAlign = TextAlign.Center)
+        }
+        if (resume.isNotEmpty()) item { CategoryStrip(L("▶ להמשיך לצפות"), resume, Kind.MOVIE, favs, nav, null) { menu = MenuTarget(Kind.MOVIE, it, movies) } }
+        if (fresh.isNotEmpty()) item { CategoryStrip(L("🆕 חדש בשבילך"), fresh, Kind.MOVIE, favs, nav, null) { menu = MenuTarget(Kind.MOVIE, it, movies) } }
+        if (live.isNotEmpty()) item { CategoryStrip(L("📺 הערוצים שלי"), live, Kind.LIVE, favs, nav, null) { menu = MenuTarget(Kind.LIVE, it, live) } }
+        if (movies.isNotEmpty()) item { CategoryStrip(L("🎬 סרטים"), movies.sortedByDescending { it.rating() }, Kind.MOVIE, favs, nav, null) { menu = MenuTarget(Kind.MOVIE, it, movies) } }
+        if (series.isNotEmpty()) item { CategoryStrip(L("🍿 סדרות"), series.sortedByDescending { it.rating() }, Kind.SERIES, favs, nav, null) { menu = MenuTarget(Kind.SERIES, it, series) } }
+        items(topicRows, key = { "t:" + it.first }) { (title, l) -> CategoryStrip(title, l, Kind.LIVE, favs, nav, null) { } }
+    }
+    menu?.let { ItemMenu(it) { menu = null } }
 }
