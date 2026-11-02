@@ -12,7 +12,20 @@
           "package_name": "com.tbm.iptv"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "1069438578061-24sr95f2aahb5t4nsor9ug59243m5t9h.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.tbm.iptv",
+            "certificate_hash": "c43fba379646e5c648a2b391450ccdf071ef258f"
+          }
+        },
+        {
+          "client_id": "1069438578061-er37uks8udidun3ijipbgsfhndsljf09.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyB5FXd0FOZcZ09K6lR0V4o4Or5w4jy70XM"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1069438578061-er37uks8udidun3ijipbgsfhndsljf09.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
