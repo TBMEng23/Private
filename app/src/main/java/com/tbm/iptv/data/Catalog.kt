@@ -45,6 +45,17 @@ object KidsFilter {
 
     fun blocked(s: String, age: Int): Boolean = age < 16 && hardRx.containsMatchIn(s)
 
+    /** נושאים נוספים לפרופיל ילדים */
+    val topicRx = linkedMapOf(
+        "nature" to Regex("(?i)(nat ?geo|national geographic|wild|animal|planet|earth|nature|טבע|חיות|בעלי חיים)"),
+        "sport" to Regex("(?i)(sport|ספורט|espn|eurosport|bein|\\bnba\\b|\\bnfl\\b|fifa|uefa|football|soccer|כדורגל|כדורסל)"),
+        "docu" to Regex("(?i)(docu|documentary|science|history|discovery|דוקו|מדע|היסטוריה)"),
+        "music" to Regex("(?i)(music|\\bmtv\\b|מוזיקה|קליפ)"),
+        "edu" to Regex("(?i)(educat|learning|חינוכית|לימוד)"),
+    )
+
+    fun topicMatch(topics: Set<String>, s: String): Boolean = topics.any { topicRx[it]?.containsMatchIn(s) == true }
+
     /** גיל מינימלי לפי סיווג (ארה"ב / ישראל) */
     fun certAge(c: String): Int? = when (c.trim().uppercase()) {
         "G", "TV-Y", "TV-G", "U", "0", "ALL" -> 0
@@ -125,9 +136,10 @@ object Catalog {
                 if (gk in exc || isAdult(e.group)) return@filter false
                 if (e.key in ki || gk in inc) return@filter true
                 if (KidsFilter.blocked(e.group, prof.age) || KidsFilter.blocked(e.name, prof.age)) return@filter false
+                if (prof.countries.isNotEmpty() && Countries.of(e.group) !in prof.countries) return@filter false
                 gk in kg ||
-                    (prof.auto && (autoOk.getOrPut(e.group) { KidsFilter.matches(e.group, prof.age) } ||
-                        (kind == Kind.LIVE && KidsFilter.matches(e.name, prof.age))))
+                    (prof.auto && (autoOk.getOrPut(e.group) { KidsFilter.matches(e.group, prof.age) || KidsFilter.topicMatch(prof.topics, e.group) } ||
+                        (kind == Kind.LIVE && (KidsFilter.matches(e.name, prof.age) || KidsFilter.topicMatch(prof.topics, e.name)))))
             }
         } else {
             val hidden = Prefs.hidden()
