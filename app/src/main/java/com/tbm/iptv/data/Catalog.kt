@@ -1,6 +1,7 @@
 package com.tbm.iptv.data
 
 import androidx.compose.runtime.getValue
+import kotlinx.coroutines.launch
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 
@@ -133,11 +134,37 @@ object Catalog {
     }
 
     fun build(kind: Kind, all: List<Entry>): View {
-        val k = "${kind.name}|${System.identityHashCode(all)}|${all.size}|${Prefs.version.intValue}|${Parental.unlocked}|${Prefs.profileId}"
+        val k = keyOf(kind, all)
         synchronized(cache) { cache[k] }?.let { return it }
         val v = buildRaw(kind, all)
         synchronized(cache) { cache[k] = v }
         return v
+    }
+
+    /** מתעדכן כשחישוב ברקע הסתיים – המסכים מאזינים לו */
+    val ready = androidx.compose.runtime.mutableIntStateOf(0)
+    private val EMPTY = View(emptyList(), emptyList(), emptySet())
+    private val lastByKind = HashMap<Kind, View>()
+    private val pending = HashSet<String>()
+
+    private fun keyOf(kind: Kind, all: List<Entry>) =
+        "${kind.name}|${System.identityHashCode(all)}|${all.size}|${Prefs.version.intValue}|${Parental.unlocked}|${Prefs.profileId}"
+
+    /**
+     * לשימוש במסכים: אף פעם לא מחשב על ה-UI thread.
+     * אם יש תוצאה במטמון – מחזיר מיד; אחרת מחשב ברקע ובינתיים מחזיר את התוצאה הקודמת של אותו סוג.
+     */
+    fun get(kind: Kind, all: List<Entry>): View {
+        val k = keyOf(kind, all)
+        synchronized(cache) { cache[k] }?.let { v -> synchronized(lastByKind) { lastByKind[kind] = v }; return v }
+        if (synchronized(pending) { pending.add(k) }) {
+            Repo.scope.launch(kotlinx.coroutines.Dispatchers.Default) {
+                runCatching { build(kind, all) }
+                synchronized(pending) { pending.remove(k) }
+                kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) { ready.intValue = ready.intValue + 1 }
+            }
+        }
+        return synchronized(lastByKind) { lastByKind[kind] } ?: EMPTY
     }
 
     /** מחשב מראש ברקע את שלושת סוגי התוכן (לפני מעבר פרופיל) */

@@ -8,6 +8,7 @@ class App : Application() {
         super.onCreate()
         instance = this
         CrashLog.install(this)
+        CrashLog.watchdog()
         Prefs.init(this)
         I18n.init()
         runCatching { com.tbm.iptv.data.Cloud.init() }

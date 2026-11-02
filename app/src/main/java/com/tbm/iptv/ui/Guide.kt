@@ -82,7 +82,7 @@ private const val HOUR = 3_600_000L
 fun GuideSection(content: Content) {
     val ver = Prefs.version.intValue
     val epgVer = Epg.version.intValue
-    val view = remember(content, ver) { Catalog.build(Kind.LIVE, content.live) }
+    val view = remember(content, ver, Catalog.ready.intValue) { Catalog.get(Kind.LIVE, content.live) }
     var group by rememberSaveable { mutableStateOf<String?>(null) }
     val chans = remember(view, group) {
         view.items.filterIsInstance<Channel>().filter { group == null || it.group == group }

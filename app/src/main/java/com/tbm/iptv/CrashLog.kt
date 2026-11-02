@@ -32,12 +32,33 @@ object CrashLog {
         }
     }
 
+    /** גלאי תקיעות: אם ה-UI לא מגיב 4 שניות – שומר את מצב ה-thread הראשי לדוח (מוצג בפתיחה הבאה) */
+    fun watchdog() {
+        val main = android.os.Handler(android.os.Looper.getMainLooper())
+        Thread({
+            var reported = false
+            while (true) {
+                val done = java.util.concurrent.atomic.AtomicBoolean(false)
+                main.post { done.set(true) }
+                Thread.sleep(4000)
+                if (!done.get() && !reported) {
+                    reported = true
+                    runCatching {
+                        val st = android.os.Looper.getMainLooper().thread.stackTrace.joinToString("\n") { "  at $it" }
+                        file?.writeText("ANR (UI frozen >4s) – TBM Player ${BuildConfigLite.VERSION}\n$st")
+                    }
+                }
+                if (done.get()) reported = false
+            }
+        }, "tbm-watchdog").apply { isDaemon = true; priority = Thread.MIN_PRIORITY }.start()
+    }
+
     fun read(): String? = file?.takeIf { it.exists() }?.readText()
 
     fun clear() { file?.delete() }
 }
 
-object BuildConfigLite { const val VERSION = "4.0.1" }
+object BuildConfigLite { const val VERSION = "4.0.2" }
 
 /** הגרסה האמיתית מתוך ה-APK (versionName + versionCode) */
 fun appVersion(ctx: android.content.Context): String = runCatching {

@@ -60,7 +60,7 @@ import com.tbm.iptv.player.PlayerFactory
 fun MultiViewSection(content: Content) {
     val ctx = LocalContext.current
     val ver = Prefs.version.intValue
-    val chans = remember(content, ver) { Catalog.build(Kind.LIVE, content.live).items.filterIsInstance<Channel>() }
+    val chans = remember(content, ver, Catalog.ready.intValue) { Catalog.get(Kind.LIVE, content.live).items.filterIsInstance<Channel>() }
     val slots = remember { mutableStateListOf<Channel?>(null, null, null, null) }
     var active by remember { mutableIntStateOf(0) }
     var picking by remember { mutableStateOf<Int?>(null) }

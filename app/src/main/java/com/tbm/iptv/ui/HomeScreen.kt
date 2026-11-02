@@ -258,9 +258,9 @@ private fun SectionContent(section: Section, content: Content, ver: Int, wide: B
 @Composable
 private fun HomeRows(content: Content, ver: Int, wide: Boolean, nav: (Screen) -> Unit, go: (Section) -> Unit) {
     val ctx = LocalContext.current
-    val live = remember(content, ver) { Catalog.build(Kind.LIVE, content.live).items.filterIsInstance<Channel>() }
-    val movies = remember(content, ver) { Catalog.build(Kind.MOVIE, content.movies).items }
-    val series = remember(content, ver) { Catalog.build(Kind.SERIES, content.series).items }
+    val live = remember(content, ver, Catalog.ready.intValue) { Catalog.get(Kind.LIVE, content.live).items.filterIsInstance<Channel>() }
+    val movies = remember(content, ver, Catalog.ready.intValue) { Catalog.get(Kind.MOVIE, content.movies).items }
+    val series = remember(content, ver, Catalog.ready.intValue) { Catalog.get(Kind.SERIES, content.series).items }
     val recentCh = remember(live, ver) {
         val byKey = live.associateBy { it.key }
         Prefs.recentChannels().mapNotNull { byKey[it] }
@@ -431,7 +431,7 @@ private fun Poster(
 @Composable
 private fun BrowseSection(kind: Kind, all: List<Entry>, ver: Int, nav: (Screen) -> Unit) {
     val unlocked = Parental.unlocked
-    val view = remember(all, ver, unlocked) { Catalog.build(kind, all) }
+    val view = remember(all, ver, unlocked, Catalog.ready.intValue) { Catalog.get(kind, all) }
     val filtered = view.items
     val counts = remember(filtered) { filtered.groupingBy { it.group }.eachCount() }
     val favs = remember(ver) { Prefs.favs() }
@@ -794,9 +794,9 @@ fun PosterGrid(items: List<Entry>, favs: Set<String>, modifier: Modifier, onLong
 private fun FavoritesSection(content: Content, ver: Int, nav: (Screen) -> Unit) {
     val ctx = LocalContext.current
     val favs = remember(ver) { Prefs.favs() }
-    val live = remember(content, ver) { Catalog.build(Kind.LIVE, content.live).items.filterIsInstance<Channel>().filter { it.key in favs } }
-    val vod = remember(content, ver) { Catalog.build(Kind.MOVIE, content.movies).items.filterIsInstance<Channel>().filter { it.key in favs } }
-    val ser = remember(content, ver) { Catalog.build(Kind.SERIES, content.series).items.filterIsInstance<SeriesItem>().filter { it.key in favs } }
+    val live = remember(content, ver, Catalog.ready.intValue) { Catalog.get(Kind.LIVE, content.live).items.filterIsInstance<Channel>().filter { it.key in favs } }
+    val vod = remember(content, ver, Catalog.ready.intValue) { Catalog.get(Kind.MOVIE, content.movies).items.filterIsInstance<Channel>().filter { it.key in favs } }
+    val ser = remember(content, ver, Catalog.ready.intValue) { Catalog.get(Kind.SERIES, content.series).items.filterIsInstance<SeriesItem>().filter { it.key in favs } }
     if (live.isEmpty() && vod.isEmpty() && ser.isEmpty()) {
         Box(Modifier.fillMaxSize()) {
             Text(L("אין מועדפים עדיין.\nלחיצה ארוכה על ערוץ, סרט או סדרה ← הוסף למועדפים."),
@@ -910,9 +910,9 @@ private fun RecordingsSection(ver: Int) {
 private fun SearchSection(content: Content, ver: Int, nav: (Screen) -> Unit) {
     val ctx = LocalContext.current
     var q by rememberSaveable { mutableStateOf("") }
-    val liveAll = remember(content, ver) { Catalog.build(Kind.LIVE, content.live).items.filterIsInstance<Channel>() }
-    val vodAll = remember(content, ver) { Catalog.build(Kind.MOVIE, content.movies).items.filterIsInstance<Channel>() }
-    val serAll = remember(content, ver) { Catalog.build(Kind.SERIES, content.series).items.filterIsInstance<SeriesItem>() }
+    val liveAll = remember(content, ver, Catalog.ready.intValue) { Catalog.get(Kind.LIVE, content.live).items.filterIsInstance<Channel>() }
+    val vodAll = remember(content, ver, Catalog.ready.intValue) { Catalog.get(Kind.MOVIE, content.movies).items.filterIsInstance<Channel>() }
+    val serAll = remember(content, ver, Catalog.ready.intValue) { Catalog.get(Kind.SERIES, content.series).items.filterIsInstance<SeriesItem>() }
     val live = remember(q, liveAll) { if (q.length < 2) emptyList() else liveAll.filter { it.name.contains(q, true) }.take(60) }
     val vod = remember(q, vodAll) { if (q.length < 2) emptyList() else vodAll.filter { it.name.contains(q, true) }.take(60) }
     val ser = remember(q, serAll) { if (q.length < 2) emptyList() else serAll.filter { it.name.contains(q, true) }.take(60) }
@@ -1217,9 +1217,9 @@ fun PlatformBadge(p: com.tbm.iptv.data.Platforms.P, modifier: Modifier = Modifie
 @Composable
 private fun KidsHome(content: Content, ver: Int, nav: (Screen) -> Unit) {
     val prof = remember(ver) { Prefs.profile() }
-    val live = remember(content, ver) { Catalog.build(Kind.LIVE, content.live).items.filterIsInstance<Channel>() }
-    val movies = remember(content, ver) { Catalog.build(Kind.MOVIE, content.movies).items }
-    val series = remember(content, ver) { Catalog.build(Kind.SERIES, content.series).items }
+    val live = remember(content, ver, Catalog.ready.intValue) { Catalog.get(Kind.LIVE, content.live).items.filterIsInstance<Channel>() }
+    val movies = remember(content, ver, Catalog.ready.intValue) { Catalog.get(Kind.MOVIE, content.movies).items }
+    val series = remember(content, ver, Catalog.ready.intValue) { Catalog.get(Kind.SERIES, content.series).items }
     val favs = remember(ver) { Prefs.favs() }
     val fresh = remember(movies, series) { (movies + series).filter { it.addedAt() > 0 }.sortedByDescending { it.addedAt() }.take(30) }
     val resume = remember(movies, ver) {
