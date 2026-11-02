@@ -20,7 +20,55 @@ object Prefs {
         sp = c.getSharedPreferences("tbm", Context.MODE_PRIVATE)
     }
 
-    fun bump() { version.intValue = version.intValue + 1 }
+    /** נקרא בכל שינוי (לסנכרון בענן) */
+    @Volatile var onChange: (() -> Unit)? = null
+
+    fun bump() { version.intValue = version.intValue + 1; onChange?.invoke() }
+
+    /** מפתחות ששייכים למכשיר הזה בלבד ולא מסונכרנים */
+    private fun isLocalKey(k: String) = k == "profile" || k == "device_id" || k.startsWith("cloud_") ||
+        k.startsWith("mini_") || k == "pip_warned" || k == "player_landscape" ||
+        k.startsWith("updated_") || k.startsWith("tz_") || k.startsWith("exp_") || k.startsWith("status_")
+
+    /** מזהה קבוע למכשיר */
+    val deviceId: String get() = str("device_id").ifBlank {
+        java.util.UUID.randomUUID().toString().take(12).also { sp.edit().putString("device_id", it).apply() }
+    }
+
+    /** ייצוא לסנכרון: בלי מפתחות מקומיים */
+    fun exportCloud(): String {
+        val o = JSONObject()
+        sp.all.forEach { (k, v) ->
+            if (isLocalKey(k)) return@forEach
+            when (v) {
+                is Set<*> -> o.put(k, JSONObject().put("\$set", JSONArray(v.map { it.toString() })))
+                null -> {}
+                else -> o.put(k, v)
+            }
+        }
+        return o.put("_tbm_backup", 1).toString()
+    }
+
+    /** ייבוא מהענן: מחליף הכל חוץ מהמפתחות המקומיים של המכשיר */
+    fun importCloud(text: String) {
+        val o = JSONObject(text)
+        val e = sp.edit()
+        sp.all.keys.filter { !isLocalKey(it) }.forEach { e.remove(it) }
+        o.keys().forEach { k ->
+            if (k == "_tbm_backup" || isLocalKey(k)) return@forEach
+            when (val v = o.get(k)) {
+                is JSONObject -> v.optJSONArray("\$set")?.let { a -> e.putStringSet(k, (0 until a.length()).map { a.getString(it) }.toSet()) }
+                is Boolean -> e.putBoolean(k, v)
+                is Int -> e.putInt(k, v)
+                is Long -> e.putLong(k, v)
+                is Double -> e.putFloat(k, v.toFloat())
+                is String -> e.putString(k, v)
+                else -> {}
+            }
+        }
+        e.apply()
+        version.intValue = version.intValue + 1
+    }
 
     fun str(k: String, d: String = ""): String = sp.getString(k, d) ?: d
     fun setStr(k: String, v: String) { sp.edit().putString(k, v).apply(); bump() }

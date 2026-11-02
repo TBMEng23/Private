@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1069438578061",
+    "project_id": "tbm-iptv-player",
+    "storage_bucket": "tbm-iptv-player.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1069438578061:android:6b1fb7b59efe9c18b3a1c4",
+        "android_client_info": {
+          "package_name": "com.tbm.iptv"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB5FXd0FOZcZ09K6lR0V4o4Or5w4jy70XM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

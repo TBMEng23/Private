@@ -38,6 +38,7 @@ import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.clickable
@@ -317,6 +318,12 @@ private fun MainSettings(nav: (Screen) -> Unit) {
         when (Prefs.str("view_${k.name}", "grid")) { "rows" -> L("שורות לפי קטגוריה"); "cats" -> L("רשימת קטגוריות"); else -> L("רשת + בחירת קטגוריה") }
     }
     val p = Prefs.activePlaylist()
+    GroupTitle(L("חשבון"))
+    Card {
+        NavRow(L("חשבון וסנכרון"), Icons.Filled.Person,
+            sub = if (com.tbm.iptv.data.Cloud.signedIn) com.tbm.iptv.data.Cloud.email.ifBlank { "Google" } + " · " + com.tbm.iptv.data.Cloud.status
+            else L("לא מחובר – התחבר כדי לסנכרן בין מכשירים")) { nav(Screen.Account) }
+    }
     GroupTitle(L("כללי"))
     Card {
         NavRow(L("שפת אפליקציה"), Icons.Filled.Translate, sub = if (com.tbm.iptv.I18n.isEn) "English" else "עברית") {
@@ -810,10 +817,17 @@ fun PlaylistsScreen(onDone: () -> Unit, onBack: (() -> Unit)?) {
     }
 
     if (lists.isEmpty() && onBack == null) {
+        if (dialog == "account") {
+            AccountScreen { dialog = null }
+            // אחרי כניסה הסנכרון מוריד את המקורות – עוברים ישר לבית
+            LaunchedEffect(ver) { Prefs.activePlaylist()?.let { if (com.tbm.iptv.data.Cloud.signedIn) { dialog = null; activate(it) } } }
+            return
+        }
         WelcomeScreen(
             onXtream = { dialog = "xtream" },
             onM3u = { dialog = "m3u" },
             onRestore = { restore.launch(arrayOf("application/json", "*/*")) },
+            onAccount = { dialog = "account" },
         )
         val addFirst: (Playlist) -> Unit = { p -> Prefs.savePlaylists(listOf(p)); dialog = null; activate(p) }
         when (dialog) {
@@ -1023,7 +1037,7 @@ private fun XtreamDialog(onAdd: (Playlist) -> Unit, onDismiss: () -> Unit, edit:
 
 // ============================================================ מסך פתיחה
 @Composable
-private fun WelcomeScreen(onXtream: () -> Unit, onM3u: () -> Unit, onRestore: () -> Unit) {
+private fun WelcomeScreen(onXtream: () -> Unit, onM3u: () -> Unit, onRestore: () -> Unit, onAccount: () -> Unit = {}) {
     Box(
         Modifier.fillMaxSize().background(
             androidx.compose.ui.graphics.Brush.verticalGradient(
@@ -1046,6 +1060,7 @@ private fun WelcomeScreen(onXtream: () -> Unit, onM3u: () -> Unit, onRestore: ()
             Spacer(Modifier.height(12.dp))
             WelcomeButton(L("רשימת M3U"), L("קישור או קובץ מהמכשיר"), primary = false, onClick = onM3u)
             Spacer(Modifier.height(12.dp))
+            WelcomeButton(L("התחבר לחשבון TBM"), L("כבר יש לך חשבון? הכל ייטען אוטומטית – גם בטלוויזיה עם קוד מהטלפון"), primary = false, onClick = onAccount)
             WelcomeButton(L("שחזור מגיבוי"), L("מחזיר חשבון, מועדפים, הגדרות ומפתחות מקובץ גיבוי"), primary = false, onClick = onRestore)
             Spacer(Modifier.height(28.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {

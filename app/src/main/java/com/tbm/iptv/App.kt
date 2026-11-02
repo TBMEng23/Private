@@ -10,6 +10,7 @@ class App : Application() {
         CrashLog.install(this)
         Prefs.init(this)
         I18n.init()
+        runCatching { com.tbm.iptv.data.Cloud.init() }
     }
 
     companion object {
