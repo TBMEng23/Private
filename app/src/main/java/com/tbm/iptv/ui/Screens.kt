@@ -559,6 +559,13 @@ private fun PlayerPage() {
             Hint(L("הכפתור 🗣 בנגן מפעיל ומכבה. דורש קול עברי מותקן: הגדרות אנדרואיד ← שפה וקלט ← המרת טקסט לדיבור ← Google ← עברית."))
             HorizontalDivider(Modifier.padding(vertical = 8.dp))
             ExternalPlayerSettings()
+            Text(L("גודל באפר (טעינה מראש)"), fontSize = 13.sp, modifier = Modifier.padding(top = 8.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                listOf("small" to L("קטן"), "normal" to L("רגיל"), "large" to L("גדול"), "max" to L("מקסימלי")).forEach { (k, t) ->
+                    FilterChipSimple(t, Prefs.str("buffer_size", "normal") == k) { Prefs.setStr("buffer_size", k) }
+                }
+            }
+            Hint(L("רגיל: עד 2.5 דקות קדימה. גדול/מקסימלי: עד 4/10 דקות – פחות עצירות בחיבור לא יציב, אבל יותר זיכרון (בסטרימר חלש עדיף רגיל). חל מהניגון הבא."))
             Text(L("זמן הצגת פקדים: {0} שניות", Prefs.osdTimeout), fontSize = 13.sp, modifier = Modifier.padding(top = 8.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 listOf(3, 5, 8, 12).forEach { s ->

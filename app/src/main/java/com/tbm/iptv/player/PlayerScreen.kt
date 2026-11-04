@@ -39,6 +39,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -301,9 +302,11 @@ private fun Controls(a: PlayerActivity) {
     var dur by androidx.compose.runtime.remember { androidx.compose.runtime.mutableLongStateOf(0L) }
     var playing by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(true) }
     var dragging by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<Float?>(null) }
+    var buffered by androidx.compose.runtime.remember { androidx.compose.runtime.mutableLongStateOf(0L) }
     LaunchedEffect(Unit) {
         while (true) {
             pos = a.player.currentPosition; dur = a.player.duration.coerceAtLeast(0); playing = a.player.isPlaying
+            buffered = a.player.bufferedPosition
             kotlinx.coroutines.delay(400)
         }
     }
@@ -340,16 +343,30 @@ private fun Controls(a: PlayerActivity) {
             if (!ui.isLive && dur > 0) com.tbm.iptv.ui.Ltr {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(fmtDur(dragging?.let { (it * dur).toLong() } ?: pos), color = Color.White, fontSize = 12.sp)
-                    androidx.compose.material3.Slider(
-                        value = dragging ?: (pos.toFloat() / dur).coerceIn(0f, 1f),
-                        onValueChange = { dragging = it; a.touched() },
-                        onValueChangeFinished = { dragging?.let { a.player.seekTo((it * dur).toLong()) }; dragging = null },
-                        colors = androidx.compose.material3.SliderDefaults.colors(
-                            thumbColor = Color(0xFFE50914), activeTrackColor = Color(0xFFE50914),
-                            inactiveTrackColor = Color(0x66FFFFFF)),
-                        modifier = Modifier.weight(1f).padding(horizontal = 10.dp),
-                    )
-                    Text("-" + fmtDur((dur - pos).coerceAtLeast(0)), color = Color.White, fontSize = 12.sp)
+                    // פס התקדמות כמו ביוטיוב: אדום = נצפה, אפור בהיר = נטען מראש (באפר), כהה = עוד לא נטען
+                    Box(Modifier.weight(1f).padding(horizontal = 10.dp), contentAlignment = Alignment.CenterStart) {
+                        val bf = (buffered.toFloat() / dur).coerceIn(0f, 1f)
+                        Box(Modifier.fillMaxWidth().height(4.dp).padding(horizontal = 10.dp)
+                            .background(Color(0x40FFFFFF), RoundedCornerShape(2.dp)))
+                        Box(Modifier.fillMaxWidth().height(4.dp).padding(horizontal = 10.dp)) {
+                            Box(Modifier.fillMaxWidth(bf).height(4.dp).background(Color(0xB3FFFFFF), RoundedCornerShape(2.dp)))
+                        }
+                        androidx.compose.material3.Slider(
+                            value = dragging ?: (pos.toFloat() / dur).coerceIn(0f, 1f),
+                            onValueChange = { dragging = it; a.touched() },
+                            onValueChangeFinished = { dragging?.let { a.player.seekTo((it * dur).toLong()) }; dragging = null },
+                            colors = androidx.compose.material3.SliderDefaults.colors(
+                                thumbColor = Color(0xFFE50914), activeTrackColor = Color(0xFFE50914),
+                                inactiveTrackColor = Color.Transparent),
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                    }
+                    Column(horizontalAlignment = Alignment.End) {
+                        Text("-" + fmtDur((dur - pos).coerceAtLeast(0)), color = Color.White, fontSize = 12.sp)
+                        val ahead = ((buffered - pos) / 1000).coerceAtLeast(0)
+                        Text(L("נטען {0}", if (ahead >= 60) "${ahead / 60}:%02d".format(ahead % 60) else "${ahead}s"),
+                            color = Color(0xB3FFFFFF), fontSize = 10.sp)
+                    }
                 }
             } else if (ui.isLive) com.tbm.iptv.ui.Ltr {
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 6.dp)) {

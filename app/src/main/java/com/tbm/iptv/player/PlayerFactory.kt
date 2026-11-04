@@ -36,8 +36,17 @@ object PlayerFactory {
         val renderers = DefaultRenderersFactory(ctx)
             .setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER)
             .setEnableDecoderFallback(true)
+        // באפר לפי ההגדרה: (מינימום, מקסימום, להתחלת ניגון, אחרי עצירה) בשניות + באפר אחורה
+        val (minB, maxB, startB, reB) = when (Prefs.str("buffer_size", "normal")) {
+            "small" -> listOf(15, 60, 2, 4)
+            "large" -> listOf(60, 240, 3, 8)
+            "max" -> listOf(120, 600, 5, 12)
+            else -> listOf(40, 150, 2, 6)
+        }
         val load = DefaultLoadControl.Builder()
-            .setBufferDurationsMs(15_000, 60_000, 1_500, 3_000)
+            .setBufferDurationsMs(minB * 1000, maxB * 1000, startB * 1000, reB * 1000)
+            .setBackBuffer(30_000, true)
+            .setPrioritizeTimeOverSizeThresholds(true)
             .build()
         return ExoPlayer.Builder(ctx, renderers)
             .setMediaSourceFactory(DefaultMediaSourceFactory(ds))
