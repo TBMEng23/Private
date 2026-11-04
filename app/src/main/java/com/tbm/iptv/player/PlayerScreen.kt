@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.Subtitles
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Replay
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.PictureInPicture
 import androidx.compose.material.icons.automirrored.filled.OpenInNew
@@ -186,6 +187,7 @@ fun PlayerScreen(a: PlayerActivity) {
                 Text(it, color = Color.White, textAlign = TextAlign.Center)
                 if (ui.errorActions) Row(Modifier.padding(top = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     androidx.compose.material3.Button(onClick = { a.retryNow() }) { Text(L("🔄 נסה שוב")) }
+                    if (!ui.isLive) OutlinedButton(onClick = { a.restartFromBeginning() }) { Text(L("⏮ מההתחלה"), color = Color.White) }
                     OutlinedButton(onClick = { a.openExternal() }) { Text(L("נגן חיצוני"), color = Color.White) }
                     if (ui.hasNext) OutlinedButton(onClick = { ui.error = null; a.next() }) { Text(L("הבא ⏭"), color = Color.White) }
                 }
@@ -380,6 +382,7 @@ private fun Controls(a: PlayerActivity) {
                 }
                 BarBtn(Icons.Filled.AspectRatio, L("יחס תצוגה")) { a.touched(); a.cycleResize() }
                 BarBtn(Icons.Filled.ScreenRotation, if (ui.landscape) L("לאורך") else L("לרוחב")) { a.touched(); a.toggleRotate() }
+                if (!ui.isLive) BarBtn(Icons.Filled.Replay, L("מההתחלה")) { a.touched(); a.restartFromBeginning() }
                 BarBtn(Icons.Filled.Lock, L("נעילה")) { ui.locked = true }
                 if (!ui.isLive && ui.hasNext) BarBtn(Icons.Filled.SkipNext, L("הפרק הבא")) { a.next() }
             }
@@ -611,6 +614,7 @@ private fun OptionsSheet(a: PlayerActivity) {
                                         if (p.isBlank()) L("VLC / MX – בחירה") else ExternalPlayer.appName(ctx, p)) { ui.options = null; a.openExternal() }
                                 }
                                 item { OptRow(Icons.Filled.Refresh, L("רענן / טען מחדש"), L("אם התמונה נתקעה או יש שגיאה")) { ui.options = null; a.retryNow() } }
+                                if (!ui.isLive) item { OptRow(Icons.Filled.Replay, L("נגן מההתחלה"), L("מתחיל את הפרק / הסרט מהדקה הראשונה")) { ui.options = null; a.restartFromBeginning() } }
                                 val aud = ui.audio.firstOrNull { it.selected }?.name ?: ui.audio.firstOrNull()?.name ?: L("ברירת מחדל")
                                 item { OptRow(Icons.Filled.MusicNote, L("רצועת שמע"), aud) { ui.options = "audio" } }
                                 val sub = ui.subLabel ?: ui.embedded.firstOrNull { it.selected }?.name ?: L("כבוי")

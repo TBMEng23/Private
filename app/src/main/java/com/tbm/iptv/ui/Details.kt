@@ -43,6 +43,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -385,7 +386,12 @@ fun SeriesScreen(s: SeriesItem, onBack: () -> Unit) {
             if (next != null) {
                 val started = nextResume != null && nextResume.first < nextResume.second * 0.95
                 PlayRow((if (started) L("המשך") else L("נגן")) + " S${next.season} E${next.episode}", fav, { play(next) }) { Prefs.toggleFav(s.key) }
-                if (started) ResumeBar(nextResume!!.first, nextResume.second)
+                if (started) {
+                    ResumeBar(nextResume!!.first, nextResume.second)
+                    TextButton(onClick = { Prefs.removeResume(next.key); play(next) }, modifier = Modifier.padding(horizontal = 8.dp)) {
+                        Text(L("⏮ נגן את הפרק מההתחלה"), color = Color.White)
+                    }
+                }
             } else {
                 PlayRow(L("נגן"), fav, {}) { Prefs.toggleFav(s.key) }
             }
@@ -499,7 +505,12 @@ fun MovieScreen(c: Channel, onBack: () -> Unit) {
             MetaLine(shown, c.rating, fmtMin(info?.durationSec ?: 0))
             PlatformLine(c, info, false)
             PlayRow(if (started) L("המשך") else L("נגן"), fav, { Launcher.play(ctx, listOf(c.toPlay()), 0) }) { Prefs.toggleFav(c.key) }
-            if (started) ResumeBar(r!!.first, r.second)
+            if (started) {
+                ResumeBar(r!!.first, r.second)
+                TextButton(onClick = { Prefs.removeResume(c.key); Launcher.play(ctx, listOf(c.toPlay()), 0) }, modifier = Modifier.padding(horizontal = 8.dp)) {
+                    Text(L("⏮ נגן מההתחלה"), color = Color.White)
+                }
+            }
             Plot(shown?.plot)
             DetailTabs(listOf(L("שחקנים"), L("טריילר"), L("תמונות")), tab) { tab = it }
         }

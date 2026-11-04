@@ -24,7 +24,13 @@ class SubTrack(val file: File, val mime: String, val lang: String, val label: St
 
 object PlayerFactory {
     fun create(ctx: Context): ExoPlayer {
-        val http = OkHttpDataSource.Factory(Http.client).setUserAgent(Prefs.userAgent)
+        // לקוח לזרימה: זמן קריאה קצר – אחרי מעבר Wi-Fi⇄סלולר חיבור מת מתגלה תוך שניות ולא 90 שניות
+        val streamClient = Http.client.newBuilder()
+            .connectTimeout(10, java.util.concurrent.TimeUnit.SECONDS)
+            .readTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
+            .retryOnConnectionFailure(true)
+            .build()
+        val http = OkHttpDataSource.Factory(streamClient).setUserAgent(Prefs.userAgent)
         // DefaultDataSource: קבצים מקומיים (הקלטות, כתוביות) + http דרך OkHttp
         val ds = DefaultDataSource.Factory(ctx, http)
         val renderers = DefaultRenderersFactory(ctx)

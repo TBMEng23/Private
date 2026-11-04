@@ -344,6 +344,9 @@ class PlayerActivity : FragmentActivity() {
     private fun watchNetwork() {
         val cm = getSystemService(CONNECTIVITY_SERVICE) as android.net.ConnectivityManager
         val cb = object : android.net.ConnectivityManager.NetworkCallback() {
+            override fun onLost(network: android.net.Network) {
+                runCatching { com.tbm.iptv.data.Http.client.connectionPool.evictAll() }
+            }
             override fun onAvailable(network: android.net.Network) {
                 runOnUiThread {
                     // הקריאה הראשונה היא הרשת הנוכחית – לא מעבר
@@ -402,6 +405,16 @@ class PlayerActivity : FragmentActivity() {
         val live = item.kind == Kind.LIVE && !item.isCatchup
         if (live) player.seekToDefaultPosition() else if (lastGoodPos > 0) player.seekTo(lastGoodPos)
         player.prepare(); player.play()
+    }
+
+    /** מתחיל את הפרק / הסרט מההתחלה (גם כשנתקע באמצע) */
+    fun restartFromBeginning() {
+        lastGoodPos = 0L; retry = 0; ui.error = null; ui.errorActions = false
+        current?.let { Prefs.removeResume(it.key) }
+        runCatching { com.tbm.iptv.data.Http.client.connectionPool.evictAll() }
+        player.seekTo(0)
+        player.prepare(); player.play()
+        toast(L("מתחיל מההתחלה"))
     }
 
     /** כפתור "נסה שוב" / "רענן" */
