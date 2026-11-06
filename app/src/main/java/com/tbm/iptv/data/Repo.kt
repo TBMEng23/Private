@@ -39,6 +39,13 @@ object Repo {
         scope.launch { load(p, force) }
     }
 
+    /** סריקה מחדש של לוח השידורים (מהקובץ השמור) – אחרי שינוי קטגוריות גלויות */
+    fun refreshEpg() {
+        val p = Prefs.activePlaylist() ?: return
+        val c = content ?: return
+        scope.launch { Epg.load(p, c, false) }
+    }
+
     suspend fun load(p: Playlist, force: Boolean = false) = withContext(Dispatchers.IO) {
         state.value = LoadState.Loading(L("טוען את \"{0}\"…", p.name))
         try {
@@ -74,7 +81,15 @@ object Repo {
         val c = f.inputStream().use { M3uParser.parse(it, p.id) }
         if (c.live.isEmpty() && c.movies.isEmpty() && c.series.isEmpty())
             throw Exception(L("הרשימה ריקה או שאינה בפורמט M3U"))
-        return c
+        if (!Prefs.leanLoad) return c
+        val kl = Catalog.parentGroupFilter(Kind.LIVE)
+        val km = Catalog.parentGroupFilter(Kind.MOVIE)
+        val ks = Catalog.parentGroupFilter(Kind.SERIES)
+        return c.copy(
+            live = c.live.filter { kl(it.group) }, movies = c.movies.filter { km(it.group) }, series = c.series.filter { ks(it.group) },
+            allGroups = mapOf(Kind.LIVE to c.live.map { it.group }.distinct(), Kind.MOVIE to c.movies.map { it.group }.distinct(),
+                Kind.SERIES to c.series.map { it.group }.distinct()),
+        )
     }
 
     fun cacheFile(name: String) = File(App.instance.filesDir, name)

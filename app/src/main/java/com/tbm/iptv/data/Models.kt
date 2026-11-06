@@ -82,6 +82,8 @@ data class Content(
     val series: List<SeriesItem>,
     /** כתובת XMLTV מתוך כותרת ה-M3U (url-tvg) */
     val epgUrl: String? = null,
+    /** בטעינה חסכונית: כל שמות הקטגוריות (כולל אלה שלא נטענו) – לניהול קבוצות */
+    val allGroups: Map<Kind, List<String>> = emptyMap(),
 )
 
 data class EpgEntry(val title: String, val start: Long, val end: Long, val desc: String = "")

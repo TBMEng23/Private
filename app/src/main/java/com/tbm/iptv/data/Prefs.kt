@@ -320,6 +320,16 @@ object Prefs {
 
     fun setGroupOrder(kind: Kind, l: List<String>) = setStr("gorder_${kind.name}", JSONArray(l).toString())
 
+    /** לוח שידורים נסרק רק לערוצים בקטגוריות גלויות */
+    var epgVisibleOnly: Boolean
+        get() = bool("epg_visible_only", true)
+        set(v) = setBool("epg_visible_only", v)
+
+    /** טעינה חסכונית – קטגוריות מוסתרות/מסוננות לא נטענות לזיכרון כלל */
+    var leanLoad: Boolean
+        get() = bool("lean_load", false)
+        set(v) = setBool("lean_load", v)
+
     // ================= אפשרויות נגן =================
     var inAppPip: Boolean
         get() = bool("inapp_pip", true)

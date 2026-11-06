@@ -109,6 +109,21 @@ object Catalog {
 
     fun isAdult(group: String) = adultRx.containsMatchIn(group)
 
+    /** מסנן ההורה לקבוצה: לא מוסתרת, ארץ מותרת, לא תוכן מבוגרים מוסתר */
+    fun parentGroupFilter(kind: Kind): (String) -> Boolean {
+        val hidden = Prefs.hidden()
+        val allowed = Prefs.allowedCountries(kind)
+        val adultMode = Prefs.adultMode
+        val cache = HashMap<String, Boolean>()
+        return { g ->
+            cache.getOrPut(g) {
+                "${kind.name}|$g" !in hidden &&
+                    (allowed.isEmpty() || Countries.of(g) in allowed) &&
+                    !(adultMode == "hide" && isAdult(g))
+            }
+        }
+    }
+
     fun isGroupLocked(kind: Kind, group: String): Boolean =
         Parental.hasPin() && ("${kind.name}|$group" in Prefs.lockedGroups() ||
             (Prefs.adultMode == "lock" && isAdult(group)))

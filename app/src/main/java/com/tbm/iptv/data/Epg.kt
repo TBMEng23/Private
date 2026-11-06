@@ -105,7 +105,10 @@ object Epg {
         // לכל ערוץ: מאיזה זמן לשמור (ארכיון רק לערוצים עם catch-up)
         val fromById = HashMap<String, Long>()
         val wantNames = HashMap<String, Long>()
+        val vis = if (Prefs.epgVisibleOnly) Catalog.parentGroupFilter(Kind.LIVE) else null
+        val hiddenItems = if (vis != null) Prefs.hiddenItems() else emptySet()
         c.live.forEach { ch ->
+            if (vis != null && (!vis(ch.group) || ch.key in hiddenItems)) return@forEach
             val days = if (ch.archiveDays > 0) minOf(ch.archiveDays, 7) else if (ch.catchupType != null) 7 else 0
             val from = if (days > 0) now - days * day else now - 3 * hour
             ch.epgId?.lowercase()?.let { id -> if ((fromById[id] ?: Long.MAX_VALUE) > from) fromById[id] = from }

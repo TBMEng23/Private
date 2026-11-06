@@ -137,7 +137,20 @@ fun ManageGroupsScreen(startKind: Kind, onBack: () -> Unit, onKids: (String) -> 
         Kind.SERIES -> content?.series
     } ?: emptyList()
     val ver = Prefs.version.intValue
-    val groupsRaw = remember(all) { all.map { it.group }.distinct() }
+    val groupsRaw = remember(all, content, kind) { (all.map { it.group } + (content?.allGroups?.get(kind) ?: emptyList())).distinct() }
+    // ביציאה: אם הסינון השתנה – טוען מחדש (חסכוני) או סורק שוב את לוח השידורים
+    val filterSig = { Triple(Prefs.hidden(), Kind.entries.map { Prefs.allowedCountries(it) }, Prefs.hiddenItems()) to (Prefs.leanLoad to Prefs.epgVisibleOnly) }
+    val startSig = remember { filterSig() }
+    androidx.compose.runtime.DisposableEffect(Unit) {
+        onDispose {
+            val now = filterSig()
+            if (now != startSig) {
+                val leanChanged = now.second.first != startSig.second.first
+                if (Prefs.leanLoad || leanChanged) Prefs.activePlaylist()?.let { Repo.loadAsync(it) }
+                else if (Prefs.epgVisibleOnly || now.second.second != startSig.second.second) Repo.refreshEpg()
+            }
+        }
+    }
     val groups = remember(groupsRaw, ver, kind) { Catalog.orderGroups(kind, groupsRaw) }
     val counts = remember(all) { all.groupingBy { it.group }.eachCount() }
     val countries = remember(groupsRaw) { groupsRaw.map { Countries.of(it) }.distinct().sortedBy { Countries.label(it) } }
@@ -157,6 +170,21 @@ fun ManageGroupsScreen(startKind: Kind, onBack: () -> Unit, onKids: (String) -> 
 
     Column(Modifier.fillMaxSize()) {
         ScreenHeader(L("ניהול קבוצות"), onBack)
+        var scanOpen by remember { mutableStateOf(false) }
+        Column(Modifier.fillMaxWidth().padding(horizontal = 12.dp)) {
+            FocusItem(Modifier.fillMaxWidth(), onClick = { scanOpen = !scanOpen }) {
+                Row(Modifier.padding(6.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text(L("סריקה וטעינה רק של קטגוריות גלויות"), Modifier.weight(1f), fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                    Icon(if (scanOpen) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore, null)
+                }
+            }
+            if (scanOpen) {
+                SwitchRow(L("לוח שידורים רק לערוצים גלויים"), Prefs.epgVisibleOnly) { Prefs.epgVisibleOnly = it }
+                SwitchRow(L("טעינה חסכונית – לא לטעון קטגוריות מוסתרות"), Prefs.leanLoad) { Prefs.leanLoad = it }
+                Text(L("בטעינה חסכונית קטגוריות מוסתרות או ממדינות שלא נבחרו לא נטענות לזיכרון בכלל – מהיר יותר ופחות קריסות במכשירים חלשים. הן עדיין מופיעות כאן כדי שתוכל להחזיר אותן. שים לב: גם פרופילי ילדים לא יראו אותן. השינוי נכנס לתוקף ביציאה מהמסך."),
+                    fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(4.dp))
+            }
+        }
         // ההורה עורך מכאן גם את התוכן של כל פרופיל ילדים
         val kidsProfiles = remember(ver) { Prefs.profiles().filter { it.kids } }
         if (kidsProfiles.isNotEmpty() && !Prefs.isKids) Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp),

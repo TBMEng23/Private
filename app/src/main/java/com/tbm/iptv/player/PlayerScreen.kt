@@ -76,6 +76,7 @@ import androidx.compose.runtime.collectAsState
 import com.tbm.iptv.rec.RecordingService
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -469,6 +470,10 @@ private fun ChannelGuidePanel(a: PlayerActivity, modifier: Modifier) {
     Epg.version.intValue
     val progs = androidx.compose.runtime.remember(c?.key, Epg.version.intValue) { if (c != null) Epg.forChannel(c) else emptyList() }
     val now = System.currentTimeMillis()
+    val schedVer = com.tbm.iptv.data.Prefs.version.intValue
+    val reminded = androidx.compose.runtime.remember(schedVer) {
+        com.tbm.iptv.rec.Scheduler.list().filter { it.type == "remind" }.map { it.id }.toSet()
+    }
     val curIdx = progs.indexOfFirst { now in it.start until it.end }.coerceAtLeast(0)
     val state = rememberLazyListState(initialFirstVisibleItemIndex = (curIdx - 2).coerceAtLeast(0))
     Surface(color = Color(0xF00B1220), modifier = modifier.fillMaxHeight().widthIn(max = 460.dp).fillMaxWidth(0.7f)) {
@@ -500,9 +505,15 @@ private fun ChannelGuidePanel(a: PlayerActivity, modifier: Modifier) {
                                 if ((past || live) && cu) a.playCatchup(ch, e)
                                 else if (live) { ui.showGuide = false; if (ui.inCatchup) a.backToLive() }
                                 else if (!past) {
-                                    com.tbm.iptv.rec.Scheduler.add(ctx, com.tbm.iptv.rec.Sched("r${e.start}${ch.key.hashCode()}", "remind",
-                                        e.title, ch.url, e.start, e.end, ch.epgId, ch.name))
-                                    a.toast(L("תזכורת נקבעה: {0}", e.title))
+                                    val rid = "r${e.start}${ch.key.hashCode()}"
+                                    if (rid in reminded) {
+                                        com.tbm.iptv.rec.Scheduler.cancel(ctx, rid)
+                                        a.toast(L("התזכורת בוטלה: {0}", e.title))
+                                    } else {
+                                        com.tbm.iptv.rec.Scheduler.add(ctx, com.tbm.iptv.rec.Sched(rid, "remind",
+                                            e.title, ch.url, e.start, e.end, ch.epgId, ch.name))
+                                        a.toast(L("תזכורת נקבעה: {0}", e.title))
+                                    }
                                 }
                             }
                         }) {
@@ -513,9 +524,12 @@ private fun ChannelGuidePanel(a: PlayerActivity, modifier: Modifier) {
                                         fontWeight = if (live) FontWeight.Bold else FontWeight.Normal, maxLines = 2)
                                     if (live && e.desc.isNotBlank()) Text(e.desc, color = Color(0xFF8899AA), fontSize = 11.sp, maxLines = 2)
                                 }
+                                val isRem = !past && !live && c?.let { "r${e.start}${it.key.hashCode()}" in reminded } == true
                                 Text(
                                     when { live && cu -> "⏮"; live -> "●"; past && cu -> "▶"; !past -> "🔔"; else -> "" },
                                     color = if (live) Color(0xFFE50914) else Color.White, fontSize = 16.sp,
+                                    // פעמון מלא = תזכורת פעילה (לחיצה מבטלת); חיוור = אין תזכורת
+                                    modifier = if (!past && !live && !isRem) Modifier.alpha(0.3f) else Modifier,
                                 )
                             }
                         }

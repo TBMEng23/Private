@@ -117,16 +117,22 @@ class Xtream(private val p: Playlist) {
         val pool = HashMap<String, String>()
         fun grp(cats: Map<String, String>, id: String?) = (cats[id] ?: noGroup).let { pool.getOrPut(it) { it } }
         val pfx = "$base/live/${p.user}/${p.pass}/"
+        val lean = Prefs.leanLoad
+        val keepL = if (lean) Catalog.parentGroupFilter(Kind.LIVE) else null
+        val keepM = if (lean) Catalog.parentGroupFilter(Kind.MOVIE) else null
+        val keepS = if (lean) Catalog.parentGroupFilter(Kind.SERIES) else null
 
         val live = ArrayList<Channel>()
         eachObject(file("get_live_streams", force),
             setOf("stream_id", "name", "stream_icon", "category_id", "epg_channel_id", "tv_archive", "tv_archive_duration")) { o ->
             val id = o["stream_id"]?.toIntOrNull() ?: return@eachObject
+            val g = grp(liveCats, o["category_id"])
+            if (keepL != null && !keepL(g)) return@eachObject
             live += Channel(
                 key = "x:${p.id}:l:$id",
                 name = o["name"] ?: "",
                 logo = o["stream_icon"]?.ifBlank { null },
-                group = grp(liveCats, o["category_id"]),
+                group = g,
                 url = "$pfx$id.ts", kind = Kind.LIVE, streamId = id,
                 epgId = o["epg_channel_id"]?.ifBlank { null },
                 archiveDays = if (o["tv_archive"] == "1")
@@ -138,12 +144,14 @@ class Xtream(private val p: Playlist) {
         eachObject(file("get_vod_streams", force),
             setOf("stream_id", "name", "stream_icon", "category_id", "container_extension", "added", "rating")) { o ->
             val id = o["stream_id"]?.toIntOrNull() ?: return@eachObject
+            val g = grp(vodCats, o["category_id"])
+            if (keepM != null && !keepM(g)) return@eachObject
             val ext = o["container_extension"]?.ifBlank { null } ?: "mp4"
             movies += Channel(
                 key = "x:${p.id}:m:$id",
                 name = o["name"] ?: "",
                 logo = o["stream_icon"]?.ifBlank { null },
-                group = grp(vodCats, o["category_id"]),
+                group = g,
                 url = "$base/movie/${p.user}/${p.pass}/$id.$ext",
                 kind = Kind.MOVIE, streamId = id,
                 added = (o["added"]?.toLongOrNull() ?: 0L) * 1000,
@@ -155,11 +163,13 @@ class Xtream(private val p: Playlist) {
         eachObject(file("get_series", force),
             setOf("series_id", "name", "cover", "category_id", "plot", "last_modified", "rating")) { o ->
             val id = o["series_id"]?.toIntOrNull() ?: return@eachObject
+            val g = grp(serCats, o["category_id"])
+            if (keepS != null && !keepS(g)) return@eachObject
             series += SeriesItem(
                 key = "x:${p.id}:s:$id",
                 name = o["name"] ?: "",
                 logo = o["cover"]?.ifBlank { null },
-                group = grp(serCats, o["category_id"]),
+                group = g,
                 seriesId = id,
                 plot = o["plot"]?.ifBlank { null }?.take(600),
                 added = (o["last_modified"]?.toLongOrNull() ?: 0L) * 1000,
@@ -167,9 +177,12 @@ class Xtream(private val p: Playlist) {
             )
         }
 
-        if (live.isEmpty() && movies.isEmpty() && series.isEmpty())
+        if (!lean && live.isEmpty() && movies.isEmpty() && series.isEmpty())
             throw Exception(L("לא התקבל תוכן מהשרת – בדוק כתובת, שם משתמש וסיסמה"))
-        return Content(live, movies, series)
+        val allGroups = if (lean) mapOf(
+            Kind.LIVE to liveCats.values.distinct(), Kind.MOVIE to vodCats.values.distinct(), Kind.SERIES to serCats.values.distinct(),
+        ) else emptyMap()
+        return Content(live, movies, series, allGroups = allGroups)
     }
 
     fun seriesEpisodes(seriesId: Int): List<Episode> = seriesDetails(seriesId).second

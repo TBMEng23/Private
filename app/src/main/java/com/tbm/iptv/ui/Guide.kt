@@ -256,11 +256,18 @@ fun ProgramDialog(c: Channel, e: EpgEntry, queue: List<Channel>, onDismiss: () -
                     if (past && !cu) Text(L("התוכנית שודרה ואין לה ארכיון"), fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
                     if (future) {
+                        val rid = "r${e.start}${c.key.hashCode()}"
+                        val has = Scheduler.list().any { it.id == rid }
                         OutlinedButton(onClick = {
-                            Scheduler.add(ctx, Sched("r${e.start}${c.key.hashCode()}", "remind", e.title, c.url,
-                                e.start, e.end, c.epgId, c.name))
-                            Toast.makeText(ctx, L("תזכורת נקבעה"), Toast.LENGTH_SHORT).show(); onDismiss()
-                        }, modifier = Modifier.fillMaxWidth()) { Text(L("🔔 תזכורת")) }
+                            if (has) {
+                                Scheduler.cancel(ctx, rid)
+                                Toast.makeText(ctx, L("התזכורת בוטלה"), Toast.LENGTH_SHORT).show()
+                            } else {
+                                Scheduler.add(ctx, Sched(rid, "remind", e.title, c.url, e.start, e.end, c.epgId, c.name))
+                                Toast.makeText(ctx, L("תזכורת נקבעה"), Toast.LENGTH_SHORT).show()
+                            }
+                            onDismiss()
+                        }, modifier = Modifier.fillMaxWidth()) { Text(if (has) L("🔕 בטל תזכורת") else L("🔔 תזכורת")) }
                     }
                     if ((future || live) && !Prefs.isKids) {
                         OutlinedButton(onClick = {
