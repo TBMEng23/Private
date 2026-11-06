@@ -1013,7 +1013,9 @@ private fun RowsView(
     }
     val topRated = remember(pref) { pref.filter { it.rating() >= 7.5f }.sortedByDescending { it.rating() }.take(40) }
     val resume = remember(items, Prefs.version.intValue) {
-        items.mapNotNull { e -> Prefs.resume(e.key)?.let { r -> if (r.first < r.second * 0.95) e else null } }.take(30)
+        val rm = Prefs.resumeMap()
+        if (rm.isEmpty()) emptyList()
+        else items.mapNotNull { e -> rm[e.key]?.let { r -> if (r.first < r.second * 0.95) e else null } }.take(30)
     }
     val heroes = remember(pref, top) {
         if (kind == Kind.LIVE) emptyList()

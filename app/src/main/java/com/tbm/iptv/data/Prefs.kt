@@ -270,10 +270,21 @@ object Prefs {
     // ================= המשך צפייה (לכל פרופיל) =================
     private fun resumeObj(): JSONObject = obj(pk("resume"))
 
-    fun resume(key: String): Pair<Long, Long>? {
-        val o = resumeObj().optJSONObject(key) ?: return null
-        return o.optLong("pos") to o.optLong("dur")
+    // מטמון: פענוח ה-JSON פעם אחת בלבד עד שהוא משתנה (נקרא לכל פריט ברשימות של אלפי סרטים)
+    @Volatile private var resumeCache: Triple<String, String, Map<String, Pair<Long, Long>>>? = null
+
+    fun resumeMap(): Map<String, Pair<Long, Long>> {
+        val k = pk("resume")
+        val raw = str(k, "{}")
+        resumeCache?.let { if (it.first == k && it.second == raw) return it.third }
+        val o = runCatching { JSONObject(raw) }.getOrDefault(JSONObject())
+        val m = HashMap<String, Pair<Long, Long>>(o.length() * 2)
+        o.keys().forEach { key -> o.optJSONObject(key)?.let { m[key] = it.optLong("pos") to it.optLong("dur") } }
+        resumeCache = Triple(k, raw, m)
+        return m
     }
+
+    fun resume(key: String): Pair<Long, Long>? = resumeMap()[key]
 
     fun saveResume(item: PlayItem, pos: Long, dur: Long) {
         val all = resumeObj()
