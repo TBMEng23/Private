@@ -138,13 +138,9 @@ private fun MetaLine(info: MediaInfo?, rating: Float, extra: String?) {
 /** "זמין ב-": תווית מהספק + פלטפורמות מ-TMDB */
 @Composable
 private fun PlatformLine(e: com.tbm.iptv.data.Entry, info: MediaInfo?, tv: Boolean) {
+    // רק לפי המקור עצמו: מהשרת – הפלטפורמה שזוהתה מהקטגוריה; מ-Plex – Plex (בלי רשימות חיצוניות של TMDB)
     val local = remember(e.key) { com.tbm.iptv.data.Platforms.detect(e) }
-    var names by remember(info) { mutableStateOf<List<String>>(emptyList()) }
-    LaunchedEffect(info) {
-        val id = info?.tmdbId ?: return@LaunchedEffect
-        names = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { com.tbm.iptv.data.Platforms.tmdbProviders(id, tv) }
-    }
-    val list = (listOfNotNull(local?.name) + names).distinctBy { com.tbm.iptv.data.Platforms.find(it)?.id ?: it }.take(5)
+    val list = listOfNotNull(local?.name)
     if (list.isEmpty()) return
     Row(Modifier.padding(horizontal = 16.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
         Text(L("זמין ב-"), color = Color(0xFF9A9BA3), fontSize = 12.sp)
