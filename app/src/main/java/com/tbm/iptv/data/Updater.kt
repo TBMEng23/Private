@@ -49,6 +49,50 @@ object Updater {
         if (Build.VERSION.SDK_INT >= 28) pi.longVersionCode else pi.versionCode.toLong()
     }.getOrDefault(0L)
 
+    // SharePoint מעביר דרך הפניה שמגדירה עוגייה (FedAuth) – בלי שמירת עוגיות מתקבל 403
+    private val net by lazy {
+        val store = java.util.concurrent.ConcurrentHashMap<String, MutableList<okhttp3.Cookie>>()
+        Http.client.newBuilder()
+            .cookieJar(object : okhttp3.CookieJar {
+                override fun saveFromResponse(url: okhttp3.HttpUrl, cookies: List<okhttp3.Cookie>) {
+                    val l = store.getOrPut(url.host) { mutableListOf() }
+                    synchronized(l) { cookies.forEach { c -> l.removeAll { it.name == c.name }; l += c } }
+                }
+                override fun loadForRequest(url: okhttp3.HttpUrl): List<okhttp3.Cookie> =
+                    store[url.host]?.let { l -> synchronized(l) { l.toList() } } ?: emptyList()
+            })
+            .connectTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
+            .readTimeout(60, java.util.concurrent.TimeUnit.SECONDS)
+            .build()
+    }
+    private const val BROWSER_UA = "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Mobile Safari/537.36"
+
+    /** כל צורות ההורדה האפשריות לקישור (ננסה לפי הסדר) */
+    private fun candidates(url: String): List<String> {
+        val u = url.trim()
+        val out = mutableListOf(direct(u))
+        // https://x-my.sharepoint.com/:t:/g/personal/USER/TOKEN?e=.. → .../personal/USER/_layouts/15/download.aspx?share=TOKEN
+        Regex("""^(https://[^/]+)/:\w:/[gr]/(personal/[^/]+)/([^/?]+)""").find(u)?.let { m ->
+            val (host, site, token) = m.destructured
+            out += "$host/$site/_layouts/15/download.aspx?share=$token"
+        }
+        out += u
+        return out.distinct()
+    }
+
+    private fun open(url: String): okhttp3.Response {
+        var last: Exception? = null
+        for (c in candidates(url)) {
+            try {
+                val r = net.newCall(okhttp3.Request.Builder().url(c).header("User-Agent", BROWSER_UA).build()).execute()
+                val type = r.header("Content-Type") ?: ""
+                if (r.isSuccessful && !type.contains("text/html")) return r
+                r.close(); last = IOException("HTTP ${r.code}")
+            } catch (e: Exception) { last = e }
+        }
+        throw last ?: IOException(L("ההורדה נכשלה"))
+    }
+
     /** הופך קישור שיתוף לקישור הורדה ישיר */
     fun direct(url: String): String {
         val u = url.trim()
@@ -74,7 +118,7 @@ object Updater {
         if (manual) status = L("בודק…")
         scope.launch {
             try {
-                val txt = Http.get(direct(verUrl)).trim()
+                val txt = open(verUrl).use { it.body?.string() ?: "" }.trim()
                 if (txt.startsWith("<")) throw IOException(L("הקישור לקובץ הגרסה אינו קישור הורדה ישיר"))
                 val lines = txt.lines().map { it.trim() }.filter { it.isNotEmpty() }
                 val code = lines.firstNotNullOfOrNull { l -> l.substringAfter("=").trim().toLongOrNull() }
@@ -127,8 +171,7 @@ object Updater {
                 val dir = File(app.cacheDir, "updates").apply { mkdirs() }
                 dir.listFiles()?.forEach { it.delete() }
                 val f = File(dir, "TBMPlayer-update.apk")
-                Http.client.newCall(okhttp3.Request.Builder().url(direct(apkUrl)).header("User-Agent", Http.UA).build()).execute().use { r ->
-                    if (!r.isSuccessful) throw IOException("HTTP ${r.code}")
+                open(apkUrl).use { r ->
                     val body = r.body ?: throw IOException(L("תגובה ריקה"))
                     val total = body.contentLength()
                     body.byteStream().use { inp ->
