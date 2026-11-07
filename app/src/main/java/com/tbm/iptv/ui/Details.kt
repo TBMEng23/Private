@@ -343,7 +343,7 @@ fun SeriesScreen(s: SeriesItem, onBack: () -> Unit, onOpen: (SeriesItem) -> Unit
         if (p == null) { err = L("אין רשימה פעילה"); return@LaunchedEffect }
         try { val (i, e) = Repo.details(p, s); info = i; eps = e } catch (e: Exception) { err = e.message ?: L("שגיאה") }
     }
-    if (AgeGate(info, true, s.name, onBack)) return
+    if (AgeGate(info, true, s.name, onBack, s.key)) return
     val all = eps ?: emptyList()
     val seasons = remember(all) { all.map { it.season }.distinct().sorted() }
     // הפרק להמשך: האחרון שנצפה – אם לא הסתיים אותו, אחרת הבא אחריו
@@ -490,7 +490,7 @@ fun MovieScreen(c: Channel, onBack: () -> Unit, onOpen: (Channel) -> Unit = {}) 
         val p = Prefs.activePlaylist() ?: return@LaunchedEffect
         info = runCatching { Repo.vodInfo(p, c) }.getOrNull()
     }
-    if (AgeGate(info, false, c.name, onBack)) return
+    if (AgeGate(info, false, c.name, onBack, c.key)) return
     val r = remember(ver) { Prefs.resume(c.key) }
     val started = r != null && r.first < r.second * 0.95
     val fav = remember(ver) { Prefs.isFav(c.key) }
@@ -590,13 +590,20 @@ private suspend fun localizeInfo(name: String, i: MediaInfo, fallbackPlot: Strin
 
 /** בפרופיל ילדים: בודק סיווג גיל ב-TMDB. מחזיר true (ומציג מסך חסימה) אם התוכן מעל גיל הפרופיל */
 @Composable
-private fun AgeGate(info: MediaInfo?, tv: Boolean, title: String, onBack: () -> Unit): Boolean {
+private fun AgeGate(info: MediaInfo?, tv: Boolean, title: String, onBack: () -> Unit, itemKey: String? = null): Boolean {
     if (!Prefs.isKids) return false
     val prof = Prefs.profile()
-    var rated by remember(info) { mutableStateOf<Int?>(null) }
+    var rated by remember(info) { mutableStateOf<Int?>(itemKey?.let { com.tbm.iptv.data.KidsFilter.cachedAge(it) }?.takeIf { it >= 0 }) }
     LaunchedEffect(info) {
         val id = info?.tmdbId ?: return@LaunchedEffect
-        rated = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { com.tbm.iptv.data.KidsFilter.tmdbAge(id, tv) }
+        val r = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { com.tbm.iptv.data.KidsFilter.tmdbAge(id, tv) }
+        rated = r
+        // נשמר – ואם לא מתאים, הפריט יוסתר מהרשימות של הפרופיל
+        if (itemKey != null) {
+            val before = com.tbm.iptv.data.KidsFilter.cachedAge(itemKey)
+            com.tbm.iptv.data.KidsFilter.cacheAge(itemKey, r)
+            if (r != null && r > prof.age && before != r) Prefs.bump()
+        }
     }
     val r = rated ?: return false
     if (r <= prof.age) return false

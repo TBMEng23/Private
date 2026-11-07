@@ -1,5 +1,7 @@
 package com.tbm.iptv.data
 
+import kotlinx.coroutines.async
+
 import androidx.compose.runtime.getValue
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.mutableStateOf
@@ -78,6 +80,49 @@ object KidsFilter {
     }
 
     /** בודק ב-TMDB את סיווג הגיל של סרט/סדרה. null = לא ידוע */
+    // ---- מטמון גיל לכל פריט (מקומי במכשיר) – כדי לא להציג בכלל תוכן שלא מתאים לגיל ----
+    private val ageSp by lazy { com.tbm.iptv.App.instance.getSharedPreferences("tbm_age", android.content.Context.MODE_PRIVATE) }
+    /** גיל סיווג ידוע לפריט, -1 = נבדק ולא נמצא סיווג, null = עוד לא נבדק */
+    fun cachedAge(key: String): Int? = if (ageSp.contains(key)) ageSp.getInt(key, -1) else null
+    fun cacheAge(key: String, age: Int?) = ageSp.edit().putInt(key, age ?: -1).apply()
+
+    /** מוצא את הכותר ב-TMDB לפי השם (והשנה) ומחזיר את גיל הסיווג */
+    fun ageByName(name: String, tv: Boolean): Int? {
+        val key = Prefs.tmdbKey
+        if (key.isBlank()) return null
+        val pt = TitleParser.parse(name)
+        if (pt.title.length < 2) return null
+        return runCatching {
+            val bearer = key.length > 40
+            val url = "https://api.themoviedb.org/3/search/${if (tv) "tv" else "movie"}?query=${Http.enc(pt.title)}" +
+                (pt.year?.let { if (tv) "&first_air_date_year=$it" else "&year=$it" } ?: "") +
+                (if (bearer) "" else "&api_key=${Http.enc(key)}")
+            val hdr = if (bearer) mapOf("Authorization" to "Bearer $key") else emptyMap()
+            val id = org.json.JSONObject(Http.get(url, hdr)).optJSONArray("results")?.optJSONObject(0)?.optLong("id")?.takeIf { it > 0 }
+                ?: return null
+            tmdbAge(id.toString(), tv)
+        }.getOrNull()
+    }
+
+    private val scanning = java.util.concurrent.atomic.AtomicBoolean(false)
+
+    /** בדיקת רקע של סיווג הגיל לפריטים שמוצגים לילדים – מסתיר את מה שמעל הגיל */
+    fun scanAges(items: List<Entry>, maxAge: Int) {
+        if (Prefs.tmdbKey.isBlank() || !scanning.compareAndSet(false, true)) return
+        Repo.scope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            try {
+                var hidden = 0
+                val todo = items.filter { cachedAge(it.key) == null }.take(150)
+                for (chunk in todo.chunked(4)) {
+                    chunk.map { e ->
+                        async { val a = ageByName(e.name, e is SeriesItem); cacheAge(e.key, a); a }
+                    }.forEachIndexed { _, d -> val a = d.await(); if (a != null && a > maxAge) hidden++ }
+                }
+                if (hidden > 0) kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) { Prefs.bump() }
+            } finally { scanning.set(false) }
+        }
+    }
+
     fun tmdbAge(tmdbId: String?, tv: Boolean): Int? {
         val key = Prefs.tmdbKey
         if (tmdbId.isNullOrBlank() || key.isBlank()) return null
@@ -205,6 +250,8 @@ object Catalog {
             base = all.filter { e ->
                 val gk = "$k|${e.group}"
                 if (e.key in itemExc || gk in exc || isAdult(e.group)) return@filter false
+                // סיווג גיל ידוע (TMDB) מעל גיל הפרופיל – לא מציגים בכלל
+                KidsFilter.cachedAge(e.key)?.let { a -> if (a > prof.age) return@filter false }
                 if (KidsFilter.blocked(e.name, prof.age)) return@filter false
                 if (lang && !KidsFilter.langOk(e)) return@filter false
                 val chosen = e.key in ki || gk in inc

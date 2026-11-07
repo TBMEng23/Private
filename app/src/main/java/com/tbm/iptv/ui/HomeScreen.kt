@@ -649,6 +649,8 @@ private fun ContentArea(
     modifier: Modifier, onLong: (Entry) -> Unit,
 ) {
     val ctx = LocalContext.current
+    // ילדים: בדיקת סיווג גיל ברקע לסרטים/סדרות שמוצגים – מה שמעל הגיל נעלם מהרשימה
+    if (Prefs.isKids && kind != Kind.LIVE) LaunchedEffect(items) { com.tbm.iptv.data.KidsFilter.scanAges(items.take(150), Prefs.profile().age) }
     when (kind) {
         Kind.LIVE -> {
             val chans = items.filterIsInstance<Channel>()
@@ -1375,6 +1377,7 @@ private fun KidsHome(content: Content, ver: Int, nav: (Screen) -> Unit) {
     val kids = remember(ver) { Prefs.kidsNames() }
     val child = remember(ver) { Prefs.kidChild.takeIf { it in kids } }
     val favItems = remember(favs, live, movies, series) { (live + movies + series).filter { it.key in favs } }
+    LaunchedEffect(movies, series) { com.tbm.iptv.data.KidsFilter.scanAges(movies.take(80) + series.take(80), prof.age) }
     // שורות לפי דמויות ונושאים
     val themeRows = remember(movies, series) {
         com.tbm.iptv.data.KidsThemes.all.mapNotNull { (title, rx) ->
