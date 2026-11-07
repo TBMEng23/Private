@@ -576,15 +576,19 @@ private fun SourcesBlock(e: com.tbm.iptv.data.Entry, kind: Kind, onPick: (com.tb
 private suspend fun localizeInfo(name: String, i: MediaInfo, fallbackPlot: String?, tv: Boolean): Pair<String?, MediaInfo> =
     kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
         if (!Localize.enabled) return@withContext null to i
-        runCatching {
-            val tm = Localize.tmdb(i.tmdbId, tv)
-            val plot0 = i.plot ?: fallbackPlot
-            // שם הסרט/הסדרה נשאר מקורי – מתרגמים רק תקציר, ז'אנר ושמות
-            val tr = Localize.texts(listOf(if (tm?.second == null) plot0 else null, i.cast, i.director))
-            // בפרופיל ילדים – גם שם הסרט/הסדרה בעברית (המקורי מוצג מתחתיו)
-            val heName = if (Prefs.isKids) (tm?.first?.takeIf { Regex("[\\u0590-\\u05FF]").containsMatchIn(it) } ?: Localize.hebTitle(name)) else null
-            heName to i.copy(plot = tm?.second ?: tr[0] ?: plot0, genre = Localize.genre(i.genre), cast = tr[1], director = tr[2])
-        }.getOrDefault(null to i)
+        // כל שלב בנפרד – כשל באחד (רשת / TMDB) לא מבטל את השאר
+        val heb = Regex("[\\u0590-\\u05FF]")
+        val wantHe = !com.tbm.iptv.I18n.isEn
+        val tm = runCatching { Localize.tmdb(i.tmdbId, tv) }.getOrNull()
+        // תקציר מ-TMDB רק אם הוא באמת בשפת היעד
+        val tmPlot = tm?.second?.takeIf { !wantHe || heb.containsMatchIn(it) }
+        val plot0 = i.plot ?: fallbackPlot
+        val tr = runCatching { Localize.texts(listOf(if (tmPlot == null) plot0 else null, i.cast, i.director)) }
+            .getOrDefault(listOf(null, i.cast, i.director))
+        val genre = runCatching { Localize.genre(i.genre) }.getOrDefault(i.genre)
+        // בפרופיל ילדים – גם שם הסרט/הסדרה בעברית (המקורי מוצג מתחתיו)
+        val heName = if (Prefs.isKids) runCatching { tm?.first?.takeIf { heb.containsMatchIn(it) } ?: Localize.hebTitle(name) }.getOrNull() else null
+        heName to i.copy(plot = tmPlot ?: tr.getOrNull(0) ?: plot0, genre = genre, cast = tr.getOrNull(1), director = tr.getOrNull(2))
     }
 
 

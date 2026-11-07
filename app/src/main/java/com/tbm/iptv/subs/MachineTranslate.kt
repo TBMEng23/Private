@@ -7,6 +7,11 @@ import org.json.JSONArray
 
 /** תרגום כתוביות אוטומטי (Google Translate) – גיבוי כשאין כתובית בעברית */
 object MachineTranslate {
+    // תרגום – לא מחכים 90 שניות לשרת שלא עונה
+    private val fast by lazy {
+        Http.client.newBuilder().connectTimeout(8, java.util.concurrent.TimeUnit.SECONDS)
+            .readTimeout(15, java.util.concurrent.TimeUnit.SECONDS).build()
+    }
     private val tsLine = Regex("""^\d{1,2}:\d{2}:\d{2}[,.]\d{3}\s*-->""")
 
     /** תרגום רשימת טקסטים קצרים (תיאורים, ז'אנרים, שמות). שורה ריקה נשמרת. */
@@ -34,7 +39,7 @@ object MachineTranslate {
             .url("https://translate.googleapis.com/translate_a/single?client=gtx&sl=$from&tl=$to&dt=t")
             .header("User-Agent", "Mozilla/5.0")
             .post(body).build()
-        val txt = Http.client.newCall(req).execute().use { r ->
+        val txt = fast.newCall(req).execute().use { r ->
             if (!r.isSuccessful) throw java.io.IOException("HTTP ${r.code}")
             r.body?.string() ?: ""
         }
