@@ -49,7 +49,10 @@ object Repo {
     suspend fun load(p: Playlist, force: Boolean = false) = withContext(Dispatchers.IO) {
         state.value = LoadState.Loading(L("טוען את \"{0}\"…", p.name))
         try {
-            val c = if (p.isXtream) Xtream(p).load(force) else loadM3u(p, force)
+            val c0 = if (p.isXtream) Xtream(p).load(force) else loadM3u(p, force)
+            // ספריות Plex נוספות לסרטים ולסדרות
+            val plex = if (Plex.connected && Plex.enabled) runCatching { Plex.load() }.getOrNull() else null
+            val c = if (plex == null) c0 else c0.copy(movies = c0.movies + plex.first, series = c0.series + plex.second)
             seriesCache.clear()
             state.value = LoadState.Ready(c)
             if (force || Prefs.str("updated_${p.id}").isBlank())
@@ -114,6 +117,12 @@ object Repo {
     /** פרטי סדרה מלאים + פרקים */
     suspend fun details(p: Playlist, s: SeriesItem): Pair<MediaInfo, List<Episode>> = withContext(Dispatchers.IO) {
         s.episodesM3u?.let { return@withContext MediaInfo(plot = s.plot) to it }
+        if (s.key.startsWith("plex:")) {
+            seriesCache[s.key]?.let { e -> infoCache[s.key]?.let { return@withContext it to e } }
+            val (pi, pe) = Plex.seriesDetails(s)
+            seriesCache[s.key] = pe; infoCache[s.key] = pi
+            return@withContext pi to pe
+        }
         val cachedEps = seriesCache[s.key]; val cachedInfo = infoCache[s.key]
         if (cachedEps != null && cachedInfo != null) return@withContext cachedInfo to cachedEps
         val id = s.seriesId ?: return@withContext MediaInfo(plot = s.plot) to emptyList()
@@ -124,7 +133,7 @@ object Repo {
 
     /** פרטי סרט */
     suspend fun vodInfo(p: Playlist, c: Channel): MediaInfo = withContext(Dispatchers.IO) {
-        infoCache[c.key] ?: run {
+        infoCache[c.key] ?: if (c.key.startsWith("plex:")) Plex.movieInfo(c).also { infoCache[c.key] = it } else run {
             val id = c.streamId
             if (!p.isXtream || id == null) MediaInfo() else Xtream(p).vodInfo(id).also { infoCache[c.key] = it }
         }

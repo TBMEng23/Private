@@ -118,7 +118,7 @@ object Catalog {
         return { g ->
             cache.getOrPut(g) {
                 "${kind.name}|$g" !in hidden &&
-                    (allowed.isEmpty() || Countries.of(g) in allowed) &&
+                    (allowed.isEmpty() || g.startsWith("Plex · ") || Countries.of(g) in allowed) &&
                     !(adultMode == "hide" && isAdult(g))
             }
         }
@@ -231,7 +231,7 @@ object Catalog {
             val filtered = all.filter { e ->
                 e.key !in hiddenItems && ok.getOrPut(e.group) {
                     "${kind.name}|${e.group}" !in hidden &&
-                        (allowed.isEmpty() || Countries.of(e.group) in allowed) &&
+                        (allowed.isEmpty() || e.group.startsWith("Plex · ") || Countries.of(e.group) in allowed) &&
                         !(adultMode == "hide" && isAdult(e.group))
                 }
             }

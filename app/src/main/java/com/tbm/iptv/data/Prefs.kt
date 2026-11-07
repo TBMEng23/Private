@@ -287,6 +287,7 @@ object Prefs {
     fun resume(key: String): Pair<Long, Long>? = resumeMap()[key]
 
     fun saveResume(item: PlayItem, pos: Long, dur: Long) {
+        Plex.report(item.key, pos, dur)
         val all = resumeObj()
         all.put(item.key, JSONObject().put("item", item.toJson()).put("pos", pos).put("dur", dur)
             .put("ts", System.currentTimeMillis()))

@@ -329,7 +329,7 @@ fun SettingsScreen(page: String, nav: (Screen) -> Unit, onBack: () -> Unit) {
     Prefs.version.intValue
     val title = when (page) {
         "epg" -> L("נתוני EPG"); "subs" -> L("שמע וכתוביות"); "player" -> L("אפשרויות נגן"); "parental" -> L("בקרת הורים ופרופילים")
-        "content" -> L("תוכן"); "backup" -> L("גיבוי ושחזור"); "about" -> L("אודות"); "update" -> L("עדכונים"); else -> L("הגדרות")
+        "content" -> L("תוכן"); "backup" -> L("גיבוי ושחזור"); "about" -> L("אודות"); "update" -> L("עדכונים"); "plex" -> "Plex"; else -> L("הגדרות")
     }
     Column(Modifier.fillMaxSize()) {
         ScreenHeader(title, onBack)
@@ -343,6 +343,7 @@ fun SettingsScreen(page: String, nav: (Screen) -> Unit, onBack: () -> Unit) {
                 "backup" -> BackupPage()
                 "about" -> AboutPage()
                 "update" -> UpdatePage()
+                "plex" -> PlexPage()
                 else -> MainSettings(nav)
             }
             Spacer(Modifier.height(40.dp))
@@ -371,6 +372,8 @@ private fun MainSettings(nav: (Screen) -> Unit) {
             com.tbm.iptv.I18n.set(if (com.tbm.iptv.I18n.isEn) "he" else "en")
         }
         NavRow(L("מקורות תוכן"), Icons.Filled.Sensors, sub = p?.name) { nav(Screen.Playlists) }
+        NavRow("Plex", Icons.Filled.VideoLibrary, sub = if (com.tbm.iptv.data.Plex.connected) L("מחובר לשרת {0}", com.tbm.iptv.data.Plex.serverName)
+            else L("חיבור לשרת Plex שלך")) { nav(Screen.Settings("plex")) }
         NavRow(L("נתוני EPG"), Icons.Filled.DateRange, sub = L("לוח שידורים וצפייה לאחור")) { nav(Screen.Settings("epg")) }
     }
     GroupTitle(L("תצוגה"))
@@ -746,6 +749,39 @@ private fun BackupPage() {
             }, modifier = Modifier.fillMaxWidth()) { Text(L("גיבוי")) }
             Spacer(Modifier.height(8.dp))
             OutlinedButton(onClick = { load.launch(arrayOf("application/json", "*/*")) }, modifier = Modifier.fillMaxWidth()) { Text(L("שחזור")) }
+        }
+    }
+}
+
+@Composable
+private fun PlexPage() {
+    val px = com.tbm.iptv.data.Plex
+    Prefs.version.intValue
+    val reload = { Prefs.activePlaylist()?.let { Repo.loadAsync(it) } }
+    Card {
+        Column(Modifier.padding(14.dp)) {
+            if (px.connected) {
+                Text(L("מחובר לשרת {0}", px.serverName), fontWeight = FontWeight.Bold)
+                SwitchRow(L("הצג את ספריות Plex בסרטים ובסדרות"), px.enabled) { px.enabled = it; reload() }
+                Text(L("הספריות מופיעות כקטגוריות \"Plex · …\". סרט שקיים גם בספק ה-IPTV יופיע ב\"מקורות\". מה שצופים כאן מסומן כנצפה גם ב-Plex."),
+                    fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Row(Modifier.padding(top = 10.dp)) {
+                    Button(onClick = { reload() }) { Text(L("רענן ספריות")) }
+                    Spacer(Modifier.width(8.dp))
+                    OutlinedButton(onClick = { px.disconnect(); reload() }) { Text(L("נתק")) }
+                }
+            } else {
+                Text(L("חיבור לשרת Plex"), fontWeight = FontWeight.Bold)
+                Text(L("לחץ \"התחבר\", ואז בטלפון או במחשב היכנס ל-plex.tv/link והזן את הקוד שיופיע כאן."),
+                    fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                px.pinCode?.let { code ->
+                    Text(code, fontSize = 44.sp, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(vertical = 12.dp))
+                    Text("plex.tv/link", fontWeight = FontWeight.Bold)
+                }
+                Button(enabled = !px.busy, onClick = { px.startLink { reload() } }, modifier = Modifier.padding(top = 10.dp)) { Text(L("התחבר")) }
+            }
+            if (px.status.isNotBlank()) Text(px.status, fontSize = 13.sp, modifier = Modifier.padding(top = 8.dp))
         }
     }
 }

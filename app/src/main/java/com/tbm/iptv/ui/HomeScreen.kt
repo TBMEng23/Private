@@ -11,6 +11,9 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.Keyboard
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -960,6 +963,65 @@ private fun RecordingsSection(ver: Int) {
     }
 }
 
+// ============================================================ שדה חיפוש: מקלדת עברית בטלוויזיה + חיפוש קולי
+@Composable
+fun SearchInput(q: String, placeholder: String = L("חפש ערוץ, סרט או סדרה…"), onChange: (String) -> Unit) {
+    val ctx = LocalContext.current
+    val tv = com.tbm.iptv.data.Device.isTv
+    // בטלוויזיה – מקלדת פנימית (עברית/אנגלית) במקום מקלדת המערכת שאין בה עברית
+    var useOsk by rememberSaveable { mutableStateOf(tv) }
+    val voice = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()) { r ->
+        val txt = r.data?.getStringArrayListExtra(android.speech.RecognizerIntent.EXTRA_RESULTS)?.firstOrNull()
+        if (!txt.isNullOrBlank()) onChange(txt)
+    }
+    fun startVoice() {
+        val i = android.content.Intent(android.speech.RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+            .putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE_MODEL, android.speech.RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+            .putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE, if (com.tbm.iptv.I18n.isEn) "en-US" else "he-IL")
+            .putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, if (com.tbm.iptv.I18n.isEn) "en-US" else "he-IL")
+            .putExtra(android.speech.RecognizerIntent.EXTRA_PROMPT, L("מה לחפש?"))
+        runCatching { voice.launch(i) }.onFailure {
+            android.widget.Toast.makeText(ctx, L("חיפוש קולי לא זמין במכשיר הזה"), android.widget.Toast.LENGTH_SHORT).show()
+        }
+    }
+    Column {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            OutlinedTextField(q, onChange, singleLine = true, readOnly = useOsk, modifier = Modifier.weight(1f),
+                placeholder = { Text(placeholder) },
+                trailingIcon = { if (q.isNotEmpty()) IconButton(onClick = { onChange("") }) { Icon(Icons.Filled.Close, L("נקה")) } })
+            IconButton(onClick = { startVoice() }) { Icon(Icons.Filled.Mic, L("חיפוש קולי"), tint = MaterialTheme.colorScheme.primary) }
+            if (tv) IconButton(onClick = { useOsk = !useOsk }) { Icon(Icons.Filled.Keyboard, L("מקלדת")) }
+        }
+        if (useOsk) HebKeyboard(q, onChange)
+    }
+}
+
+@Composable
+private fun HebKeyboard(q: String, onChange: (String) -> Unit) {
+    var heb by rememberSaveable { mutableStateOf(!com.tbm.iptv.I18n.isEn) }
+    val rows = if (heb) listOf("1234567890", "קראטוןםפ", "שדגכעיחלךף", "זסבהנמצתץ")
+        else listOf("1234567890", "qwertyuiop", "asdfghjkl", "zxcvbnm")
+    @Composable
+    fun Key(label: String, w: Float = 1f, onClick: () -> Unit) {
+        Box(Modifier.padding(2.dp).height(40.dp).width((38 * w).dp)) {
+            FocusItem(Modifier.fillMaxSize(), onClick = onClick) {
+                Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(6.dp)),
+                    contentAlignment = Alignment.Center) { Text(label, fontSize = 17.sp, fontWeight = FontWeight.Bold) }
+            }
+        }
+    }
+    Column(Modifier.fillMaxWidth().padding(vertical = 6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+        rows.forEach { r -> Row { r.forEach { ch -> Key(ch.toString()) { onChange(q + ch) } } } }
+        Row {
+            Key(if (heb) "EN" else "עב", 1.4f) { heb = !heb }
+            Key(L("רווח"), 4f) { onChange("$q ") }
+            Key("⌫", 1.4f) { if (q.isNotEmpty()) onChange(q.dropLast(1)) }
+            Key(L("נקה"), 1.6f) { onChange("") }
+        }
+    }
+}
+
 // ============================================================ חיפוש כללי
 @Composable
 private fun SearchSection(content: Content, ver: Int, nav: (Screen) -> Unit) {
@@ -972,8 +1034,7 @@ private fun SearchSection(content: Content, ver: Int, nav: (Screen) -> Unit) {
     val vod = remember(q, vodAll) { if (q.length < 2) emptyList() else vodAll.filter { it.name.contains(q, true) }.take(60) }
     val ser = remember(q, serAll) { if (q.length < 2) emptyList() else serAll.filter { it.name.contains(q, true) }.take(60) }
     Column(Modifier.fillMaxSize().padding(10.dp)) {
-        OutlinedTextField(q, { q = it }, singleLine = true, modifier = Modifier.fillMaxWidth(),
-            placeholder = { Text(L("חפש ערוץ, סרט או סדרה…")) })
+        SearchInput(q) { q = it }
         LazyColumn(Modifier.fillMaxSize()) {
             if (live.isNotEmpty()) {
                 item { SectionTitle(L("ערוצים ({0})", live.size)) }
