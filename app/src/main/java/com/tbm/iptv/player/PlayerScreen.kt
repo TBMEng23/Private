@@ -353,30 +353,45 @@ private fun Controls(a: PlayerActivity) {
             }
         } } }
 
-        // חלון תיקון זמן לארכיון
+        // חלון סנכרון שעות: הזזת לוח השידורים, ובארכיון גם הזזת התוכנית שנפתחת
         if (cuFix) {
             val pl = Prefs.activePlaylist()
-            var off by androidx.compose.runtime.remember { androidx.compose.runtime.mutableFloatStateOf(com.tbm.iptv.data.Catchup.offsetHours(pl)) }
+            var cu by androidx.compose.runtime.remember { androidx.compose.runtime.mutableFloatStateOf(com.tbm.iptv.data.Catchup.offsetHours(pl)) }
+            var ep by androidx.compose.runtime.remember { androidx.compose.runtime.mutableFloatStateOf(pl?.let { Prefs.str("epg_off_${it.id}", "0").toFloatOrNull() } ?: 0f) }
+            fun fmtH(h: Float) = if (h == 0f) L("ללא תיקון") else (if (h > 0) "+" else "") + (if (h % 1f == 0f) h.toInt().toString() else h.toString()) + L(" שעות")
+            @Composable
+            fun Shifter(value: Float, onShift: (Float) -> Unit) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    androidx.compose.material3.OutlinedButton(onClick = { onShift(-0.5f) }) { Text(L("⏪ אחורה")) }
+                    Text(fmtH(value), fontSize = 18.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 6.dp))
+                    androidx.compose.material3.OutlinedButton(onClick = { onShift(0.5f) }) { Text(L("קדימה ⏩")) }
+                }
+            }
             androidx.compose.material3.AlertDialog(
                 onDismissRequest = { cuFix = false },
-                title = { Text(L("תיקון זמן לארכיון")) },
+                title = { Text(L("סנכרון שעות")) },
                 text = {
                     Column {
-                        Text(L("אם התוכנית שנפתחת לא תואמת לשם שלה – הזז עד שתתאים. ההגדרה נשמרת למקור הזה."), fontSize = 13.sp)
-                        Text(if (off == 0f) L("ללא תיקון") else (if (off > 0) "+" else "") + off + L(" שעות"),
-                            fontSize = 22.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(vertical = 10.dp))
-                        listOf(listOf(-2f, -1f, -0.5f), listOf(0.5f, 1f, 2f)).forEach { rowVals -> Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                            rowVals.forEach { d ->
-                                androidx.compose.material3.OutlinedButton(onClick = {
-                                    off += d; pl?.let { com.tbm.iptv.data.Catchup.setOffsetHours(it, off) }; a.replayCatchup()
-                                }) { Text((if (d > 0) "+" else "−") + (if (kotlin.math.abs(d) < 1f) L("30 דק'") else L("{0} ש'", kotlin.math.abs(d).toInt()))) }
-                            }
-                        } }
+                        Text(L("לוח השידורים"), fontWeight = FontWeight.Bold)
+                        Text(L("אם השעות בלוח לא תואמות למה שמשודר – הזז בחצי שעה כל לחיצה."), fontSize = 12.sp)
+                        Shifter(ep) { d ->
+                            ep += d
+                            pl?.let { Prefs.setStr("epg_off_${it.id}", if (ep % 1f == 0f) ep.toInt().toString() else ep.toString()); com.tbm.iptv.data.Repo.refreshEpg() }
+                        }
+                        if (ui.inCatchup) {
+                            Spacer(Modifier.height(14.dp))
+                            Text(L("צפייה לאחור (ארכיון)"), fontWeight = FontWeight.Bold)
+                            Text(L("אם התוכנית שנפתחה לא תואמת לשם שלה – הזז עד שתתאים."), fontSize = 12.sp)
+                            Shifter(cu) { d -> cu += d; pl?.let { com.tbm.iptv.data.Catchup.setOffsetHours(it, cu) }; a.replayCatchup() }
+                        }
+                        Text(L("ההגדרות נשמרות למקור הזה."), fontSize = 11.sp, modifier = Modifier.padding(top = 10.dp))
                     }
                 },
                 confirmButton = { androidx.compose.material3.TextButton(onClick = { cuFix = false }) { Text(L("סגור")) } },
                 dismissButton = { androidx.compose.material3.TextButton(onClick = {
-                    off = 0f; pl?.let { com.tbm.iptv.data.Catchup.setOffsetHours(it, 0f) }; a.replayCatchup()
+                    ep = 0f; cu = 0f
+                    pl?.let { Prefs.setStr("epg_off_${it.id}", "0"); com.tbm.iptv.data.Catchup.setOffsetHours(it, 0f); com.tbm.iptv.data.Repo.refreshEpg() }
+                    if (ui.inCatchup) a.replayCatchup()
                 }) { Text(L("איפוס")) } },
             )
         }
@@ -440,7 +455,7 @@ private fun Controls(a: PlayerActivity) {
                 BarBtn(Icons.Filled.ScreenRotation, if (ui.landscape) L("לאורך") else L("לרוחב")) { a.touched(); a.toggleRotate() }
                 if (!ui.isLive) BarBtn(Icons.Filled.Replay, L("מההתחלה")) { a.touched(); a.restartFromBeginning() }
                 // ארכיון: התוכנית שנפתחה לא תואמת לשם? מזיזים זמן
-                if (ui.inCatchup) BarBtn(Icons.Filled.Schedule, L("תיקון זמן")) { a.touched(); cuFix = true }
+                if (ui.isLive || ui.inCatchup) BarBtn(Icons.Filled.Schedule, L("סנכרון שעות")) { a.touched(); cuFix = true }
                 BarBtn(Icons.Filled.Lock, L("נעילה")) { ui.locked = true }
                 if (!ui.isLive && ui.hasNext) BarBtn(Icons.Filled.SkipNext, L("הפרק הבא")) { a.next() }
             }
