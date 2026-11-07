@@ -61,6 +61,24 @@ fun ItemMenu(t: MenuTarget, onDismiss: () -> Unit) {
         text = {
             Column(Modifier.verticalScroll(rememberScrollState())) {
                 MenuRow(if (fav) L("★ הסר ממועדפים") else L("☆ הוסף למועדפים")) { Prefs.toggleFav(e.key); onDismiss() }
+                if (Prefs.isKids) {
+                    // בתוך פרופיל ילדים: ההורה חוסם פריט / קטגוריה שעברו סינון – רק עם קוד הורים
+                    val pid = Prefs.profileId
+                    MenuRow(L("⛔ חסום בפרופיל הזה")) {
+                        Parental.requireAlways(L("חסימה לילדים")) {
+                            Prefs.setKidsItemBlocked(pid, e.key, true)
+                            Toast.makeText(ctx, L("נחסם: {0}", e.name), Toast.LENGTH_SHORT).show()
+                            onDismiss()
+                        }
+                    }
+                    MenuRow(L("⛔ חסום את כל הקטגוריה \"{0}\"", e.group)) {
+                        Parental.requireAlways(L("חסימה לילדים")) {
+                            Prefs.setKidsGroupState(pid, "${t.kind.name}|${e.group}", -1)
+                            Toast.makeText(ctx, L("הקטגוריה נחסמה: {0}", e.group), Toast.LENGTH_SHORT).show()
+                            onDismiss()
+                        }
+                    }
+                }
                 if (!Prefs.isKids) {
                     MenuRow(L("✏ שינוי שם")) { Parental.require(L("שינוי שם")) { renaming = true } }
                     MenuRow(L("⬆ הזז למעלה")) { Catalog.move(t.kind, t.all, e, -1); onDismiss() }
