@@ -1,5 +1,11 @@
 package com.tbm.iptv.ui
 
+import androidx.compose.runtime.setValue
+
+import androidx.compose.runtime.mutableStateOf
+
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+
 import com.tbm.iptv.L
 
 import android.content.ActivityNotFoundException
@@ -99,8 +105,24 @@ fun FocusItem(
         else -> Color.Transparent
     }
     val scale by animateFloatAsState(if (focused) 1.04f else 1f, label = "focusScale")
+    // בשלט: לחיצה ארוכה על OK או מקש MENU פותחים את תפריט האפשרויות
+    var longFired by remember { mutableStateOf(false) }
     Box(
         modifier
+            .onPreviewKeyEvent { ev ->
+                val lc = onLongClick ?: return@onPreviewKeyEvent false
+                val k = ev.nativeKeyEvent
+                val ok = k.keyCode == android.view.KeyEvent.KEYCODE_DPAD_CENTER || k.keyCode == android.view.KeyEvent.KEYCODE_ENTER ||
+                    k.keyCode == android.view.KeyEvent.KEYCODE_NUMPAD_ENTER
+                when {
+                    k.keyCode == android.view.KeyEvent.KEYCODE_MENU && k.action == android.view.KeyEvent.ACTION_UP -> { lc(); true }
+                    ok && k.action == android.view.KeyEvent.ACTION_DOWN && k.repeatCount > 0 -> {
+                        if (!longFired) { longFired = true; lc() }; true
+                    }
+                    ok && k.action == android.view.KeyEvent.ACTION_UP && longFired -> { longFired = false; true }
+                    else -> false
+                }
+            }
             .graphicsLayer { scaleX = scale; scaleY = scale }
             .clip(shape)
             .background(bg)

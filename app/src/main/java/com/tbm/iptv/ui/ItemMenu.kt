@@ -71,6 +71,13 @@ fun ItemMenu(t: MenuTarget, onDismiss: () -> Unit) {
                             onDismiss()
                         }
                     }
+                    if (e is Channel && t.kind == Kind.LIVE) MenuRow(L("⏺ הקלט שעה מעכשיו")) {
+                        Parental.requireAlways(L("הקלטה")) {
+                            RecordingService.start(ctx, e.name, e.url, 60 * 60_000L)
+                            Toast.makeText(ctx, L("ההקלטה התחילה"), Toast.LENGTH_SHORT).show()
+                            onDismiss()
+                        }
+                    }
                     MenuRow(L("⛔ חסום את כל הקטגוריה \"{0}\"", e.group)) {
                         Parental.requireAlways(L("חסימה לילדים")) {
                             Prefs.setKidsGroupState(pid, "${t.kind.name}|${e.group}", -1)

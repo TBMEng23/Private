@@ -1378,7 +1378,7 @@ private fun KidsHome(content: Content, ver: Int, nav: (Screen) -> Unit) {
         if (live.isNotEmpty()) item { CategoryStrip(L("📺 הערוצים שלי"), live, Kind.LIVE, favs, nav, null) { menu = MenuTarget(Kind.LIVE, it, live) } }
         if (movies.isNotEmpty()) item { CategoryStrip(L("🎬 סרטים"), movies.sortedByDescending { it.rating() }, Kind.MOVIE, favs, nav, null) { menu = MenuTarget(Kind.MOVIE, it, movies) } }
         if (series.isNotEmpty()) item { CategoryStrip(L("🍿 סדרות"), series.sortedByDescending { it.rating() }, Kind.SERIES, favs, nav, null) { menu = MenuTarget(Kind.SERIES, it, series) } }
-        items(topicRows, key = { "t:" + it.first }) { (title, l) -> CategoryStrip(title, l, Kind.LIVE, favs, nav, null) { } }
+        items(topicRows, key = { "t:" + it.first }) { (title, l) -> CategoryStrip(title, l, Kind.LIVE, favs, nav, null) { menu = MenuTarget(Kind.LIVE, it, live) } }
     }
     menu?.let { ItemMenu(it) { menu = null } }
 }
