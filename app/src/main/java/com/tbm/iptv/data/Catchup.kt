@@ -25,14 +25,15 @@ object Catchup {
     private fun fmt(pattern: String, t: Long, tz: TimeZone): String =
         SimpleDateFormat(pattern, Locale.US).apply { timeZone = tz }.format(t)
 
-    fun url(p: Playlist?, c: Channel, start: Long, end: Long): String? {
+    /** force = לנסות גם כשהספק לא סימן ארכיון לערוץ (יש ספקים שתומכים בלי לסמן) */
+    fun url(p: Playlist?, c: Channel, start: Long, end: Long, force: Boolean = false): String? {
         val now = System.currentTimeMillis()
         val endT = minOf(end, now)
         val durSec = ((endT - start) / 1000).coerceAtLeast(60)
         val durMin = (durSec + 59) / 60
 
         // ---------- Xtream ----------
-        if (p != null && p.isXtream && c.streamId != null && c.archiveDays > 0) {
+        if (p != null && p.isXtream && c.streamId != null && (c.archiveDays > 0 || force)) {
             val base = Xtream.normalize(p.url)
             val tz = Prefs.str("tz_${p.id}").ifBlank { null }?.let { TimeZone.getTimeZone(it) } ?: TimeZone.getDefault()
             val s = fmt("yyyy-MM-dd:HH-mm", start, tz)

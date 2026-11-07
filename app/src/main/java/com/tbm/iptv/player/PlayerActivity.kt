@@ -455,8 +455,8 @@ class PlayerActivity : FragmentActivity() {
     }
 
     /** צפייה בתוכנית שכבר שודרה, בלי לעזוב את הערוץ */
-    fun playCatchup(c: com.tbm.iptv.data.Channel, e: com.tbm.iptv.data.EpgEntry) {
-        val url = com.tbm.iptv.data.Catchup.url(Prefs.activePlaylist(), c, e.start, e.end)
+    fun playCatchup(c: com.tbm.iptv.data.Channel, e: com.tbm.iptv.data.EpgEntry, force: Boolean = false) {
+        val url = com.tbm.iptv.data.Catchup.url(Prefs.activePlaylist(), c, e.start, e.end, force)
         if (url == null) { toast(L("הערוץ לא תומך בצפייה לאחור")); return }
         val it = PlayItem("cu:${c.key}:${e.start}", "${c.name} · ${e.title}", url, Kind.LIVE,
             c.logo, epgId = c.epgId, channelName = c.name, isCatchup = true)

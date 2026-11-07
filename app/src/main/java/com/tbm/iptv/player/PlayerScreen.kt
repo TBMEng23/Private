@@ -504,6 +504,8 @@ private fun ChannelGuidePanel(a: PlayerActivity, modifier: Modifier) {
                             if (ch != null) {
                                 if ((past || live) && cu) a.playCatchup(ch, e)
                                 else if (live) { ui.showGuide = false; if (ui.inCatchup) a.backToLive() }
+                                // הספק לא סימן ארכיון – מנסים בכל זאת (ואם אין, תוצג הודעה)
+                                else if (past) { a.toast(L("הספק לא סימן ארכיון לערוץ – מנסה בכל זאת…")); a.playCatchup(ch, e, force = true) }
                                 else if (!past) {
                                     val rid = "r${e.start}${ch.key.hashCode()}"
                                     if (rid in reminded) {

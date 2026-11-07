@@ -227,8 +227,8 @@ fun ProgramDialog(c: Channel, e: EpgEntry, queue: List<Channel>, onDismiss: () -
     val cu = Catchup.available(c, e, now)
     val p = Prefs.activePlaylist()
 
-    fun playCatchup() {
-        val url = Catchup.url(p, c, e.start, e.end)
+    fun playCatchup(force: Boolean = false) {
+        val url = Catchup.url(p, c, e.start, e.end, force)
         if (url == null) { Toast.makeText(ctx, L("הערוץ לא תומך בצפייה לאחור"), Toast.LENGTH_SHORT).show(); return }
         Launcher.play(ctx, listOf(PlayItem(
             key = "cu:${c.key}:${e.start}", title = "${c.name} · ${e.title}", url = url, kind = Kind.LIVE,
@@ -253,8 +253,12 @@ fun ProgramDialog(c: Channel, e: EpgEntry, queue: List<Channel>, onDismiss: () -
                     if ((live || past) && cu) OutlinedButton(onClick = { playCatchup() }, modifier = Modifier.fillMaxWidth()) {
                         Text(if (live) L("⏮ צפה מההתחלה") else L("▶ צפה (Catch-up)"))
                     }
-                    if (past && !cu) Text(L("התוכנית שודרה ואין לה ארכיון"), fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    if (past && !cu) {
+                        Text(L("הספק לא סימן ארכיון לערוץ הזה"), fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        if (p?.isXtream == true) OutlinedButton(onClick = { playCatchup(force = true) }, modifier = Modifier.fillMaxWidth()) {
+                            Text(L("▶ נסה לצפות בכל זאת"))
+                        }
+                    }
                     if (future) {
                         val rid = "r${e.start}${c.key.hashCode()}"
                         val has = Scheduler.list().any { it.id == rid }
