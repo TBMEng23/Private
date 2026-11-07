@@ -329,7 +329,7 @@ fun SettingsScreen(page: String, nav: (Screen) -> Unit, onBack: () -> Unit) {
     Prefs.version.intValue
     val title = when (page) {
         "epg" -> L("נתוני EPG"); "subs" -> L("שמע וכתוביות"); "player" -> L("אפשרויות נגן"); "parental" -> L("בקרת הורים ופרופילים")
-        "content" -> L("תוכן"); "backup" -> L("גיבוי ושחזור"); "about" -> L("אודות"); else -> L("הגדרות")
+        "content" -> L("תוכן"); "backup" -> L("גיבוי ושחזור"); "about" -> L("אודות"); "update" -> L("עדכונים"); else -> L("הגדרות")
     }
     Column(Modifier.fillMaxSize()) {
         ScreenHeader(title, onBack)
@@ -342,6 +342,7 @@ fun SettingsScreen(page: String, nav: (Screen) -> Unit, onBack: () -> Unit) {
                 "content" -> ContentPage()
                 "backup" -> BackupPage()
                 "about" -> AboutPage()
+                "update" -> UpdatePage()
                 else -> MainSettings(nav)
             }
             Spacer(Modifier.height(40.dp))
@@ -401,7 +402,11 @@ private fun MainSettings(nav: (Screen) -> Unit) {
         NavRow(L("איפוס העדפות משתמש"), Icons.Filled.RestartAlt, arrow = false) { confirm = "reset" }
     }
     GroupTitle(L("אודות"))
-    Card { NavRow(L("אודות"), Icons.Filled.Info, sub = "TBM Player " + com.tbm.iptv.appVersion(ctx)) { nav(Screen.Settings("about")) } }
+    Card {
+        NavRow(L("עדכונים"), Icons.Filled.Refresh, sub = com.tbm.iptv.data.Updater.available?.let { L("גרסה {0} זמינה", it.name) }
+            ?: if (com.tbm.iptv.data.Updater.auto) L("עדכון אוטומטי פעיל") else L("עדכון ידני")) { nav(Screen.Settings("update")) }
+        NavRow(L("אודות"), Icons.Filled.Info, sub = "TBM Player " + com.tbm.iptv.appVersion(ctx)) { nav(Screen.Settings("about")) }
+    }
     viewPick?.let { k ->
         AlertDialog(
             onDismissRequest = { viewPick = null },
@@ -741,6 +746,41 @@ private fun BackupPage() {
             }, modifier = Modifier.fillMaxWidth()) { Text(L("גיבוי")) }
             Spacer(Modifier.height(8.dp))
             OutlinedButton(onClick = { load.launch(arrayOf("application/json", "*/*")) }, modifier = Modifier.fillMaxWidth()) { Text(L("שחזור")) }
+        }
+    }
+}
+
+@Composable
+private fun UpdatePage() {
+    val ctx = LocalContext.current
+    val u = com.tbm.iptv.data.Updater
+    var ver by remember { mutableStateOf(u.verUrl) }
+    var apk by remember { mutableStateOf(u.apkUrl) }
+    Card {
+        Column(Modifier.padding(14.dp)) {
+            Text(L("גרסה מותקנת: {0}", com.tbm.iptv.appVersion(ctx)), fontWeight = FontWeight.Bold)
+            SwitchRow(L("עדכון אוטומטי (מוריד ומתקין לבד)"), u.auto) { u.auto = it }
+            Text(L("באנדרואיד 12 ומעלה העדכון מותקן לבד בלי לשאול. במכשירים ישנים יותר יופיע מסך אישור אחד. בפעם הראשונה אנדרואיד יבקש לאשר התקנה ממקור זה."),
+                fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Spacer(Modifier.height(10.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Button(enabled = !u.busy, onClick = { u.check(ctx, true) }) { Text(L("בדוק עדכונים")) }
+                Spacer(Modifier.width(8.dp))
+                if (u.available != null) Button(enabled = !u.busy, onClick = { u.downloadAndInstall(ctx) }) { Text(L("עדכן עכשיו")) }
+            }
+            if (u.progress >= 0f) LinearProgressIndicator(progress = { u.progress }, modifier = Modifier.fillMaxWidth().padding(top = 8.dp))
+            if (u.status.isNotBlank()) Text(u.status, fontSize = 13.sp, modifier = Modifier.padding(top = 6.dp))
+        }
+    }
+    Spacer(Modifier.height(12.dp))
+    Card {
+        Column(Modifier.padding(14.dp)) {
+            Text(L("מקור העדכונים (OneDrive)"), fontWeight = FontWeight.Bold)
+            Text(L("הדבק את קישורי השיתוף של version.txt ושל TBMPlayer-latest.apk. מספיק להגדיר פעם אחת – זה מסתנכרן לשאר המכשירים דרך החשבון."),
+                fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            OutlinedTextField(ver, { ver = it }, label = { Text(L("קישור ל-version.txt")) }, singleLine = true, modifier = Modifier.fillMaxWidth().padding(top = 6.dp))
+            OutlinedTextField(apk, { apk = it }, label = { Text(L("קישור ל-TBMPlayer-latest.apk")) }, singleLine = true, modifier = Modifier.fillMaxWidth().padding(top = 6.dp))
+            Button(onClick = { u.verUrl = ver; u.apkUrl = apk; u.check(ctx, true) }, modifier = Modifier.padding(top = 8.dp)) { Text(L("שמור ובדוק")) }
         }
     }
 }

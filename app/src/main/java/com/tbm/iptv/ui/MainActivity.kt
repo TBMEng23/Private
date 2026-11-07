@@ -46,6 +46,8 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -118,6 +120,29 @@ class MainActivity : FragmentActivity() {
     }
 }
 
+/** חלון עדכון – רק כשהעדכון האוטומטי לא הצליח לבד או כשהעדכון האוטומטי כבוי */
+@Composable
+private fun UpdateDialog() {
+    val u = com.tbm.iptv.data.Updater
+    val info = u.available ?: return
+    if (u.dismissed || (u.auto && !u.needsTap && u.progress < 0f)) return
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = { if (!u.busy) u.dismissed = true },
+        title = { androidx.compose.material3.Text(com.tbm.iptv.L("גרסה {0} זמינה", info.name)) },
+        text = {
+            androidx.compose.foundation.layout.Column {
+                if (u.progress >= 0f) androidx.compose.material3.LinearProgressIndicator(progress = { u.progress }, modifier = Modifier.fillMaxWidth())
+                if (u.status.isNotBlank()) androidx.compose.material3.Text(u.status, fontSize = 13.sp)
+            }
+        },
+        confirmButton = { androidx.compose.material3.TextButton(enabled = !u.busy, onClick = { u.needsTap = false; u.downloadAndInstall(ctx) }) {
+            androidx.compose.material3.Text(com.tbm.iptv.L("עדכן")) } },
+        dismissButton = { androidx.compose.material3.TextButton(enabled = !u.busy, onClick = { u.dismissed = true }) {
+            androidx.compose.material3.Text(com.tbm.iptv.L("אחר כך")) } },
+    )
+}
+
 @Composable
 fun AppRoot() {
     val stack = remember {
@@ -129,7 +154,9 @@ fun AppRoot() {
             }
         )
     }
+    val updCtx = androidx.compose.ui.platform.LocalContext.current
     LaunchedEffect(Unit) {
+        com.tbm.iptv.data.Updater.autoCheck(updCtx)
         if (Repo.state.value is LoadState.Idle) Prefs.activePlaylist()?.let { Repo.loadAsync(it) }
         // פעם ראשונה אחרי העדכון: מציעים להתחבר לחשבון (אפשר לדלג)
         if (!com.tbm.iptv.data.Cloud.signedInNow() && Prefs.str("cloud_prompted").isBlank() && Prefs.activePlaylist() != null && !Prefs.isKids) {
@@ -162,6 +189,7 @@ fun AppRoot() {
         }
         if (PlayerHolder.miniActive) DraggableMini()
         PinDialog()
+        UpdateDialog()
         CrashReport()
     }
 }
