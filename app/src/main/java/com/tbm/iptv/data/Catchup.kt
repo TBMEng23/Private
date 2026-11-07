@@ -7,6 +7,15 @@ import java.util.TimeZone
 /** בניית כתובת צפייה לתוכנית שכבר שודרה (Catch-up / Archive) */
 object Catchup {
 
+    // שרשרת כתובות חלופיות לכל צפייה לאחור
+    private val chains = java.util.concurrent.ConcurrentHashMap<String, List<String>>()
+
+    /** הכתובת החלופית הבאה אחרי זו שנכשלה (או null אם נגמרו) */
+    fun next(url: String): String? {
+        val l = chains[url] ?: return null
+        return l.getOrNull(l.indexOf(url) + 1)
+    }
+
     fun available(c: Channel, e: EpgEntry, now: Long = System.currentTimeMillis()): Boolean {
         if (!c.hasCatchup || e.start >= now) return false
         val days = if (c.archiveDays > 0) c.archiveDays else 7
@@ -27,7 +36,20 @@ object Catchup {
             val base = Xtream.normalize(p.url)
             val tz = Prefs.str("tz_${p.id}").ifBlank { null }?.let { TimeZone.getTimeZone(it) } ?: TimeZone.getDefault()
             val s = fmt("yyyy-MM-dd:HH-mm", start, tz)
-            return "$base/timeshift/${p.user}/${p.pass}/$durMin/$s/${c.streamId}.ts"
+            val u = p.user; val pw = p.pass; val id = c.streamId
+            // כמה פורמטים – ספקים שונים תומכים בצורות שונות; אם הראשון נכשל הנגן עובר לבא
+            val list = mutableListOf(
+                "$base/timeshift/$u/$pw/$durMin/$s/$id.ts",
+                "$base/timeshift/$u/$pw/$durMin/$s/$id.m3u8",
+                "$base/streaming/timeshift.php?username=$u&password=$pw&stream=$id&start=$s&duration=$durMin",
+                "$base/timeshift.php?username=$u&password=$pw&stream=$id&start=$s&duration=$durMin",
+            )
+            // אזור זמן שגוי בשרת – ניסיון גם לפי זמן המכשיר ו-UTC
+            listOf(TimeZone.getDefault(), TimeZone.getTimeZone("UTC")).map { fmt("yyyy-MM-dd:HH-mm", start, it) }
+                .distinct().filter { it != s }.forEach { s2 -> list += "$base/timeshift/$u/$pw/$durMin/$s2/$id.ts" }
+            val l = list.distinct()
+            l.forEach { chains[it] = l }
+            return l.first()
         }
 
         val type = c.catchupType?.lowercase() ?: return null

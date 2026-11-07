@@ -331,6 +331,7 @@ object I18nEn {
         "🔒 נעל בקוד" to "🔒 Lock with PIN",
         "🔓 בטל נעילה" to "🔓 Unlock",
         "🔔 תזכורת" to "🔔 Reminder",
+        "מנסה פורמט צפייה לאחור נוסף…" to "Trying another catch-up format…",
         "⛔ חסום בפרופיל הזה" to "⛔ Block in this profile",
         "⛔ חסום את כל הקטגוריה \"{0}\"" to "⛔ Block the whole category \"{0}\"",
         "נחסם: {0}" to "Blocked: {0}",

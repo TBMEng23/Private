@@ -375,6 +375,19 @@ class PlayerActivity : FragmentActivity() {
     private fun handleError(e: PlaybackException) {
         val item = current ?: return
         val live = item.kind == Kind.LIVE && !item.isCatchup
+        // צפייה לאחור שנכשלה – מנסים מיד את הפורמט הבא שהספק אולי תומך בו
+        if (item.isCatchup && player.currentPosition <= 0) {
+            val nxt = com.tbm.iptv.data.Catchup.next(item.url)
+            if (nxt != null) {
+                val it2 = item.copy(url = nxt)
+                current = it2; ui.item = it2
+                ui.errorActions = false
+                ui.error = L("מנסה פורמט צפייה לאחור נוסף…")
+                player.setMediaItem(PlayerFactory.mediaItem(nxt, it2.title))
+                player.prepare(); player.play()
+                return
+            }
+        }
         if (!live && player.currentPosition > 0) lastGoodPos = player.currentPosition
         val max = if (live) 5 else 3
         if (retry < max) {
