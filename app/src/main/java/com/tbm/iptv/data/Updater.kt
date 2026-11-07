@@ -30,11 +30,15 @@ object Updater {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
+    // קישורי השיתוף הקבועים של תיקיית העדכונים ב-OneDrive (אפשר לשנות בהגדרות)
+    private const val DEF_VER = "https://tbmeng-my.sharepoint.com/:t:/g/personal/tamir_tbmeng_co_il/IQByidkxOdy8RIA3NX3DA9REAVa_TePgB7Z8ULnrAhKvOZw?e=mG2Pj3"
+    private const val DEF_APK = "https://tbmeng-my.sharepoint.com/:u:/g/personal/tamir_tbmeng_co_il/IQCkhZFQKUqGR7iBUf0A154VAfVXUxmklB5aNFxnPaeshl8?e=3es29a"
+
     var verUrl: String
-        get() = Prefs.str("upd_ver_url")
+        get() = Prefs.str("upd_ver_url").ifBlank { DEF_VER }
         set(v) = Prefs.setStr("upd_ver_url", v.trim())
     var apkUrl: String
-        get() = Prefs.str("upd_apk_url")
+        get() = Prefs.str("upd_apk_url").ifBlank { DEF_APK }
         set(v) = Prefs.setStr("upd_apk_url", v.trim())
 
     val configured get() = verUrl.isNotBlank() && apkUrl.isNotBlank()
