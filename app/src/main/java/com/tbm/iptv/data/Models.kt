@@ -127,6 +127,8 @@ data class Profile(
     val ageInside: Set<String> = setOf("LIVE"),
     /** ילדים: סוגים שבהם רק תוכן בעברית ובאנגלית */
     val langOnly: Set<String> = emptySet(),
+    /** דמות (אימוג'י) לפרופיל – ריק = אייקון רגיל */
+    val avatar: String = "",
 ) {
     fun countriesFor(kind: String): Set<String> = kindCountries[kind] ?: countries
     fun toJson(): JSONObject = JSONObject().put("id", id).put("name", name).put("kids", kids)
@@ -134,7 +136,7 @@ data class Profile(
         .put("countries", org.json.JSONArray(countries.toList())).put("topics", org.json.JSONArray(topics.toList()))
         .put("kc", JSONObject().apply { kindCountries.forEach { (k, v) -> put(k, org.json.JSONArray(v.toList())) } })
         .put("pick", org.json.JSONArray(pickOnly.toList())).put("ageIn", org.json.JSONArray(ageInside.toList()))
-        .put("lang", org.json.JSONArray(langOnly.toList()))
+        .put("lang", org.json.JSONArray(langOnly.toList())).put("av", avatar)
 
     companion object {
         private fun strSet(a: org.json.JSONArray?): Set<String> = a?.let { (0 until it.length()).map { i -> it.optString(i) }.toSet() } ?: emptySet()
@@ -144,7 +146,7 @@ data class Profile(
             o.optJSONObject("kc")?.let { kc -> kc.keys().asSequence().associateWith { k -> strSet(kc.optJSONArray(k)) } } ?: emptyMap(),
             strSet(o.optJSONArray("pick")),
             if (o.has("ageIn")) strSet(o.optJSONArray("ageIn")) else setOf("LIVE"),
-            strSet(o.optJSONArray("lang")))
+            strSet(o.optJSONArray("lang")), o.optString("av"))
     }
 }
 

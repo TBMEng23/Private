@@ -201,7 +201,7 @@ fun ProfilesScreen(onDone: () -> Unit, onManage: () -> Unit = {}) {
         Spacer(Modifier.height(24.dp))
         FlowRow(horizontalArrangement = Arrangement.spacedBy(18.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
             list.forEach { p -> ProfileTile(p) { choose(p) { switching = true; warmThen(onDone) { switching = false } } } }
-            if (list.size < 6) FocusItem(onClick = { Parental.requireAlways(L("הוספת פרופיל")) { adding = true } }) {
+            if (list.size < 8) FocusItem(onClick = { Parental.requireAlways(L("הוספת פרופיל")) { adding = true } }) {
                 Column(Modifier.padding(10.dp).width(110.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                     Box(Modifier.size(84.dp).clip(CircleShape).background(MaterialTheme.colorScheme.surfaceVariant), contentAlignment = Alignment.Center) {
                         Text("+", fontSize = 40.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -238,6 +238,9 @@ fun choose(p: Profile, onDone: () -> Unit) {
     }
 }
 
+/** דמויות לבחירה לפרופיל */
+val profileAvatars = listOf("🦁", "🐼", "🦄", "🐶", "🐱", "🦊", "🐸", "🐵", "🦖", "🐬", "🦋", "🚀", "⚽", "🎨", "👑", "🦸", "🧚", "🤖", "🐻", "🐰")
+
 /** צבעי אווטאר */
 val profileColors = listOf(Color(0xFF3A9BFF), Color(0xFF00A86B), Color(0xFFE50914), Color(0xFFFFB300), Color(0xFF8E44AD), Color(0xFFFF6F91))
 
@@ -251,9 +254,13 @@ fun ProfileEditDialog(edit: Profile?, onDone: () -> Unit) {
     var age by remember { mutableStateOf(edit?.age ?: 7) }
     var auto by remember { mutableStateOf(edit?.auto ?: true) }
     var color by remember { mutableStateOf(edit?.color ?: (all.size % profileColors.size)) }
+    var avatar by remember { mutableStateOf(edit?.avatar ?: "") }
     var needPin by remember { mutableStateOf(false) }
     fun save() {
-        val p = Profile(edit?.id ?: java.util.UUID.randomUUID().toString().take(6), name.trim(), kids, age, auto, color)
+        // עריכה שומרת את כל הגדרות התוכן הקיימות (מדינות, נושאים…), ופרופיל ילד חדש מקבל אותן מפרופיל הילדים הראשון
+        val base = edit ?: (if (kids) all.firstOrNull { it.kids } else null)?.copy(id = "", name = "")
+        val p = (base ?: Profile("", "", kids)).copy(id = edit?.id ?: java.util.UUID.randomUUID().toString().take(6),
+            name = name.trim(), kids = kids, age = age, auto = auto, color = color, avatar = avatar)
         Prefs.saveProfiles(if (edit == null) all + p else all.map { if (it.id == p.id) p else it })
         onDone()
     }
@@ -270,6 +277,17 @@ fun ProfileEditDialog(edit: Profile?, onDone: () -> Unit) {
                             .then(if (i == color) Modifier.background(Color.White.copy(alpha = 0.35f)) else Modifier)
                             .clickableCompat { color = i }, contentAlignment = Alignment.Center) {
                             if (i == color) Text("✓", color = Color.White, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+                // דמות לפרופיל
+                Text(L("דמות"), fontSize = 13.sp, modifier = Modifier.padding(top = 10.dp))
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    (listOf("") + profileAvatars).forEach { a ->
+                        Box(Modifier.size(40.dp).clip(CircleShape)
+                            .background(if (a == avatar) MaterialTheme.colorScheme.primary.copy(alpha = 0.45f) else MaterialTheme.colorScheme.surfaceVariant)
+                            .clickableCompat { avatar = a }, contentAlignment = Alignment.Center) {
+                            Text(if (a.isEmpty()) "∅" else a, fontSize = 22.sp)
                         }
                     }
                 }
@@ -333,7 +351,8 @@ private fun ProfileTile(p: Profile, onClick: () -> Unit) {
                     .background(profileColors[p.color.coerceIn(0, profileColors.size - 1)]),
                 contentAlignment = Alignment.Center,
             ) {
-                Icon(if (p.kids) Icons.Filled.ChildCare else Icons.Filled.Person, null, tint = Color.White,
+                if (p.avatar.isNotBlank()) Text(p.avatar, fontSize = 46.sp)
+                else Icon(if (p.kids) Icons.Filled.ChildCare else Icons.Filled.Person, null, tint = Color.White,
                     modifier = Modifier.size(44.dp))
             }
             Spacer(Modifier.height(6.dp))

@@ -1412,7 +1412,7 @@ private fun KidsHome(content: Content, ver: Int, nav: (Screen) -> Unit) {
                         kids.size == 1 -> kids[0]
                         else -> prof.name
                     }
-                    Text(L("שלום {0}! 👋", who), color = Color.White, fontSize = 28.sp, fontWeight = FontWeight.Black)
+                    Text(L("שלום {0}! 👋", who) + (if (prof.avatar.isNotBlank()) " " + prof.avatar else ""), color = Color.White, fontSize = 28.sp, fontWeight = FontWeight.Black)
                     val many = kids.size > 1 || prof.name.trim() == "ילדים"
                     Text(if (many) L("מה בא לכם לראות היום?") else L("מה בא לך לראות היום?"), color = Color.White.copy(alpha = 0.9f), fontSize = 16.sp)
                 }
