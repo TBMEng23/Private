@@ -190,12 +190,29 @@ object Updater {
                 if (head[0] != 'P'.code.toByte() || head[1] != 'K'.code.toByte())
                     throw IOException(L("הקישור לקובץ ה-APK אינו קישור הורדה ישיר"))
                 status = L("מתקין…")
-                install(app, f)
+                try { install(app, f) } catch (e: Exception) {
+                    if (!systemInstall(app)) throw e
+                }
             } catch (e: Exception) {
                 status = L("העדכון נכשל: {0}", e.message ?: e.javaClass.simpleName)
                 if (silent) needsTap = true
             } finally { busy = false; progress = -1f }
         }
+    }
+
+    private fun apkFile(ctx: Context) = File(File(ctx.cacheDir, "updates"), "TBMPlayer-update.apk")
+
+    /** פתיחת מסך ההתקנה הרגיל של המערכת לקובץ שהורד. מחזיר false אם אין קובץ */
+    fun systemInstall(ctx: Context): Boolean {
+        val f = apkFile(ctx)
+        if (!f.exists() || f.length() == 0L) return false
+        return runCatching {
+            val uri = androidx.core.content.FileProvider.getUriForFile(ctx, "${ctx.packageName}.files", f)
+            ctx.startActivity(Intent(Intent.ACTION_VIEW).setDataAndType(uri, "application/vnd.android.package-archive")
+                .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK))
+            status = L("אשר את ההתקנה במסך שנפתח")
+            true
+        }.getOrDefault(false)
     }
 
     private fun install(ctx: Context, f: File) {
@@ -226,7 +243,43 @@ class UpdateReceiver : android.content.BroadcastReceiver() {
                 confirm?.let { runCatching { ctx.startActivity(it.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) } }
             }
             android.content.pm.PackageInstaller.STATUS_SUCCESS -> Updater.status = ""
-            else -> Updater.status = L("העדכון נכשל: {0}", intent.getStringExtra(android.content.pm.PackageInstaller.EXTRA_STATUS_MESSAGE) ?: "")
+            else -> {
+                // HyperOS ואחרים חוסמים התקנה דרך session – עוברים למסך ההתקנה הרגיל של המערכת
+                val msg = intent.getStringExtra(android.content.pm.PackageInstaller.EXTRA_STATUS_MESSAGE) ?: ""
+                if (!Updater.systemInstall(ctx)) Updater.status = L("העדכון נכשל: {0}", msg)
+            }
+        }
+    }
+}
+
+/** אחרי שהאפליקציה עודכנה – פותחים אותה מחדש (ואם אנדרואיד חוסם פתיחה מהרקע – התראה ללחיצה) */
+class UpdatedReceiver : android.content.BroadcastReceiver() {
+    override fun onReceive(ctx: Context, intent: Intent) {
+        if (intent.action != Intent.ACTION_MY_PACKAGE_REPLACED) return
+        val launch = ctx.packageManager.getLaunchIntentForPackage(ctx.packageName)
+            ?.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP) ?: return
+        runCatching { ctx.startActivity(launch) }
+        // גיבוי: התראה (נסגרת כשהאפליקציה נפתחת)
+        runCatching {
+            val nm = ctx.getSystemService(android.app.NotificationManager::class.java)
+            if (Build.VERSION.SDK_INT >= 26)
+                nm.createNotificationChannel(android.app.NotificationChannel(UPDATED_CH, L("עדכוני אפליקציה"), android.app.NotificationManager.IMPORTANCE_HIGH))
+            val pi = android.app.PendingIntent.getActivity(ctx, 7702, launch,
+                android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE)
+            val n = androidx.core.app.NotificationCompat.Builder(ctx, UPDATED_CH)
+                .setSmallIcon(android.R.drawable.stat_sys_download_done)
+                .setContentTitle(L("TBM Player עודכן – לחץ לפתיחה"))
+                .setContentIntent(pi).setAutoCancel(true)
+                .setPriority(androidx.core.app.NotificationCompat.PRIORITY_HIGH).build()
+            nm.notify(UPDATED_ID, n)
+        }
+    }
+
+    companion object {
+        const val UPDATED_CH = "app_updated"
+        const val UPDATED_ID = 7702
+        fun clear(ctx: Context) = runCatching {
+            ctx.getSystemService(android.app.NotificationManager::class.java).cancel(UPDATED_ID)
         }
     }
 }

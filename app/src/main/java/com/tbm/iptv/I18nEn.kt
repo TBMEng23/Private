@@ -331,6 +331,8 @@ object I18nEn {
         "🔒 נעל בקוד" to "🔒 Lock with PIN",
         "🔓 בטל נעילה" to "🔓 Unlock",
         "🔔 תזכורת" to "🔔 Reminder",
+        "עדכוני אפליקציה" to "App updates", "TBM Player עודכן – לחץ לפתיחה" to "TBM Player updated – tap to open",
+        "אשר את ההתקנה במסך שנפתח" to "Confirm the installation on the screen that opened",
         "למחוק את ההקלטה?" to "Delete this recording?", "למחוק {0} הקלטות?" to "Delete {0} recordings?",
         "{0} MB יפונו מהמכשיר. לא ניתן לשחזר." to "{0} MB will be freed. This can't be undone.",
         "נקה בחירה" to "Clear selection", "בחר הכל" to "Select all", "מחק ({0})" to "Delete ({0})", "☑ בחירה מרובה" to "☑ Select multiple",

@@ -84,6 +84,7 @@ class MainActivity : FragmentActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         Notif.init(this)
+        com.tbm.iptv.data.UpdatedReceiver.clear(this)
         Scheduler.rescheduleAll(this)
         if (Build.VERSION.SDK_INT >= 33 &&
             ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
