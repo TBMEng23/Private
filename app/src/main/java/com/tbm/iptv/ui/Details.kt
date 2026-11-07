@@ -581,7 +581,9 @@ private suspend fun localizeInfo(name: String, i: MediaInfo, fallbackPlot: Strin
             val plot0 = i.plot ?: fallbackPlot
             // שם הסרט/הסדרה נשאר מקורי – מתרגמים רק תקציר, ז'אנר ושמות
             val tr = Localize.texts(listOf(if (tm?.second == null) plot0 else null, i.cast, i.director))
-            null to i.copy(plot = tm?.second ?: tr[0] ?: plot0, genre = Localize.genre(i.genre), cast = tr[1], director = tr[2])
+            // בפרופיל ילדים – גם שם הסרט/הסדרה בעברית (המקורי מוצג מתחתיו)
+            val heName = if (Prefs.isKids) (tm?.first?.takeIf { Regex("[\\u0590-\\u05FF]").containsMatchIn(it) } ?: Localize.hebTitle(name)) else null
+            heName to i.copy(plot = tm?.second ?: tr[0] ?: plot0, genre = Localize.genre(i.genre), cast = tr[1], director = tr[2])
         }.getOrDefault(null to i)
     }
 

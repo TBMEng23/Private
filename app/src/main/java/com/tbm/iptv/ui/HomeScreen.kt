@@ -425,7 +425,15 @@ private fun Poster(
                     color = Color(0xFFE53935),
                 )
             }
-            Text(name, fontSize = 12.sp, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 3.dp))
+            // בפרופיל ילדים: שם בעברית (מ-TMDB) גדול, והשם המקורי קטן מתחתיו
+            val heName = if (Prefs.isKids) androidx.compose.runtime.produceState<String?>(null, name) {
+                value = withContext(Dispatchers.IO) { com.tbm.iptv.data.Localize.hebTitle(name) }
+            }.value else null
+            if (heName != null) {
+                Text(heName, fontSize = 13.sp, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(top = 3.dp))
+                Text(name, fontSize = 10.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            } else Text(name, fontSize = 12.sp, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 3.dp))
             sub?.let { Text(it, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant) }
         }
     }

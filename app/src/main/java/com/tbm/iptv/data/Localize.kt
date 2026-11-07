@@ -98,6 +98,45 @@ object Localize {
         }.getOrNull()
     }
 
+    private val searchGate = java.util.concurrent.Semaphore(3)
+
+    /** שם עברי מ-TMDB לפי שם הזרם (חיפוש סרט/סדרה) – לפרופיל ילדים. null אם אין או כבר בעברית */
+    fun hebTitle(raw: String): String? {
+        if (heb.containsMatchIn(raw)) return null
+        val key = Prefs.tmdbKey
+        if (key.isBlank()) return null
+        val pt = TitleParser.parse(raw)
+        val q = pt.title.trim()
+        if (q.length < 2) return null
+        load()
+        val ck = "hs|${q.lowercase()}|${pt.year ?: ""}"
+        mem[ck]?.let { return it.ifBlank { null } }
+        return runCatching {
+            searchGate.acquire()
+            try {
+                val bearer = key.length > 40
+                val url = "https://api.themoviedb.org/3/search/multi?language=he-IL&include_adult=false&query=${Http.enc(q)}" +
+                    (if (bearer) "" else "&api_key=${Http.enc(key)}")
+                val hdr = if (bearer) mapOf("Authorization" to "Bearer $key", "Accept" to "application/json") else emptyMap()
+                val arr = JSONObject(Http.get(url, hdr)).optJSONArray("results")
+                var best: String? = null
+                if (arr != null) for (i in 0 until arr.length()) {
+                    val o = arr.optJSONObject(i) ?: continue
+                    val type = o.optString("media_type")
+                    if (type != "movie" && type != "tv") continue
+                    val y = (o.optString("release_date").ifBlank { o.optString("first_air_date") }).take(4).toIntOrNull()
+                    if (pt.year != null && y != null && kotlin.math.abs(y - pt.year) > 1) continue
+                    val t = o.optString(if (type == "tv") "name" else "title")
+                    if (heb.containsMatchIn(t)) { best = t; break }
+                    if (best == null) best = ""   // נמצאה התאמה אבל בלי שם עברי
+                    break
+                }
+                mem[ck] = best ?: ""; save()
+                best?.ifBlank { null }
+            } finally { searchGate.release() }
+        }.getOrNull()
+    }
+
     /** מסיר קידומות ספק כמו "NF - ", "EN - ", "|HE| " ושנה בסוף לצורך תרגום */
     fun cleanTitle(t: String): String =
         t.replace(Regex("^\\s*(\\|[^|]{1,6}\\||\\[[^\\]]{1,8}]|[A-Z0-9]{2,4}\\s*[-:|])\\s*"), "").trim()
