@@ -26,7 +26,13 @@ object Catchup {
         SimpleDateFormat(pattern, Locale.US).apply { timeZone = tz }.format(t)
 
     /** force = לנסות גם כשהספק לא סימן ארכיון לערוץ (יש ספקים שתומכים בלי לסמן) */
-    fun url(p: Playlist?, c: Channel, start: Long, end: Long, force: Boolean = false): String? {
+    /** תיקון זמן לארכיון (שעות) לכל מקור – כשהתוכנית שנפתחת לא תואמת לשם */
+    fun offsetHours(p: Playlist?): Float = p?.let { Prefs.str("cu_off_${it.id}", "0").toFloatOrNull() } ?: 0f
+    fun setOffsetHours(p: Playlist, h: Float) = Prefs.setStr("cu_off_${p.id}", h.toString())
+
+    fun url(p: Playlist?, c: Channel, start0: Long, end0: Long, force: Boolean = false): String? {
+        val shift = (offsetHours(p) * 3_600_000L).toLong()
+        val start = start0 + shift; val end = end0 + shift
         val now = System.currentTimeMillis()
         val endT = minOf(end, now)
         val durSec = ((endT - start) / 1000).coerceAtLeast(60)

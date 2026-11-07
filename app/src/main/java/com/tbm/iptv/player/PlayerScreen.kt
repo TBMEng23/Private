@@ -1,5 +1,21 @@
 package com.tbm.iptv.player
 
+import androidx.compose.foundation.shape.CircleShape
+
+import androidx.compose.foundation.layout.offset
+
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+
+import androidx.compose.ui.input.key.type
+
+import androidx.compose.ui.input.key.key
+
+import androidx.compose.ui.input.key.onKeyEvent
+
+import androidx.compose.ui.focus.onFocusChanged
+
+import androidx.compose.foundation.focusable
+
 import com.tbm.iptv.L
 
 import android.view.ContextThemeWrapper
@@ -15,6 +31,7 @@ import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Forward10
 import androidx.compose.material.icons.filled.LiveTv
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Replay10
@@ -303,6 +320,7 @@ private fun Controls(a: PlayerActivity) {
     var dur by androidx.compose.runtime.remember { androidx.compose.runtime.mutableLongStateOf(0L) }
     var playing by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(true) }
     var dragging by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<Float?>(null) }
+    var cuFix by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
     var buffered by androidx.compose.runtime.remember { androidx.compose.runtime.mutableLongStateOf(0L) }
     LaunchedEffect(Unit) {
         while (true) {
@@ -335,6 +353,34 @@ private fun Controls(a: PlayerActivity) {
             }
         } } }
 
+        // חלון תיקון זמן לארכיון
+        if (cuFix) {
+            val pl = Prefs.activePlaylist()
+            var off by androidx.compose.runtime.remember { androidx.compose.runtime.mutableFloatStateOf(com.tbm.iptv.data.Catchup.offsetHours(pl)) }
+            androidx.compose.material3.AlertDialog(
+                onDismissRequest = { cuFix = false },
+                title = { Text(L("תיקון זמן לארכיון")) },
+                text = {
+                    Column {
+                        Text(L("אם התוכנית שנפתחת לא תואמת לשם שלה – הזז עד שתתאים. ההגדרה נשמרת למקור הזה."), fontSize = 13.sp)
+                        Text(if (off == 0f) L("ללא תיקון") else (if (off > 0) "+" else "") + off + L(" שעות"),
+                            fontSize = 22.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(vertical = 10.dp))
+                        androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            listOf(-2f, -1f, -0.5f, 0.5f, 1f, 2f).forEach { d ->
+                                androidx.compose.material3.OutlinedButton(onClick = {
+                                    off += d; pl?.let { com.tbm.iptv.data.Catchup.setOffsetHours(it, off) }; a.replayCatchup()
+                                }) { Text((if (d > 0) "+" else "−") + (if (kotlin.math.abs(d) < 1f) L("30 דק'") else L("{0} ש'", kotlin.math.abs(d).toInt()))) }
+                            }
+                        }
+                    }
+                },
+                confirmButton = { androidx.compose.material3.TextButton(onClick = { cuFix = false }) { Text(L("סגור")) } },
+                dismissButton = { androidx.compose.material3.TextButton(onClick = {
+                    off = 0f; pl?.let { com.tbm.iptv.data.Catchup.setOffsetHours(it, 0f) }; a.replayCatchup()
+                }) { Text(L("איפוס")) } },
+            )
+        }
+
         // תחתית: פס זמן + כפתורים
         Column(
             Modifier.align(Alignment.BottomCenter).fillMaxWidth()
@@ -344,24 +390,16 @@ private fun Controls(a: PlayerActivity) {
             if (!ui.isLive && dur > 0) com.tbm.iptv.ui.Ltr {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(fmtDur(dragging?.let { (it * dur).toLong() } ?: pos), color = Color.White, fontSize = 12.sp)
-                    // פס התקדמות כמו ביוטיוב: אדום = נצפה, אפור בהיר = נטען מראש (באפר), כהה = עוד לא נטען
-                    Box(Modifier.weight(1f).padding(horizontal = 10.dp), contentAlignment = Alignment.CenterStart) {
-                        val bf = (buffered.toFloat() / dur).coerceIn(0f, 1f)
-                        Box(Modifier.fillMaxWidth().height(4.dp).padding(horizontal = 10.dp)
-                            .background(Color(0x40FFFFFF), RoundedCornerShape(2.dp)))
-                        Box(Modifier.fillMaxWidth().height(4.dp).padding(horizontal = 10.dp)) {
-                            Box(Modifier.fillMaxWidth(bf).height(4.dp).background(Color(0xB3FFFFFF), RoundedCornerShape(2.dp)))
-                        }
-                        androidx.compose.material3.Slider(
-                            value = dragging ?: (pos.toFloat() / dur).coerceIn(0f, 1f),
-                            onValueChange = { dragging = it; a.touched() },
-                            onValueChangeFinished = { dragging?.let { a.player.seekTo((it * dur).toLong()) }; dragging = null },
-                            colors = androidx.compose.material3.SliderDefaults.colors(
-                                thumbColor = Color(0xFFE50914), activeTrackColor = Color(0xFFE50914),
-                                inactiveTrackColor = Color.Transparent),
-                            modifier = Modifier.fillMaxWidth(),
-                        )
-                    }
+                    // פס התקדמות דק כמו ביוטיוב: אדום = נצפה, אפור בהיר = נטען, כהה = עוד לא נטען; עיגול קטן שגדל בגרירה
+                    YtSeekBar(
+                        progress = dragging ?: (pos.toFloat() / dur).coerceIn(0f, 1f),
+                        buffered = (buffered.toFloat() / dur).coerceIn(0f, 1f),
+                        dragging = dragging != null,
+                        onDrag = { dragging = it; a.touched() },
+                        onDone = { dragging?.let { a.player.seekTo((it * dur).toLong()) }; dragging = null },
+                        onKeySeek = { d -> a.touched(); a.seekBy(d) },
+                        modifier = Modifier.weight(1f).padding(horizontal = 10.dp),
+                    )
                     Column(horizontalAlignment = Alignment.End) {
                         Text("-" + fmtDur((dur - pos).coerceAtLeast(0)), color = Color.White, fontSize = 12.sp)
                         val ahead = ((buffered - pos) / 1000).coerceAtLeast(0)
@@ -401,6 +439,8 @@ private fun Controls(a: PlayerActivity) {
                 BarBtn(Icons.Filled.AspectRatio, L("יחס תצוגה")) { a.touched(); a.cycleResize() }
                 BarBtn(Icons.Filled.ScreenRotation, if (ui.landscape) L("לאורך") else L("לרוחב")) { a.touched(); a.toggleRotate() }
                 if (!ui.isLive) BarBtn(Icons.Filled.Replay, L("מההתחלה")) { a.touched(); a.restartFromBeginning() }
+                // ארכיון: התוכנית שנפתחה לא תואמת לשם? מזיזים זמן
+                if (ui.inCatchup) BarBtn(Icons.Filled.Schedule, L("תיקון זמן")) { a.touched(); cuFix = true }
                 BarBtn(Icons.Filled.Lock, L("נעילה")) { ui.locked = true }
                 if (!ui.isLive && ui.hasNext) BarBtn(Icons.Filled.SkipNext, L("הפרק הבא")) { a.next() }
             }
@@ -908,5 +948,48 @@ private fun SubtitleDialog(a: PlayerActivity) {
                 }
             }
         }
+    }
+}
+
+
+/** פס התקדמות בסגנון YouTube: קו דק (3dp, 5dp בגרירה) ועיגול אדום קטן */
+@Composable
+private fun YtSeekBar(
+    progress: Float, buffered: Float, dragging: Boolean,
+    onDrag: (Float) -> Unit, onDone: () -> Unit, onKeySeek: (Long) -> Unit, modifier: Modifier = Modifier,
+) {
+    var focused by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+    val active = dragging || focused
+    val track = if (active) 5.dp else 3.dp
+    val thumb = if (active) 16.dp else 12.dp
+    val red = Color(0xFFFF0033)
+    androidx.compose.foundation.layout.BoxWithConstraints(
+        modifier.height(28.dp)
+            .onFocusChanged { focused = it.isFocused }
+            .focusable()
+            .onKeyEvent { ev ->
+                if (ev.type != androidx.compose.ui.input.key.KeyEventType.KeyDown) return@onKeyEvent false
+                when (ev.key) {
+                    androidx.compose.ui.input.key.Key.DirectionRight -> { onKeySeek(10_000); true }
+                    androidx.compose.ui.input.key.Key.DirectionLeft -> { onKeySeek(-10_000); true }
+                    else -> false
+                }
+            }
+            .pointerInput(Unit) {
+                detectTapGestures { o -> onDrag((o.x / size.width).coerceIn(0f, 1f)); onDone() }
+            }
+            .pointerInput(Unit) {
+                detectHorizontalDragGestures(
+                    onDragStart = { o -> onDrag((o.x / size.width).coerceIn(0f, 1f)) },
+                    onDragEnd = { onDone() }, onDragCancel = { onDone() },
+                ) { change, _ -> change.consume(); onDrag((change.position.x / size.width).coerceIn(0f, 1f)) }
+            },
+        contentAlignment = Alignment.CenterStart,
+    ) {
+        val w = maxWidth
+        Box(Modifier.fillMaxWidth().height(track).background(Color(0x40FFFFFF)))
+        Box(Modifier.fillMaxWidth(buffered).height(track).background(Color(0x99FFFFFF)))
+        Box(Modifier.fillMaxWidth(progress).height(track).background(red))
+        Box(Modifier.offset(x = (w * progress - thumb / 2).coerceIn(0.dp, w - thumb)).size(thumb).background(red, CircleShape))
     }
 }

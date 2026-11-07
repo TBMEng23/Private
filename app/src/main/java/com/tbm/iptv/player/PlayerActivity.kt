@@ -479,7 +479,13 @@ class PlayerActivity : FragmentActivity() {
     }
 
     /** צפייה בתוכנית שכבר שודרה, בלי לעזוב את הערוץ */
+    private var lastCu: Triple<com.tbm.iptv.data.Channel, com.tbm.iptv.data.EpgEntry, Boolean>? = null
+
+    /** הפעלה מחדש של אותה תוכנית מהארכיון (אחרי תיקון זמן) */
+    fun replayCatchup() { lastCu?.let { (c, e, f) -> playCatchup(c, e, f) } }
+
     fun playCatchup(c: com.tbm.iptv.data.Channel, e: com.tbm.iptv.data.EpgEntry, force: Boolean = false) {
+        lastCu = Triple(c, e, force)
         val url = com.tbm.iptv.data.Catchup.url(Prefs.activePlaylist(), c, e.start, e.end, force)
         if (url == null) { toast(L("הערוץ לא תומך בצפייה לאחור")); return }
         val it = PlayItem("cu:${c.key}:${e.start}", "${c.name} · ${e.title}", url, Kind.LIVE,
