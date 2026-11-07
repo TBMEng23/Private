@@ -7,6 +7,8 @@ object Platforms {
     data class P(val id: String, val name: String, val short: String, val color: Long, val rx: Regex)
 
     val all = listOf(
+        // ספריות Plex שחוברו (קטגוריות "Plex · …")
+        P("plex", "Plex", "PLEX", 0xFFE5A00D, Regex("^Plex · ")),
         P("netflix", "Netflix", "NETFLIX", 0xFFE50914, Regex("(?i)(netflix|\\bnf\\b|nflx)")),
         P("prime", "Amazon Prime Video", "prime", 0xFF00A8E1, Regex("(?i)(amazon|prime video|\\bamz\\b|\\bamzn\\b|\\bprime\\b)")),
         P("disney", "Disney+", "Disney+", 0xFF113CCF, Regex("(?i)(disney\\s*\\+|disney plus|\\bdsnp\\b|\\bdsny\\b)")),
