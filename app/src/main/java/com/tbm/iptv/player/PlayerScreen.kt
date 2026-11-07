@@ -455,6 +455,8 @@ private fun Controls(a: PlayerActivity) {
                 BarBtn(Icons.Filled.ScreenRotation, if (ui.landscape) L("לאורך") else L("לרוחב")) { a.touched(); a.toggleRotate() }
                 if (!ui.isLive) BarBtn(Icons.Filled.Replay, L("מההתחלה")) { a.touched(); a.restartFromBeginning() }
                 // ארכיון: התוכנית שנפתחה לא תואמת לשם? מזיזים זמן
+                // בשידור חי: החזרה אחורה (דרך הארכיון של הספק)
+                if (ui.isLive) BarBtn(Icons.Filled.Replay10, L("אחורה")) { a.touched(); a.liveRewind(30_000) }
                 if (ui.isLive || ui.inCatchup) BarBtn(Icons.Filled.Schedule, L("סנכרון שעות")) { a.touched(); cuFix = true }
                 BarBtn(Icons.Filled.Lock, L("נעילה")) { ui.locked = true }
                 if (!ui.isLive && ui.hasNext) BarBtn(Icons.Filled.SkipNext, L("הפרק הבא")) { a.next() }

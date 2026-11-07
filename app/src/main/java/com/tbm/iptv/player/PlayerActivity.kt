@@ -522,8 +522,31 @@ class PlayerActivity : FragmentActivity() {
         applyOrientation()
     }
 
+    /**
+     * החזרה אחורה בשידור חי: עוברים לארכיון של הספק מתחילת התוכנית הנוכחית (עד שעתיים אחורה)
+     * וקופצים לנקודה ms לפני עכשיו. "חזרה לשידור חי" מחזיר לשידור.
+     */
+    fun liveRewind(ms: Long) {
+        val c = currentChannel() ?: run { toast(L("לא ניתן להחזיר אחורה בערוץ הזה")); return }
+        val p = Prefs.activePlaylist()
+        val now = System.currentTimeMillis()
+        val cur = com.tbm.iptv.data.Epg.nowNext(c.epgId, c.name, now).first
+        val start = maxOf(cur?.start?.takeIf { now - it > ms + 60_000 } ?: (now - 2 * 3_600_000L), now - 2 * 3_600_000L)
+        val url = com.tbm.iptv.data.Catchup.url(p, c, start, now + 3 * 3_600_000L, force = true)
+            ?: run { toast(L("הספק לא מאפשר להחזיר אחורה בערוץ הזה")); return }
+        val it = PlayItem("cu:${c.key}:$start", c.name + (cur?.let { " · " + it.title } ?: ""), url, Kind.LIVE,
+            c.logo, epgId = c.epgId, channelName = c.name, isCatchup = true)
+        current = it; ui.item = it; ui.title = it.title
+        ui.isLive = false; ui.inCatchup = true; ui.error = null
+        lastCu = cur?.let { e -> Triple(c, e, true) }
+        val target = (now - start - ms).coerceAtLeast(0)
+        player.setMediaItem(PlayerFactory.mediaItem(url, it.title), target)
+        player.prepare(); player.play()
+        toast(L("⏪ חזרה אחורה – \"חזרה לשידור חי\" מחזיר לשידור"))
+    }
+
     fun seekBy(ms: Long) {
-        if (ui.isLive) return
+        if (ui.isLive) { if (ms < 0) liveRewind(-ms); return }
         val d = player.duration
         var p = player.currentPosition + ms
         if (d > 0) p = p.coerceAtMost(d - 1000)
