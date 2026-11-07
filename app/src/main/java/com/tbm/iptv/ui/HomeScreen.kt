@@ -867,6 +867,24 @@ private fun RecordingsSection(ver: Int) {
             ?.sortedByDescending { it.lastModified() } ?: emptyList()
     }
     val sched = remember(ver) { Scheduler.list() }
+    // בחירה מרובה ומחיקה עם אישור
+    var selecting by remember { mutableStateOf(false) }
+    val selected = remember { androidx.compose.runtime.mutableStateListOf<String>() }
+    var confirm by remember { mutableStateOf<List<File>?>(null) }
+    LaunchedEffect(files) { selected.retainAll(files.map { it.absolutePath }.toSet()); if (files.isEmpty()) selecting = false }
+    confirm?.let { list ->
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { confirm = null },
+            title = { Text(if (list.size == 1) L("למחוק את ההקלטה?") else L("למחוק {0} הקלטות?", list.size)) },
+            text = { Text(if (list.size == 1) list[0].nameWithoutExtension.replace("__", " · ") else
+                L("{0} MB יפונו מהמכשיר. לא ניתן לשחזר.", list.sumOf { it.length() } / 1_000_000)) },
+            confirmButton = { androidx.compose.material3.TextButton(onClick = {
+                list.forEach { it.delete() }
+                selected.clear(); selecting = false; confirm = null; tick++
+            }) { Text(L("מחק"), color = MaterialTheme.colorScheme.error) } },
+            dismissButton = { androidx.compose.material3.TextButton(onClick = { confirm = null }) { Text(L("ביטול")) } },
+        )
+    }
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(12.dp)) {
         if (active.isNotEmpty()) {
             item { SectionTitle(L("מקליט עכשיו")) }
@@ -895,23 +913,47 @@ private fun RecordingsSection(ver: Int) {
                 }
             }
         }
-        item { SectionTitle(L("הקלטות שמורות")) }
+        item {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(Modifier.weight(1f)) { SectionTitle(L("הקלטות שמורות")) }
+                if (files.isNotEmpty()) {
+                    if (selecting) {
+                        androidx.compose.material3.TextButton(onClick = {
+                            if (selected.size == files.size) selected.clear()
+                            else { selected.clear(); selected.addAll(files.map { it.absolutePath }) }
+                        }) { Text(if (selected.size == files.size) L("נקה בחירה") else L("בחר הכל")) }
+                        androidx.compose.material3.TextButton(enabled = selected.isNotEmpty(), onClick = {
+                            confirm = files.filter { it.absolutePath in selected }
+                        }) { Text(L("מחק ({0})", selected.size), color = if (selected.isNotEmpty()) MaterialTheme.colorScheme.error else Color.Gray) }
+                        androidx.compose.material3.TextButton(onClick = { selecting = false; selected.clear() }) { Text(L("ביטול")) }
+                    } else androidx.compose.material3.TextButton(onClick = { selecting = true }) { Text(L("☑ בחירה מרובה")) }
+                }
+            }
+        }
         if (files.isEmpty()) item {
             Text(L("אין הקלטות. לחץ על ⏺ בנגן או על תוכנית בלוח השידורים כדי להקליט."), fontSize = 13.sp,
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         items(files) { f: File ->
-            FocusItem(Modifier.fillMaxWidth(), onClick = {
-                Launcher.play(ctx, listOf(PlayItem("rec:${f.name}", f.nameWithoutExtension.replace("__", " · "),
+            val path = f.absolutePath
+            val isSel = path in selected
+            FocusItem(Modifier.fillMaxWidth(), selected = isSel, onLongClick = {
+                selecting = true; if (!isSel) selected.add(path)
+            }, onClick = {
+                if (selecting) { if (isSel) selected.remove(path) else selected.add(path) }
+                else Launcher.play(ctx, listOf(PlayItem("rec:${f.name}", f.nameWithoutExtension.replace("__", " · "),
                     android.net.Uri.fromFile(f).toString(), Kind.MOVIE, isLocal = true)), 0)
             }) {
                 Row(Modifier.padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    if (selecting) androidx.compose.material3.Checkbox(checked = isSel, onCheckedChange = { c ->
+                        if (c) selected.add(path) else selected.remove(path)
+                    })
                     Column(Modifier.weight(1f)) {
                         Text(f.nameWithoutExtension.replace("__", " · "), maxLines = 2)
                         Text("${f.length() / 1_000_000} MB · ${fmtDay(f.lastModified())} ${fmtTime(f.lastModified())}",
                             fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
-                    IconButton(onClick = { f.delete(); tick++ }) { Icon(Icons.Filled.Delete, L("מחק")) }
+                    if (!selecting) IconButton(onClick = { confirm = listOf(f) }) { Icon(Icons.Filled.Delete, L("מחק")) }
                 }
             }
         }
