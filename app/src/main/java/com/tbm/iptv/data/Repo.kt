@@ -55,6 +55,7 @@ object Repo {
             val c = if (plex == null) c0 else c0.copy(movies = c0.movies + plex.first, series = c0.series + plex.second)
             seriesCache.clear()
             state.value = LoadState.Ready(c)
+            Shelf.update(p, c)
             if (force || Prefs.str("updated_${p.id}").isBlank())
                 Prefs.setStrQuiet("updated_${p.id}", System.currentTimeMillis().toString())
             scope.launch { Epg.load(p, c, force) }

@@ -280,6 +280,11 @@ private fun HomeRows(content: Content, ver: Int, wide: Boolean, nav: (Screen) ->
     val recentEps = remember(recent) { recent.filter { it.item.kind == Kind.SERIES }.distinctBy { it.item.seriesName } }
     val newMovies = remember(movies) { movies.filterIsInstance<Channel>().filter { it.added > 0 && isPreferred(it) }.sortedByDescending { it.added }.take(30) }
     val newSeries = remember(series) { series.filterIsInstance<SeriesItem>().filter { it.added > 0 && isPreferred(it) }.sortedByDescending { it.added }.take(30) }
+    // המדף: סדרות חדשות ועונות/פרקים חדשים (מה שהשתנה אצל הספק מאז הטעינה הקודמת)
+    val shelfVer = com.tbm.iptv.data.Shelf.ready.intValue
+    val seriesByKey = remember(series) { series.associateBy { it.key } }
+    val shelfNew = remember(seriesByKey, shelfVer) { com.tbm.iptv.data.Shelf.newSeries.mapNotNull { seriesByKey[it] } }
+    val shelfUpd = remember(seriesByKey, shelfVer) { com.tbm.iptv.data.Shelf.updated.mapNotNull { seriesByKey[it.first] } }
     var trendMovies by remember { mutableStateOf<List<Entry>>(emptyList()) }
     var trendSeries by remember { mutableStateOf<List<Entry>>(emptyList()) }
     val tmdb = Prefs.tmdbKey
@@ -301,6 +306,15 @@ private fun HomeRows(content: Content, ver: Int, wide: Boolean, nav: (Screen) ->
                 }
                 item { QuickTile(L("חיפוש"), Icons.Filled.Search) { go(Section.SEARCH) } }
             }
+        }
+        if (shelfUpd.isNotEmpty()) item {
+            EntryRowStrip(L("🔄 עונות ופרקים חדשים"), shelfUpd, Kind.SERIES, ctx, nav, { com.tbm.iptv.data.Shelf.tag(it.key) }) { menu = MenuTarget(Kind.SERIES, it, series) }
+        }
+        if (shelfNew.isNotEmpty()) item {
+            EntryRowStrip(L("🆕 סדרות חדשות על המדף"), shelfNew, Kind.SERIES, ctx, nav, { "חדש" }) { menu = MenuTarget(Kind.SERIES, it, series) }
+        }
+        if (newMovies.isNotEmpty()) item {
+            EntryRowStrip(L("🆕 סרטים חדשים על המדף"), newMovies, Kind.MOVIE, ctx, nav) { menu = MenuTarget(Kind.MOVIE, it, movies) }
         }
         if (recentCh.isNotEmpty()) item {
             RowTitle(L("ערוצים אחרונים"))
@@ -346,9 +360,6 @@ private fun HomeRows(content: Content, ver: Int, wide: Boolean, nav: (Screen) ->
         if (trendSeries.isNotEmpty()) item {
             RankedStrip(L("סדרות פופולריות היום"), trendSeries, nav) { menu = MenuTarget(Kind.SERIES, it, series) }
         }
-        if (newMovies.isNotEmpty()) item {
-            EntryRowStrip(L("🆕 סרטים שנוספו לאחרונה"), newMovies, Kind.MOVIE, ctx, nav) { menu = MenuTarget(Kind.MOVIE, it, movies) }
-        }
         if (newSeries.isNotEmpty()) item {
             EntryRowStrip(L("🆕 סדרות שעודכנו לאחרונה"), newSeries, Kind.SERIES, ctx, nav) { menu = MenuTarget(Kind.SERIES, it, series) }
         }
@@ -391,14 +402,15 @@ private fun RowTitle(t: String) {
 
 @Composable
 private fun EntryRowStrip(
-    title: String, list: List<Entry>, kind: Kind, ctx: android.content.Context, nav: (Screen) -> Unit, onLong: (Entry) -> Unit,
+    title: String, list: List<Entry>, kind: Kind, ctx: android.content.Context, nav: (Screen) -> Unit,
+    tag: ((Entry) -> String?)? = null, onLong: (Entry) -> Unit,
 ) {
     RowTitle(title)
     LazyRow(contentPadding = PaddingValues(horizontal = 12.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         items(list) { e ->
             val r = Prefs.resume(e.key)
             Poster(e.name, e.logo, Prefs.isFav(e.key), r?.let { it.first.toFloat() / it.second.coerceAtLeast(1) },
-                rating = e.rating(), onLong = { onLong(e) }) {
+                rating = e.rating(), badge = tag?.invoke(e), onLong = { onLong(e) }) {
                 if (kind == Kind.SERIES && e is SeriesItem) nav(Screen.Series(e))
                 else if (e is Channel) nav(Screen.Movie(e))
             }
@@ -410,7 +422,7 @@ private fun EntryRowStrip(
 private fun Poster(
     name: String, logo: String?, fav: Boolean, progress: Float?, sub: String? = null,
     width: androidx.compose.ui.unit.Dp? = 118.dp, rating: Float = 0f, platform: com.tbm.iptv.data.Platforms.P? = null,
-    onLong: (() -> Unit)? = null, onClick: () -> Unit,
+    badge: String? = null, onLong: (() -> Unit)? = null, onClick: () -> Unit,
 ) {
     FocusItem(onLongClick = onLong, onClick = onClick) {
         Column((if (width != null) Modifier.width(width) else Modifier.fillMaxWidth()).padding(4.dp)) {
@@ -423,6 +435,10 @@ private fun Poster(
                         .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.85f), RoundedCornerShape(4.dp))
                         .padding(horizontal = 4.dp, vertical = 1.dp))
                 if (platform != null) PlatformBadge(platform, Modifier.align(Alignment.BottomStart).padding(4.dp))
+                // "עונה 3 חדשה" / "פרקים חדשים" / "חדש"
+                if (badge != null) Text(L(badge), color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Bold, maxLines = 1,
+                    modifier = Modifier.align(Alignment.BottomEnd).padding(4.dp).background(Color(0xFFE50914), RoundedCornerShape(4.dp))
+                        .padding(horizontal = 5.dp, vertical = 2.dp))
                 if (progress != null && progress > 0f) LinearProgressIndicator(
                     progress = { progress.coerceIn(0f, 1f) },
                     modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth(),
@@ -1162,6 +1178,12 @@ private fun RowsView(
         if (rm.isEmpty()) emptyList()
         else items.mapNotNull { e -> rm[e.key]?.let { r -> if (r.first < r.second * 0.95) e else null } }.take(30)
     }
+    // המדף (סדרות): עונות/פרקים חדשים וסדרות חדשות
+    val ctx2 = LocalContext.current
+    val shelfV = com.tbm.iptv.data.Shelf.ready.intValue
+    val itemsByKey = remember(items) { if (kind == Kind.SERIES) items.associateBy { it.key } else emptyMap() }
+    val shelfUpd2 = remember(itemsByKey, shelfV) { com.tbm.iptv.data.Shelf.updated.mapNotNull { itemsByKey[it.first] } }
+    val shelfNew2 = remember(itemsByKey, shelfV) { com.tbm.iptv.data.Shelf.newSeries.mapNotNull { itemsByKey[it] } }
     val heroes = remember(pref, top) {
         if (kind == Kind.LIVE) emptyList()
         else (top.ifEmpty { newest.ifEmpty { topRated } }).filter { it.logo != null }.take(8)
@@ -1181,6 +1203,8 @@ private fun RowsView(
                 RankedStrip(if (kind == Kind.MOVIE) L("Top 10 סרטים היום") else L("Top 10 סדרות היום"), top.take(10), nav, onLong)
             }
             if (resume.isNotEmpty()) item { CategoryStrip(L("המשך צפייה"), resume, kind, favs, nav, null, onLong) }
+            if (shelfUpd2.isNotEmpty()) item { EntryRowStrip(L("🔄 עונות ופרקים חדשים"), shelfUpd2, kind, ctx2, nav, { com.tbm.iptv.data.Shelf.tag(it.key) }, onLong) }
+            if (shelfNew2.isNotEmpty()) item { EntryRowStrip(L("🆕 סדרות חדשות על המדף"), shelfNew2, kind, ctx2, nav, { "חדש" }, onLong) }
             if (newest.isNotEmpty()) item { CategoryStrip(if (kind == Kind.MOVIE) L("🆕 סרטים חדשים") else L("🆕 סדרות חדשות"), newest, kind, favs, nav, { onSeeAll(NEW_GROUP) }, onLong) }
             if (favItems.isNotEmpty()) item { CategoryStrip(L("★ הרשימה שלי"), favItems, kind, favs, nav, { onSeeAll(FAV_GROUP) }, onLong) }
             if (topRated.size >= 4) item { CategoryStrip(L("⭐ הכי מדורגים"), topRated, kind, favs, nav, null, onLong) }

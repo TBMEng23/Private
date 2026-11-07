@@ -331,6 +331,8 @@ object I18nEn {
         "🔒 נעל בקוד" to "🔒 Lock with PIN",
         "🔓 בטל נעילה" to "🔓 Unlock",
         "🔔 תזכורת" to "🔔 Reminder",
+        "🔄 עונות ופרקים חדשים" to "🔄 New seasons & episodes", "🆕 סדרות חדשות על המדף" to "🆕 New series on the shelf",
+        "🆕 סרטים חדשים על המדף" to "🆕 New movies on the shelf", "פרקים חדשים" to "New episodes", "חדש" to "New",
         "סנכרון שעות" to "Time sync", "לוח השידורים" to "TV guide", "⏪ אחורה" to "⏪ Back", "קדימה ⏩" to "Forward ⏩",
         "אם השעות בלוח לא תואמות למה שמשודר – הזז בחצי שעה כל לחיצה." to "If guide times don't match what's on air, shift 30 min per tap.",
         "צפייה לאחור (ארכיון)" to "Catch-up (archive)", "אם התוכנית שנפתחה לא תואמת לשם שלה – הזז עד שתתאים." to "If the program that opened doesn't match its name, shift until it does.",
