@@ -73,8 +73,8 @@ object Cloud {
                 val prevUid = Prefs.str("cloud_uid")
                 when {
                     // חשבון אחר מזה שסונכרן קודם במכשיר – תמיד לוקחים את הנתונים של החשבון הנוכחי
-                    remote != null && prevUid != uid -> applyRemote(remote, snap.getLong("updated") ?: 0L)
-                    remote != null && (snap.getLong("updated") ?: 0L) > lastSync -> applyRemote(remote, snap.getLong("updated") ?: 0L)
+                    remote != null && prevUid != uid -> applyRemote(remote, snap.getLong("updated") ?: 0L, replace = true)
+                    remote != null -> applyRemote(remote, snap.getLong("updated") ?: 0L)
                     // חשבון חדש וריק: מעלים את מה שבמכשיר רק אם המכשיר לא היה שייך לחשבון אחר
                     remote == null && (prevUid.isBlank() || prevUid == uid) -> upload()
                     remote == null -> { clearLocal(); upload() }
@@ -86,18 +86,24 @@ object Cloud {
             listener = d.addSnapshotListener { s, _ ->
                 if (s == null || !s.exists()) return@addSnapshotListener
                 val upd = s.getLong("updated") ?: 0L
-                if (s.getString("device") != Prefs.deviceId && upd > lastSync) {
-                    s.getString("data")?.let { applyRemote(it, upd) }
+                // שינוי ממכשיר אחר – ממזגים תמיד (לא תלוי בשעון של המכשירים)
+                if (s.getString("device") != Prefs.deviceId && !s.metadata.hasPendingWrites()) {
+                    s.getString("data")?.let { if (it.hashCode() != lastApplied) applyRemote(it, upd) }
                 }
             }
         }
     }
 
-    private fun applyRemote(data: String, updated: Long) {
+    @Volatile private var lastApplied = 0
+
+    private fun applyRemote(data: String, updated: Long, replace: Boolean = false) {
         val before = Prefs.activePlaylist()
         applying = true
-        try { Prefs.importCloud(data) } finally { applying = false }
+        lastApplied = data.hashCode()
+        val localNewer = try { Prefs.importCloud(data, replace) } finally { applying = false }
         setLast(updated)
+        // במכשיר הזה יש שינויים חדשים יותר – מעלים את המיזוג
+        if (localNewer) scheduleUpload()
         val after = Prefs.activePlaylist()
         if (after != null && after != before) Repo.loadAsync(after)
         status = L("עודכן מהענן ✓")
@@ -141,7 +147,7 @@ object Cloud {
 
     private fun clearLocal() {
         applying = true
-        try { Prefs.importCloud("{\"_tbm_backup\":1}") } finally { applying = false }
+        try { Prefs.wipeSynced() } finally { applying = false }
     }
 
     /** מזהה לקוח Web (נוצר אוטומטית מ-google-services.json כשכניסת Google מופעלת) */

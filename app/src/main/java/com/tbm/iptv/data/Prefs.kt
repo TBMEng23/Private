@@ -19,9 +19,15 @@ object Prefs {
     /** מונה שינויים – קומפוזבלים קוראים אותו כדי להתעדכן אחרי שינוי הגדרות */
     val version = mutableIntStateOf(0)
 
+    // זמן השינוי האחרון של כל מפתח – לסנכרון בין מכשירים לפי מפתח (השינוי החדש מנצח, לא כל המסמך)
+    private lateinit var mt: SharedPreferences
+
     fun init(c: Context) {
         sp = c.getSharedPreferences("tbm", Context.MODE_PRIVATE)
+        mt = c.getSharedPreferences("tbm_mt", Context.MODE_PRIVATE)
     }
+
+    private fun touch(k: String) { if (!isLocalKey(k)) mt.edit().putLong(k, System.currentTimeMillis()).apply() }
 
     /** נקרא בכל שינוי (לסנכרון בענן) */
     @Volatile var onChange: (() -> Unit)? = null
@@ -42,6 +48,9 @@ object Prefs {
     /** ייצוא לסנכרון: בלי מפתחות מקומיים */
     fun exportCloud(): String {
         val o = JSONObject()
+        val m = JSONObject()
+        mt.all.forEach { (k, v) -> if (!isLocalKey(k) && v is Long) m.put(k, v) }
+        o.put("_mt", m)
         sp.all.forEach { (k, v) ->
             if (isLocalKey(k)) return@forEach
             when (v) {
@@ -53,39 +62,71 @@ object Prefs {
         return o.put("_tbm_backup", 1).toString()
     }
 
-    /** ייבוא מהענן: מחליף הכל חוץ מהמפתחות המקומיים של המכשיר */
-    fun importCloud(text: String) {
+    private fun putAny(e: SharedPreferences.Editor, k: String, v: Any?) {
+        when (v) {
+            is JSONObject -> v.optJSONArray("\$set")?.let { a -> e.putStringSet(k, (0 until a.length()).map { a.getString(it) }.toSet()) }
+            is Boolean -> e.putBoolean(k, v)
+            is Int -> e.putInt(k, v)
+            is Long -> e.putLong(k, v)
+            is Double -> e.putFloat(k, v.toFloat())
+            is String -> e.putString(k, v)
+            else -> {}
+        }
+    }
+
+    /**
+     * ייבוא מהענן. replace=true (חשבון אחר / ראשון) מחליף הכל.
+     * אחרת – מיזוג לפי מפתח: לכל הגדרה נלקח השינוי החדש ביותר (מכל מכשיר).
+     * מחזיר true אם במכשיר יש שינויים חדשים יותר שצריך להעלות.
+     */
+    fun importCloud(text: String, replace: Boolean = false): Boolean {
         val o = JSONObject(text)
-        val e = sp.edit()
-        sp.all.keys.filter { !isLocalKey(it) }.forEach { e.remove(it) }
-        o.keys().forEach { k ->
-            if (k == "_tbm_backup" || isLocalKey(k)) return@forEach
-            when (val v = o.get(k)) {
-                is JSONObject -> v.optJSONArray("\$set")?.let { a -> e.putStringSet(k, (0 until a.length()).map { a.getString(it) }.toSet()) }
-                is Boolean -> e.putBoolean(k, v)
-                is Int -> e.putInt(k, v)
-                is Long -> e.putLong(k, v)
-                is Double -> e.putFloat(k, v.toFloat())
-                is String -> e.putString(k, v)
-                else -> {}
+        val rmt = o.optJSONObject("_mt")
+        val e = sp.edit(); val me = mt.edit()
+        var localNewer = false
+        if (replace || rmt == null) {
+            sp.all.keys.filter { !isLocalKey(it) }.forEach { e.remove(it) }
+            mt.all.keys.filter { !isLocalKey(it) }.forEach { me.remove(it) }
+            o.keys().forEach { k -> if (k != "_tbm_backup" && k != "_mt" && !isLocalKey(k)) putAny(e, k, o.get(k)) }
+            rmt?.keys()?.forEach { k -> me.putLong(k, rmt.optLong(k)) }
+        } else {
+            val keys = HashSet<String>()
+            o.keys().forEach { keys += it }; rmt.keys().forEach { keys += it }; keys += sp.all.keys; keys += mt.all.keys
+            for (k in keys) {
+                if (k == "_tbm_backup" || k == "_mt" || isLocalKey(k)) continue
+                val r = rmt.optLong(k, 0L); val l = mt.getLong(k, 0L)
+                when {
+                    r > l -> { if (o.has(k)) putAny(e, k, o.get(k)) else e.remove(k); me.putLong(k, r) }
+                    l > r -> localNewer = true
+                    // מפתח ישן שלא נרשם לו זמן: אם רק בענן – לוקחים
+                    l == 0L && r == 0L && o.has(k) && !sp.contains(k) -> putAny(e, k, o.get(k))
+                }
             }
         }
-        e.apply()
+        e.commit(); me.commit()
+        version.intValue = version.intValue + 1
+        return localNewer
+    }
+
+    /** מחיקת כל הנתונים המסונכרנים במכשיר (יציאה מחשבון) */
+    fun wipeSynced() {
+        val e = sp.edit(); sp.all.keys.filter { !isLocalKey(it) }.forEach { e.remove(it) }; e.commit()
+        val me = mt.edit(); mt.all.keys.filter { !isLocalKey(it) }.forEach { me.remove(it) }; me.commit()
         version.intValue = version.intValue + 1
     }
 
     fun str(k: String, d: String = ""): String = sp.getString(k, d) ?: d
-    fun setStr(k: String, v: String) { sp.edit().putString(k, v).apply(); bump() }
-    fun setStrQuiet(k: String, v: String) { sp.edit().putString(k, v).apply() }
+    fun setStr(k: String, v: String) { sp.edit().putString(k, v).apply(); touch(k); bump() }
+    fun setStrQuiet(k: String, v: String) { sp.edit().putString(k, v).apply(); touch(k) }
     fun bool(k: String, d: Boolean): Boolean = sp.getBoolean(k, d)
-    fun setBool(k: String, v: Boolean) { sp.edit().putBoolean(k, v).apply(); bump() }
+    fun setBool(k: String, v: Boolean) { sp.edit().putBoolean(k, v).apply(); touch(k); bump() }
     fun float(k: String, d: Float): Float = sp.getFloat(k, d)
-    fun setFloat(k: String, v: Float) { sp.edit().putFloat(k, v).apply(); bump() }
+    fun setFloat(k: String, v: Float) { sp.edit().putFloat(k, v).apply(); touch(k); bump() }
     fun int(k: String, d: Int): Int = sp.getInt(k, d)
-    fun setInt(k: String, v: Int) { sp.edit().putInt(k, v).apply(); bump() }
+    fun setInt(k: String, v: Int) { sp.edit().putInt(k, v).apply(); touch(k); bump() }
 
     private fun set(k: String): Set<String> = sp.getStringSet(k, emptySet())?.toSet() ?: emptySet()
-    private fun putSet(k: String, s: Set<String>) { sp.edit().putStringSet(k, HashSet(s)).apply(); bump() }
+    private fun putSet(k: String, s: Set<String>) { sp.edit().putStringSet(k, HashSet(s)).apply(); touch(k); bump() }
     private fun toggle(k: String, item: String, on: Boolean) {
         val s = set(k).toMutableSet(); if (on) s.add(item) else s.remove(item); putSet(k, s)
     }
@@ -466,7 +507,7 @@ object Prefs {
 
     fun clearHistory() {
         val e = sp.edit()
-        sp.all.keys.filter { it.startsWith("resume_") || it.startsWith("recent_ch_") }.forEach { e.remove(it) }
+        sp.all.keys.filter { it.startsWith("resume_") || it.startsWith("recent_ch_") }.forEach { e.remove(it); touch(it) }
         e.apply(); bump()
     }
 
@@ -500,6 +541,7 @@ object Prefs {
                 is String -> e.putString(k, v)
                 else -> {}
             }
+            touch(k)
         }
         e.apply(); bump()
     }
@@ -509,7 +551,7 @@ object Prefs {
         val keep = setOf("playlists", "active", "os_key", "os_user", "os_pass", "subdl_key",
             "ktuvit_email", "ktuvit_hash", "tmdb_key")
         val e = sp.edit()
-        sp.all.keys.filter { k -> k !in keep && !k.startsWith("epg_url_") && !k.startsWith("tz_") }.forEach { e.remove(it) }
+        sp.all.keys.filter { k -> k !in keep && !k.startsWith("epg_url_") && !k.startsWith("tz_") }.forEach { e.remove(it); touch(it) }
         e.apply(); bump()
     }
 }
