@@ -573,7 +573,7 @@ private fun SubsPage() {
 private fun PlayerPage() {
     Card {
         Column(Modifier.padding(12.dp)) {
-            SwitchRow(L("In-App PiP – חלון צף בזמן דפדוף"), Prefs.inAppPip) { Prefs.inAppPip = it }
+            if (!com.tbm.iptv.data.Device.isTv) SwitchRow(L("In-App PiP – חלון צף בזמן דפדוף"), Prefs.inAppPip) { Prefs.inAppPip = it }
             SwitchRow(L("System PiP – תמונה בתוך תמונה ביציאה מהאפליקציה"), Prefs.systemPip) { Prefs.systemPip = it }
             SwitchRow(L("ניגון אוטומטי של הפרק הבא"), Prefs.autoNext) { Prefs.autoNext = it }
             HorizontalDivider(Modifier.padding(vertical = 8.dp))

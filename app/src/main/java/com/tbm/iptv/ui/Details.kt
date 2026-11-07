@@ -26,6 +26,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.ArrowDropUp
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Star
@@ -60,12 +61,14 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.tbm.iptv.L
 import com.tbm.iptv.data.Channel
 import com.tbm.iptv.data.Episode
+import com.tbm.iptv.data.Kind
 import com.tbm.iptv.data.Localize
 import com.tbm.iptv.data.MediaInfo
 import com.tbm.iptv.data.Prefs
@@ -333,7 +336,7 @@ private fun DetailTabs(tabs: List<String>, sel: Int, onSel: (Int) -> Unit) {
 
 // ============================================================ דף סדרה
 @Composable
-fun SeriesScreen(s: SeriesItem, onBack: () -> Unit) {
+fun SeriesScreen(s: SeriesItem, onBack: () -> Unit, onOpen: (SeriesItem) -> Unit = {}) {
     val ctx = LocalContext.current
     val ver = Prefs.version.intValue
     var info by remember { mutableStateOf<MediaInfo?>(null) }
@@ -395,6 +398,7 @@ fun SeriesScreen(s: SeriesItem, onBack: () -> Unit) {
             } else {
                 PlayRow(L("נגן"), fav, {}) { Prefs.toggleFav(s.key) }
             }
+            SourcesBlock(s, Kind.SERIES) { o -> (o as? SeriesItem)?.let(onOpen) }
             Plot(shown?.plot ?: s.plot)
             DetailTabs(listOf(L("פרקים"), L("טריילר"), L("שחקנים"), L("תמונות")), tab) { tab = it }
         }
@@ -482,7 +486,7 @@ private fun EpisodeRow(e: Episode, s: SeriesItem, info: MediaInfo?, ver: Int, cu
 
 // ============================================================ דף סרט
 @Composable
-fun MovieScreen(c: Channel, onBack: () -> Unit) {
+fun MovieScreen(c: Channel, onBack: () -> Unit, onOpen: (Channel) -> Unit = {}) {
     val ctx = LocalContext.current
     val ver = Prefs.version.intValue
     var info by remember { mutableStateOf<MediaInfo?>(null) }
@@ -511,6 +515,7 @@ fun MovieScreen(c: Channel, onBack: () -> Unit) {
                     Text(L("⏮ נגן מההתחלה"), color = Color.White)
                 }
             }
+            SourcesBlock(c, Kind.MOVIE) { o -> (o as? Channel)?.let { Launcher.play(ctx, listOf(it.toPlay()), 0) } }
             Plot(shown?.plot)
             DetailTabs(listOf(L("שחקנים"), L("טריילר"), L("תמונות")), tab) { tab = it }
         }
@@ -523,6 +528,49 @@ fun MovieScreen(c: Channel, onBack: () -> Unit) {
     }
 }
 
+
+/** מקורות נוספים לאותו סרט / סדרה – לבחירה אם אחד באיכות לא טובה */
+@Composable
+private fun SourcesBlock(e: com.tbm.iptv.data.Entry, kind: Kind, onPick: (com.tbm.iptv.data.Entry) -> Unit) {
+    val content = Repo.content ?: return
+    val ready = com.tbm.iptv.data.Catalog.ready.intValue
+    val ver = Prefs.version.intValue
+    var alts by remember(e.key) { mutableStateOf<List<com.tbm.iptv.data.Entry>>(emptyList()) }
+    LaunchedEffect(e.key, ready, ver) {
+        alts = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+            runCatching {
+                val all = if (kind == Kind.SERIES) content.series else content.movies
+                com.tbm.iptv.data.Sources.alternatives(e, com.tbm.iptv.data.Catalog.get(kind, all).items)
+            }.getOrDefault(emptyList())
+        }
+    }
+    if (alts.size < 2) return
+    var open by remember(e.key) { mutableStateOf(false) }
+    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp)) {
+        OutlinedButton(onClick = { open = !open }, shape = RoundedCornerShape(6.dp)) {
+            Text(L("🎞 מקורות ({0})", alts.size), color = Color.White, fontWeight = FontWeight.Bold)
+            Icon(if (open) Icons.Filled.ArrowDropUp else Icons.Filled.ArrowDropDown, null, tint = Color.White)
+        }
+        if (open) alts.forEach { o ->
+            val cur = o.key == e.key
+            FocusItem(Modifier.fillMaxWidth().padding(top = 4.dp), selected = cur, onClick = { if (!cur || kind == Kind.MOVIE) onPick(o) }) {
+                Row(Modifier.padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    val q = com.tbm.iptv.data.Sources.quality(o)
+                    Text(q ?: "—", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold,
+                        modifier = Modifier.width(48.dp).background(
+                            when (q) { "4K" -> Color(0xFF7B1FA2); "FHD" -> Color(0xFF1565C0); "HD" -> Color(0xFF2E7D32); "CAM" -> Color(0xFFB71C1C); else -> Color(0xFF424242) },
+                            RoundedCornerShape(4.dp)).padding(vertical = 3.dp), textAlign = TextAlign.Center)
+                    Column(Modifier.weight(1f).padding(horizontal = 10.dp)) {
+                        Text(o.name, color = Color.White, fontSize = 14.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Text(o.group + if (cur) "  ·  " + L("נוכחי") else "", color = Color(0xFF9A9BA3), fontSize = 12.sp, maxLines = 1,
+                            overflow = TextOverflow.Ellipsis)
+                    }
+                    Text(if (kind == Kind.MOVIE) "▶" else if (cur) "✓" else "›", color = Color.White, fontSize = 16.sp)
+                }
+            }
+        }
+    }
+}
 
 /** מתרגם שם/תקציר/ז'אנר/שחקנים לשפת הממשק. מחזיר (שם מתורגם או null, מידע מתורגם) */
 private suspend fun localizeInfo(name: String, i: MediaInfo, fallbackPlot: String?, tv: Boolean): Pair<String?, MediaInfo> =

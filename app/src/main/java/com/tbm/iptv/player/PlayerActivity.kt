@@ -836,7 +836,8 @@ class PlayerActivity : FragmentActivity() {
 
     /** יציאה מהנגן – אם In-App PiP פעיל, ממשיך בחלון צף בתוך האפליקציה */
     fun exit() {
-        if (Prefs.inAppPip && player.isPlaying && !ui.casting) {
+        // בסטרימר / טלוויזיה אין חלון מוקטן – יציאה מהנגן חוזרת לרשימה
+        if (Prefs.inAppPip && !com.tbm.iptv.data.Device.isTv && player.isPlaying && !ui.casting) {
             toMini = true
             PlayerHolder.miniActive = true
         }

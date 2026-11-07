@@ -331,6 +331,8 @@ object I18nEn {
         "🔒 נעל בקוד" to "🔒 Lock with PIN",
         "🔓 בטל נעילה" to "🔓 Unlock",
         "🔔 תזכורת" to "🔔 Reminder",
+        "🎞 מקורות ({0})" to "🎞 Sources ({0})",
+        "נוכחי" to "current",
         "סריקה וטעינה רק של קטגוריות גלויות" to "Scan & load visible categories only",
         "לוח שידורים רק לערוצים גלויים" to "TV guide for visible channels only",
         "טעינה חסכונית – לא לטעון קטגוריות מוסתרות" to "Lean load – skip hidden categories",
