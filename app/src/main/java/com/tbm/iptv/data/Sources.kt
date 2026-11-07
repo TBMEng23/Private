@@ -34,6 +34,10 @@ object Sources {
         return s.lowercase().replace(nonAlnum, "")
     }
 
+    private val dubRx = Regex("(?i)מדובב|דיבוב|עברית|(?<![a-z])heb(rew)?(?![a-z])|\\bil\\b|ישראל")
+    /** מדובב / בעברית */
+    fun hebDub(e: Entry): Boolean = dubRx.containsMatchIn(e.name) || dubRx.containsMatchIn(e.group)
+
     /** איכות לפי שם / קטגוריה */
     fun quality(e: Entry): String? {
         val t = (e.name + " " + e.group).lowercase()
@@ -77,4 +81,19 @@ object Sources {
         val same = index(list)[n].orEmpty().filter { o -> o.key != e.key && (y == null || year(o.name).let { it == null || it == y }) }
         return if (same.isEmpty()) emptyList() else listOf(e) + same
     }
+}
+
+
+/** שורות לפי דמויות ונושאים בפרופיל ילדים */
+object KidsThemes {
+    private fun rx(p: String) = Regex("(?i)$p")
+    val all: List<Pair<String, Regex>> = listOf(
+        "🐾 חיות" to rx("animal|חיות|חיה |dog|puppy|cat|kitten|lion|panda|bear|tiger|elephant|monkey|bunny|כלב|חתול|אריה|פנדה|דוב|נמר|פיל|קוף|ארנב|jungle|ג'ונגל|zoo|גן חיות|madagascar|zootopia|lion king"),
+        "🦸 גיבורי על" to rx("super ?hero|superman|spider|batman|avengers|marvel|justice league|incredibles|גיבור|ספיידר|באטמן|סופרמן|נוקמים|pj masks|miraculous"),
+        "👑 נסיכות" to rx("princess|frozen|cinderella|rapunzel|tangled|moana|ariel|little mermaid|sofia|נסיכ|לשבור את הקרח|סינדרלה|רפונזל|מואנה|בת הים"),
+        "🚗 מכוניות ורכבים" to rx("cars|car |truck|race|racing|blaze|paw patrol|robocar|thomas|מכונ|משאית|מירוץ|כוח פעולה|רובוקאר|רכבת"),
+        "🦖 דינוזאורים" to rx("dino|דינוזאור|jurassic|יורה|land before time"),
+        "🚀 חלל ומדע" to rx("space|rocket|planet|astronaut|alien|חלל|טיל|כוכב|חייזר|מדע|science"),
+        "🎵 שירים ומוזיקה" to rx("sing|song|music|musical|שיר|מוזיק|ריקוד|dance"),
+    )
 }

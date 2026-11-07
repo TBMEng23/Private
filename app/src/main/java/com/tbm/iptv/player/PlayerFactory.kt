@@ -62,7 +62,11 @@ object PlayerFactory {
                 trackSelectionParameters = trackSelectionParameters.buildUpon()
                     .setPreferredTextLanguages("he", "iw", "en").build()
                 val lang = Prefs.audioLang
-                if (lang.isNotBlank()) {
+                if (Prefs.isKids) {
+                    // ילדים: דיבוב עברי קודם, אחריו אנגלית
+                    trackSelectionParameters = trackSelectionParameters.buildUpon()
+                        .setPreferredAudioLanguages("he", "iw", "en").build()
+                } else if (lang.isNotBlank()) {
                     trackSelectionParameters = trackSelectionParameters.buildUpon()
                         .setPreferredAudioLanguage(lang).build()
                 }

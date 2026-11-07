@@ -19,6 +19,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -121,6 +122,33 @@ class MainActivity : FragmentActivity() {
     }
 }
 
+/** מחוץ לשעות המותרות לילדים – מסך "לילה טוב" (קוד הורים פותח לשעה) */
+@Composable
+private fun KidsBedtime(onSwitch: () -> Unit) {
+    var tick by remember { androidx.compose.runtime.mutableIntStateOf(0) }
+    LaunchedEffect(Unit) { while (true) { kotlinx.coroutines.delay(30_000); tick++ } }
+    Prefs.version.intValue; tick
+    if (Prefs.kidsAllowedNow()) return
+    val pid = Prefs.profileId
+    androidx.compose.foundation.layout.Box(Modifier.fillMaxSize().background(androidx.compose.ui.graphics.Color(0xFF0B1630)),
+        contentAlignment = androidx.compose.ui.Alignment.Center) {
+        androidx.compose.foundation.layout.Column(horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally) {
+            androidx.compose.material3.Text("🌙", fontSize = 72.sp)
+            androidx.compose.material3.Text(com.tbm.iptv.L("לילה טוב!"), fontSize = 34.sp, color = androidx.compose.ui.graphics.Color.White,
+                fontWeight = androidx.compose.ui.text.font.FontWeight.Black)
+            androidx.compose.material3.Text(com.tbm.iptv.L("אפשר לצפות בין {0} ל-{1}", Prefs.kidsFrom(pid), Prefs.kidsTo(pid)),
+                fontSize = 16.sp, color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.8f))
+            androidx.compose.foundation.layout.Spacer(Modifier.height(24.dp))
+            androidx.compose.material3.Button(onClick = { Parental.requireAlways(com.tbm.iptv.L("עוד שעה")) { Prefs.kidsOverride(1); tick++ } }) {
+                androidx.compose.material3.Text(com.tbm.iptv.L("🔑 קוד הורים – עוד שעה"))
+            }
+            androidx.compose.material3.TextButton(onClick = onSwitch) {
+                androidx.compose.material3.Text(com.tbm.iptv.L("החלף פרופיל"), color = androidx.compose.ui.graphics.Color.White)
+            }
+        }
+    }
+}
+
 /** חלון עדכון – רק כשהעדכון האוטומטי לא הצליח לבד או כשהעדכון האוטומטי כבוי */
 @Composable
 private fun UpdateDialog() {
@@ -189,6 +217,7 @@ fun AppRoot() {
             is Screen.KidsContent -> KidsContentScreen(top.profileId, back)
         }
         if (PlayerHolder.miniActive) DraggableMini()
+        KidsBedtime { stack.clear(); stack.add(Screen.Profiles) }
         PinDialog()
         UpdateDialog()
         CrashReport()

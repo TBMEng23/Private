@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Keyboard
@@ -653,9 +654,32 @@ private fun ContentArea(
             val chans = items.filterIsInstance<Channel>()
             var preview by remember { mutableStateOf<Channel?>(null) }
             val playAt: (Int) -> Unit = { i -> Launcher.play(ctx, chans.map { it.toPlay() }, i) }
+            // חזרה מהנגן: הרשימה קופצת לערוץ האחרון שצפית בו (גם אם החלפת ערוצים במסך מלא)
+            val listState = androidx.compose.foundation.lazy.rememberLazyListState()
+            var focusKey by remember { mutableStateOf<String?>(null) }
+            var focusTick by remember { mutableStateOf(0) }
+            val owner = LocalLifecycleOwner.current
+            DisposableEffect(owner, chans) {
+                val obs = LifecycleEventObserver { _, ev ->
+                    if (ev == Lifecycle.Event.ON_RESUME) {
+                        val k = Repo.queue.getOrNull(Repo.queueIndex)?.key
+                        val i = chans.indexOfFirst { it.key == k }
+                        if (i >= 0) {
+                            if (wide) preview = chans[i]
+                            focusKey = k; focusTick++
+                        }
+                    }
+                }
+                owner.lifecycle.addObserver(obs)
+                onDispose { owner.lifecycle.removeObserver(obs) }
+            }
+            LaunchedEffect(focusTick) {
+                val i = chans.indexOfFirst { it.key == focusKey }
+                if (i >= 0) runCatching { listState.scrollToItem((i - 3).coerceAtLeast(0)) }
+            }
             if (wide) {
                 Row(modifier) {
-                    ChannelList(chans, favs, preview?.key, Modifier.weight(1f), onLong) { c, i ->
+                    ChannelList(chans, favs, preview?.key ?: focusKey, Modifier.weight(1f), onLong, listState, focusKey, focusTick) { c, i ->
                         if (preview?.key == c.key) playAt(i) else preview = c
                     }
                     PreviewPane(preview, chans, Modifier.weight(1f)) {
@@ -664,7 +688,7 @@ private fun ContentArea(
                     }
                 }
             } else {
-                ChannelList(chans, favs, null, modifier, onLong) { _, i -> playAt(i) }
+                ChannelList(chans, favs, focusKey, modifier, onLong, listState, focusKey, focusTick) { _, i -> playAt(i) }
             }
         }
         Kind.MOVIE -> PosterGrid(items, favs, modifier, onLong) { e -> nav(Screen.Movie(e as Channel)) }
@@ -675,18 +699,26 @@ private fun ContentArea(
 @Composable
 fun ChannelList(
     items: List<Channel>, favs: Set<String>, selectedKey: String?, modifier: Modifier,
-    onLong: (Entry) -> Unit, onClick: (Channel, Int) -> Unit,
+    onLong: (Entry) -> Unit,
+    state: androidx.compose.foundation.lazy.LazyListState = androidx.compose.foundation.lazy.rememberLazyListState(),
+    focusKey: String? = null, focusTick: Int = 0,
+    onClick: (Channel, Int) -> Unit,
 ) {
     if (items.isEmpty()) {
         Box(modifier.fillMaxSize()) { Text(L("אין ערוצים"), Modifier.align(Alignment.Center)) }
         return
     }
     val epgVer = Epg.version.intValue
-    LazyColumn(modifier, contentPadding = PaddingValues(6.dp)) {
+    LazyColumn(modifier, state = state, contentPadding = PaddingValues(6.dp)) {
         itemsIndexed(items) { i, c ->
             val now = remember(c.key, epgVer) { Epg.nowNext(c.epgId, c.name).first }
+            // בשלט: הפוקוס חוזר לערוץ האחרון שצפית בו
+            val fr = remember { androidx.compose.ui.focus.FocusRequester() }
+            if (c.key == focusKey) LaunchedEffect(focusTick) {
+                kotlinx.coroutines.delay(150); runCatching { fr.requestFocus() }
+            }
             FocusItem(
-                Modifier.fillMaxWidth().padding(vertical = 1.dp),
+                Modifier.fillMaxWidth().padding(vertical = 1.dp).focusRequester(fr),
                 selected = c.key == selectedKey,
                 onLongClick = { onLong(c) },
                 onClick = { onClick(c, i) },
@@ -1336,9 +1368,21 @@ fun PlatformBadge(p: com.tbm.iptv.data.Platforms.P, modifier: Modifier = Modifie
 private fun KidsHome(content: Content, ver: Int, nav: (Screen) -> Unit) {
     val prof = remember(ver) { Prefs.profile() }
     val live = remember(content, ver, Catalog.ready.intValue) { Catalog.get(Kind.LIVE, content.live).items.filterIsInstance<Channel>() }
-    val movies = remember(content, ver, Catalog.ready.intValue) { Catalog.get(Kind.MOVIE, content.movies).items }
-    val series = remember(content, ver, Catalog.ready.intValue) { Catalog.get(Kind.SERIES, content.series).items }
+    // דיבוב עברי קודם
+    val movies = remember(content, ver, Catalog.ready.intValue) { Catalog.get(Kind.MOVIE, content.movies).items.sortedByDescending { com.tbm.iptv.data.Sources.hebDub(it) } }
+    val series = remember(content, ver, Catalog.ready.intValue) { Catalog.get(Kind.SERIES, content.series).items.sortedByDescending { com.tbm.iptv.data.Sources.hebDub(it) } }
     val favs = remember(ver) { Prefs.favs() }
+    val kids = remember(ver) { Prefs.kidsNames() }
+    val child = remember(ver) { Prefs.kidChild.takeIf { it in kids } }
+    val favItems = remember(favs, live, movies, series) { (live + movies + series).filter { it.key in favs } }
+    // שורות לפי דמויות ונושאים
+    val themeRows = remember(movies, series) {
+        com.tbm.iptv.data.KidsThemes.all.mapNotNull { (title, rx) ->
+            val l = (movies + series).filter { e -> rx.containsMatchIn(e.name) || ((e as? SeriesItem)?.plot?.let { rx.containsMatchIn(it) } == true) }
+                .take(30)
+            if (l.size >= 3) L(title) to l else null
+        }
+    }
     val fresh = remember(movies, series) { (movies + series).filter { it.addedAt() > 0 }.sortedByDescending { it.addedAt() }.take(30) }
     val resume = remember(movies, ver) {
         val recent = Prefs.recent()
@@ -1362,9 +1406,14 @@ private fun KidsHome(content: Content, ver: Int, nav: (Screen) -> Unit) {
                 .background(androidx.compose.ui.graphics.Brush.horizontalGradient(listOf(colors[prof.color % colors.size], colors[(prof.color + 2) % colors.size])))
                 .padding(20.dp)) {
                 Column {
-                    Text(L("שלום {0}! 👋", prof.name), color = Color.White, fontSize = 28.sp, fontWeight = FontWeight.Black)
-                    // כמה ילדים בפרופיל אחד ("פלג ושחף", "דני, רוני") – פנייה ברבים
-                    val many = Regex("""\s+ו\S|,|&|\band\b""").containsMatchIn(prof.name) || prof.name.trim() == "ילדים"
+                    // הברכה לפי שמות הילדים שההורה הגדיר (עד 5)
+                    val who = when {
+                        kids.size > 1 -> kids.dropLast(1).joinToString(", ") + " ו" + kids.last()
+                        kids.size == 1 -> kids[0]
+                        else -> prof.name
+                    }
+                    Text(L("שלום {0}! 👋", who), color = Color.White, fontSize = 28.sp, fontWeight = FontWeight.Black)
+                    val many = kids.size > 1 || prof.name.trim() == "ילדים"
                     Text(if (many) L("מה בא לכם לראות היום?") else L("מה בא לך לראות היום?"), color = Color.White.copy(alpha = 0.9f), fontSize = 16.sp)
                 }
             }
@@ -1373,11 +1422,34 @@ private fun KidsHome(content: Content, ver: Int, nav: (Screen) -> Unit) {
             Text(L("עדיין אין תוכן מאושר לפרופיל הזה. בקש מאבא או אמא לבחור תוכן בהגדרות ← בקרת הורים ← תוכן."),
                 modifier = Modifier.padding(24.dp), textAlign = TextAlign.Center)
         }
+        // מי צופה? – מועדפים נפרדים לכל ילד
+        if (kids.size > 1) item {
+            Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text(L("מי צופה?"), fontWeight = FontWeight.Bold, modifier = Modifier.padding(end = 8.dp))
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    items(kids) { n ->
+                        androidx.compose.material3.FilterChip(selected = n == child, onClick = { Prefs.kidChild = if (n == child) "" else n },
+                            label = { Text(n, fontSize = 16.sp, fontWeight = FontWeight.Bold) })
+                    }
+                }
+            }
+        }
+        if (favItems.isNotEmpty()) item {
+            CategoryStrip(if (child != null) L("⭐ המועדפים של {0}", child) else L("⭐ המועדפים שלי"), favItems, Kind.MOVIE, favs, nav, null) { e ->
+                menu = MenuTarget(if (e is SeriesItem) Kind.SERIES else if (e is Channel && e.kind == Kind.LIVE) Kind.LIVE else Kind.MOVIE, e, favItems)
+            }
+        } else if (child != null) item {
+            Text(L("{0}, לחץ לחיצה ארוכה על סרט או ערוץ ובחר ☆ כדי להוסיף למועדפים שלך", child), fontSize = 13.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp))
+        }
         if (resume.isNotEmpty()) item { CategoryStrip(L("▶ להמשיך לצפות"), resume, Kind.MOVIE, favs, nav, null) { menu = MenuTarget(Kind.MOVIE, it, movies) } }
         if (fresh.isNotEmpty()) item { CategoryStrip(L("🆕 חדש בשבילך"), fresh, Kind.MOVIE, favs, nav, null) { menu = MenuTarget(Kind.MOVIE, it, movies) } }
         if (live.isNotEmpty()) item { CategoryStrip(L("📺 הערוצים שלי"), live, Kind.LIVE, favs, nav, null) { menu = MenuTarget(Kind.LIVE, it, live) } }
         if (movies.isNotEmpty()) item { CategoryStrip(L("🎬 סרטים"), movies.sortedByDescending { it.rating() }, Kind.MOVIE, favs, nav, null) { menu = MenuTarget(Kind.MOVIE, it, movies) } }
         if (series.isNotEmpty()) item { CategoryStrip(L("🍿 סדרות"), series.sortedByDescending { it.rating() }, Kind.SERIES, favs, nav, null) { menu = MenuTarget(Kind.SERIES, it, series) } }
+        items(themeRows, key = { "th:" + it.first }) { (title, l) ->
+            CategoryStrip(title, l, Kind.MOVIE, favs, nav, null) { e -> menu = MenuTarget(if (e is SeriesItem) Kind.SERIES else Kind.MOVIE, e, l) }
+        }
         items(topicRows, key = { "t:" + it.first }) { (title, l) -> CategoryStrip(title, l, Kind.LIVE, favs, nav, null) { menu = MenuTarget(Kind.LIVE, it, live) } }
     }
     menu?.let { ItemMenu(it) { menu = null } }

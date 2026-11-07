@@ -211,6 +211,13 @@ class PlayerActivity : FragmentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // בדיקה כל דקה: נגמרו השעות המותרות לילדים → יציאה מהנגן
+        if (Prefs.isKids) lifecycleScope.launch {
+            while (true) {
+                kotlinx.coroutines.delay(60_000)
+                if (!Prefs.kidsAllowedNow()) { toast(L("זה לא הזמן לצפות עכשיו 🌙")); finish(); break }
+            }
+        }
         ui.landscape = Prefs.bool("player_landscape", true)
         applyOrientation()
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
@@ -258,11 +265,28 @@ class PlayerActivity : FragmentActivity() {
     }
 
     // ------------------------------------------------------------------ ניגון
+    // ---- דוח צפייה (פרופיל ילדים) ----
+    private var sessItem: PlayItem? = null
+    private var sessStart = 0L
+    private fun endSession() {
+        val it = sessItem ?: return
+        sessItem = null
+        val title = if (it.seriesName != null) "${it.seriesName} · S${it.season} E${it.episode}" else it.title
+        Prefs.logWatch(title, it.kind, sessStart, (System.currentTimeMillis() - sessStart) / 1000)
+    }
+    private fun startSession(item: PlayItem) {
+        if (sessItem?.key == item.key) return
+        endSession(); sessItem = item; sessStart = System.currentTimeMillis()
+    }
+
     private fun attach(i: Int) {
         val q = Repo.queue
         if (i !in q.indices) return
+        // שעות צפייה מותרות בפרופיל ילדים
+        if (!Prefs.kidsAllowedNow()) { toast(L("זה לא הזמן לצפות עכשיו 🌙")); finish(); return }
         Repo.queueIndex = i
         val item = q[i]
+        startSession(item)
         current = item
         ui.item = item
         ui.title = item.title
@@ -983,8 +1007,14 @@ class PlayerActivity : FragmentActivity() {
         enterPip()
     }
 
+    override fun onStart() {
+        super.onStart()
+        current?.let { startSession(it) }
+    }
+
     override fun onStop() {
         super.onStop()
+        endSession()
         saveProgress()
         if (!toMini && !ui.casting) player.pause()
     }

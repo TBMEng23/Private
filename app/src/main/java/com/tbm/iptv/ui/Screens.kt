@@ -329,7 +329,8 @@ fun SettingsScreen(page: String, nav: (Screen) -> Unit, onBack: () -> Unit) {
     Prefs.version.intValue
     val title = when (page) {
         "epg" -> L("נתוני EPG"); "subs" -> L("שמע וכתוביות"); "player" -> L("אפשרויות נגן"); "parental" -> L("בקרת הורים ופרופילים")
-        "content" -> L("תוכן"); "backup" -> L("גיבוי ושחזור"); "about" -> L("אודות"); "update" -> L("עדכונים"); "plex" -> "Plex"; else -> L("הגדרות")
+        "content" -> L("תוכן"); "backup" -> L("גיבוי ושחזור"); "about" -> L("אודות"); "update" -> L("עדכונים"); "plex" -> "Plex"
+        else -> if (page.startsWith("kidsx_")) L("ילדים, שעות ודוח צפייה") else L("הגדרות")
     }
     Column(Modifier.fillMaxSize()) {
         ScreenHeader(title, onBack)
@@ -344,7 +345,7 @@ fun SettingsScreen(page: String, nav: (Screen) -> Unit, onBack: () -> Unit) {
                 "about" -> AboutPage()
                 "update" -> UpdatePage()
                 "plex" -> PlexPage()
-                else -> MainSettings(nav)
+                else -> if (page.startsWith("kidsx_")) KidsExtraPage(page.removePrefix("kidsx_")) else MainSettings(nav)
             }
             Spacer(Modifier.height(40.dp))
         }
@@ -665,6 +666,7 @@ private fun ParentalPage(nav: (Screen) -> Unit = {}) {
                         tint = if (p.kids) Color(0xFF00A86B) else MaterialTheme.colorScheme.primary)
                     Text(p.name + if (p.kids) L(" (ילדים)") else L(" (מבוגר)"), Modifier.weight(1f).padding(horizontal = 8.dp))
                     if (p.kids) TextButton(onClick = { nav(Screen.KidsContent(p.id)) }) { Text(L("תוכן · עד {0}", p.age)) }
+                    if (p.kids) TextButton(onClick = { nav(Screen.Settings("kidsx_" + p.id)) }) { Text(L("👧 ילדים · שעות · דוח")) }
                     IconButton(onClick = { editProfile = p }) { Icon(Icons.Filled.Edit, L("עריכה")) }
                 }
             }
@@ -749,6 +751,79 @@ private fun BackupPage() {
             }, modifier = Modifier.fillMaxWidth()) { Text(L("גיבוי")) }
             Spacer(Modifier.height(8.dp))
             OutlinedButton(onClick = { load.launch(arrayOf("application/json", "*/*")) }, modifier = Modifier.fillMaxWidth()) { Text(L("שחזור")) }
+        }
+    }
+}
+
+/** לפרופיל ילדים: שמות הילדים (עד 5), שעות צפייה מותרות ודוח צפייה להורים */
+@Composable
+private fun KidsExtraPage(pid: String) {
+    Prefs.version.intValue
+    val names = remember(pid) { androidx.compose.runtime.mutableStateListOf<String>().apply { addAll(Prefs.kidsNames(pid)); if (isEmpty()) add("") } }
+    Card {
+        Column(Modifier.padding(14.dp)) {
+            Text(L("שמות הילדים (עד 5)"), fontWeight = FontWeight.Bold)
+            Text(L("מופיעים בברכה במסך הבית, וכל ילד מקבל מועדפים משלו."), fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            names.forEachIndexed { i, n ->
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    OutlinedTextField(n, { names[i] = it }, singleLine = true, label = { Text(L("ילד {0}", i + 1)) },
+                        modifier = Modifier.weight(1f).padding(top = 4.dp))
+                    IconButton(onClick = { names.removeAt(i); if (names.isEmpty()) names.add("") }) { Icon(Icons.Filled.Delete, L("מחק")) }
+                }
+            }
+            Row(Modifier.padding(top = 8.dp)) {
+                if (names.size < 5) OutlinedButton(onClick = { names.add("") }) { Text(L("+ הוסף ילד")) }
+                Spacer(Modifier.width(8.dp))
+                Button(onClick = { Prefs.setKidsNames(pid, names) }) { Text(L("שמור")) }
+            }
+        }
+    }
+    Spacer(Modifier.height(12.dp))
+    Card {
+        Column(Modifier.padding(14.dp)) {
+            Text(L("שעות צפייה מותרות"), fontWeight = FontWeight.Bold)
+            SwitchRow(L("להגביל שעות צפייה"), Prefs.kidsHoursOn(pid)) { Prefs.setKidsHoursOn(pid, it) }
+            if (Prefs.kidsHoursOn(pid)) {
+                fun shift(hm: String, d: Int): String {
+                    val m = ((hm.substringBefore(':').toIntOrNull() ?: 0) * 60 + (hm.substringAfter(':').toIntOrNull() ?: 0) + d + 1440) % 1440
+                    return "%02d:%02d".format(m / 60, m % 60)
+                }
+                @Composable
+                fun TimeRow(label: String, v: String, set: (String) -> Unit) {
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 4.dp)) {
+                        Text(label, Modifier.width(70.dp))
+                        OutlinedButton(onClick = { set(shift(v, -30)) }) { Text("−") }
+                        Text(v, fontSize = 22.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 14.dp))
+                        OutlinedButton(onClick = { set(shift(v, 30)) }) { Text("+") }
+                    }
+                }
+                TimeRow(L("מ-"), Prefs.kidsFrom(pid)) { Prefs.setKidsFrom(pid, it) }
+                TimeRow(L("עד"), Prefs.kidsTo(pid)) { Prefs.setKidsTo(pid, it) }
+                Text(L("מחוץ לשעות אלה יופיע מסך \"לילה טוב\". קוד הורים פותח לשעה נוספת."), fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
+    }
+    Spacer(Modifier.height(12.dp))
+    val log = remember(Prefs.version.intValue, pid) { Prefs.watchLog(pid) }
+    Card {
+        Column(Modifier.padding(14.dp)) {
+            Text(L("📊 דוח צפייה"), fontWeight = FontWeight.Bold)
+            val day0 = java.util.Calendar.getInstance().apply { set(java.util.Calendar.HOUR_OF_DAY, 0); set(java.util.Calendar.MINUTE, 0); set(java.util.Calendar.SECOND, 0) }.timeInMillis
+            val week0 = day0 - 6 * 86_400_000L
+            fun total(l: List<com.tbm.iptv.data.WatchEntry>) = l.sumOf { it.durSec } / 60
+            Text(L("היום: {0} דק' · 7 ימים: {1} דק'", total(log.filter { it.start >= day0 }), total(log.filter { it.start >= week0 })))
+            val byChild = log.filter { it.start >= week0 && it.child.isNotBlank() }.groupBy { it.child }
+            byChild.forEach { (c, l) -> Text(L("{0}: {1} דק' השבוע", c, total(l)), fontSize = 13.sp) }
+            if (log.isEmpty()) Text(L("עדיין אין צפיות"), fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            var lastDay = ""
+            log.take(60).forEach { w ->
+                val d = fmtDay(w.start)
+                if (d != lastDay) { lastDay = d; Text(d, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(top = 8.dp)) }
+                Text("${fmtTime(w.start)} · ${w.title} · ${w.durSec / 60} " + L("דק'") + (if (w.child.isNotBlank()) " · ${w.child}" else ""),
+                    fontSize = 13.sp, maxLines = 2)
+            }
+            if (log.isNotEmpty()) TextButton(onClick = { Prefs.clearWatchLog(pid) }) { Text(L("נקה דוח")) }
         }
     }
 }

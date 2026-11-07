@@ -10,6 +10,9 @@ import org.json.JSONObject
 
 data class Recent(val item: PlayItem, val pos: Long, val dur: Long, val ts: Long)
 
+/** רשומה בדוח הצפייה של פרופיל ילדים */
+data class WatchEntry(val title: String, val kind: String, val start: Long, val durSec: Long, val child: String)
+
 object Prefs {
     private lateinit var sp: SharedPreferences
 
@@ -28,7 +31,8 @@ object Prefs {
     /** מפתחות ששייכים למכשיר הזה בלבד ולא מסונכרנים */
     private fun isLocalKey(k: String) = k == "profile" || k == "device_id" || k.startsWith("cloud_") ||
         k.startsWith("mini_") || k == "pip_warned" || k == "player_landscape" ||
-        k.startsWith("updated_") || k.startsWith("tz_") || k.startsWith("exp_") || k.startsWith("status_")
+        k.startsWith("updated_") || k.startsWith("tz_") || k.startsWith("exp_") || k.startsWith("status_") ||
+        k.startsWith("kidsel_") || k == "kh_ovr"
 
     /** מזהה קבוע למכשיר */
     val deviceId: String get() = str("device_id").ifBlank {
@@ -203,13 +207,76 @@ object Prefs {
     }
 
     // ================= מועדפים (לכל פרופיל) =================
-    fun favs(): Set<String> = set(pk("fav"))
+    // בפרופיל ילדים עם כמה ילדים – מועדפים נפרדים לכל ילד
+    private fun favKey(): String {
+        val c = if (isKids) kidChild.takeIf { it.isNotBlank() && it in kidsNames() } else null
+        return if (c != null) "fav_${profileId}_$c" else pk("fav")
+    }
+    fun favs(): Set<String> = set(favKey())
     fun isFav(key: String) = key in favs()
     fun toggleFav(key: String) {
-        val s = favs().toMutableSet()
+        val k = favKey()
+        val s = set(k).toMutableSet()
         if (!s.add(key)) s.remove(key)
-        putSet(pk("fav"), s)
+        putSet(k, s)
     }
+
+    // ================= ילדים: שמות, ילד נבחר, שעות מותרות, דוח צפייה =================
+    /** שמות הילדים בפרופיל (עד 5). אם לא הוגדרו – מפרקים את שם הפרופיל ("פלג ושחף") */
+    fun kidsNames(pid: String = profileId): List<String> {
+        val saved = runCatching { JSONArray(str("kidnames_$pid", "[]")).let { a -> (0 until a.length()).map { a.optString(it).trim() } } }
+            .getOrDefault(emptyList()).filter { it.isNotEmpty() }
+        if (saved.isNotEmpty()) return saved.take(5)
+        val p = profiles().firstOrNull { it.id == pid } ?: return emptyList()
+        if (!p.kids) return emptyList()
+        return p.name.split(Regex("""\s+ו(?=\S)|,|&|\s+and\s+""")).map { it.trim() }.filter { it.isNotEmpty() && it != "ילדים" }.take(5)
+    }
+    fun setKidsNames(pid: String, names: List<String>) =
+        setStr("kidnames_$pid", JSONArray(names.map { it.trim() }.filter { it.isNotEmpty() }.take(5)).toString())
+
+    /** הילד שצופה עכשיו (במכשיר הזה) – למועדפים ולדוח */
+    var kidChild: String
+        get() = str("kidsel_$profileId")
+        set(v) = setStr("kidsel_$profileId", v)
+
+    fun kidsHoursOn(pid: String) = bool("kh_on_$pid", false)
+    fun setKidsHoursOn(pid: String, v: Boolean) = setBool("kh_on_$pid", v)
+    fun kidsFrom(pid: String) = str("kh_from_$pid", "07:00")
+    fun kidsTo(pid: String) = str("kh_to_$pid", "20:00")
+    fun setKidsFrom(pid: String, v: String) = setStr("kh_from_$pid", v)
+    fun setKidsTo(pid: String, v: String) = setStr("kh_to_$pid", v)
+    private fun mins(hm: String) = hm.split(":").let { (it.getOrNull(0)?.toIntOrNull() ?: 0) * 60 + (it.getOrNull(1)?.toIntOrNull() ?: 0) }
+
+    /** האם מותר לצפות עכשיו בפרופיל הנוכחי (מבוגר – תמיד) */
+    fun kidsAllowedNow(): Boolean {
+        if (!isKids) return true
+        val pid = profileId
+        if (!kidsHoursOn(pid)) return true
+        if (System.currentTimeMillis() < (str("kh_ovr").toLongOrNull() ?: 0L)) return true
+        val c = java.util.Calendar.getInstance()
+        val now = c.get(java.util.Calendar.HOUR_OF_DAY) * 60 + c.get(java.util.Calendar.MINUTE)
+        val f = mins(kidsFrom(pid)); val t = mins(kidsTo(pid))
+        return if (f <= t) now in f until t else now >= f || now < t
+    }
+    /** הורה אישר המשך צפייה – לשעה */
+    fun kidsOverride(hours: Int = 1) = setStrQuiet("kh_ovr", (System.currentTimeMillis() + hours * 3_600_000L).toString())
+
+    fun logWatch(title: String, kind: Kind, start: Long, durSec: Long) {
+        if (!isKids || durSec < 30) return
+        val k = "wlog_$profileId"
+        val a = runCatching { JSONArray(str(k, "[]")) }.getOrDefault(JSONArray())
+        a.put(JSONObject().put("t", title).put("k", kind.name).put("s", start).put("d", durSec).put("c", kidChild))
+        val keep = JSONArray(); val from = maxOf(0, a.length() - 400)
+        for (i in from until a.length()) keep.put(a.get(i))
+        setStr(k, keep.toString())
+    }
+    fun watchLog(pid: String): List<WatchEntry> = runCatching {
+        val a = JSONArray(str("wlog_$pid", "[]"))
+        (0 until a.length()).mapNotNull { a.optJSONObject(it) }.map {
+            WatchEntry(it.optString("t"), it.optString("k"), it.optLong("s"), it.optLong("d"), it.optString("c"))
+        }.sortedByDescending { it.start }
+    }.getOrDefault(emptyList())
+    fun clearWatchLog(pid: String) = setStr("wlog_$pid", "[]")
 
     // ================= ערוצים אחרונים (לכל פרופיל) =================
     fun recentChannels(): List<String> = runCatching {
