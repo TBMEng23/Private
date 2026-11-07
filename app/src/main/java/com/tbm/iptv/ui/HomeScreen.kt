@@ -1302,7 +1302,9 @@ private fun KidsHome(content: Content, ver: Int, nav: (Screen) -> Unit) {
                 .padding(20.dp)) {
                 Column {
                     Text(L("שלום {0}! 👋", prof.name), color = Color.White, fontSize = 28.sp, fontWeight = FontWeight.Black)
-                    Text(L("מה בא לך לראות היום?"), color = Color.White.copy(alpha = 0.9f), fontSize = 16.sp)
+                    // כמה ילדים בפרופיל אחד ("פלג ושחף", "דני, רוני") – פנייה ברבים
+                    val many = Regex("""\s+ו\S|,|&|\band\b""").containsMatchIn(prof.name) || prof.name.trim() == "ילדים"
+                    Text(if (many) L("מה בא לכם לראות היום?") else L("מה בא לך לראות היום?"), color = Color.White.copy(alpha = 0.9f), fontSize = 16.sp)
                 }
             }
         }

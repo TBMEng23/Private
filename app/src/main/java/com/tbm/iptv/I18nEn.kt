@@ -331,6 +331,7 @@ object I18nEn {
         "🔒 נעל בקוד" to "🔒 Lock with PIN",
         "🔓 בטל נעילה" to "🔓 Unlock",
         "🔔 תזכורת" to "🔔 Reminder",
+        "מה בא לכם לראות היום?" to "What would you like to watch today?",
         "עדכוני אפליקציה" to "App updates", "TBM Player עודכן – לחץ לפתיחה" to "TBM Player updated – tap to open",
         "אשר את ההתקנה במסך שנפתח" to "Confirm the installation on the screen that opened",
         "למחוק את ההקלטה?" to "Delete this recording?", "למחוק {0} הקלטות?" to "Delete {0} recordings?",
