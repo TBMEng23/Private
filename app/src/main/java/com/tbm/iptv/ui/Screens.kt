@@ -1510,6 +1510,10 @@ private fun SourceEditor(p: Playlist, onSave: (Playlist) -> Unit, onDismiss: () 
                     }
                 }
                 Hint(L("אם לוח השידורים מראה תוכניות בשעה לא נכונה (למשל שעה מוקדם), הזז כאן."))
+                // תיקון אוטומטי שזוהה מול השעון של הספק
+                val autoH = remember(p.id) { com.tbm.iptv.data.Epg.autoOffsetHours(p) }
+                if (offset == "0") Hint(if (autoH == 0f) L("בדיקה אוטומטית: השעות במדריך תואמות את השעון של הספק ✓")
+                    else L("תוקן אוטומטית: {0} שעות (לפי השעון של הספק)", (if (autoH > 0) "+" else "") + autoH))
                 FocusItem(Modifier.fillMaxWidth(), onClick = { advanced = !advanced }) {
                     Row(Modifier.padding(vertical = 14.dp), verticalAlignment = Alignment.CenterVertically) {
                         Text(L("אפשרויות מתקדמות"), fontSize = 17.sp, modifier = Modifier.weight(1f))

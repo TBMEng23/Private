@@ -68,7 +68,17 @@ object Epg {
             if (force || !fresh) {
                 try { Http.download(url, f) } catch (e: Exception) { if (!f.exists()) throw e }
             }
-            parse(f, c, ((Prefs.str("epg_off_${p.id}", "0").toFloatOrNull() ?: 0f) * 3_600_000L).toLong())
+            val manual = ((Prefs.str("epg_off_${p.id}", "0").toFloatOrNull() ?: 0f) * 3_600_000L).toLong()
+            val auto = Prefs.str("epg_auto_${p.id}", "0").toLongOrNull() ?: 0L
+            parse(f, c, manual + if (manual == 0L) auto else 0L)
+            // בדיקה עצמית מול השעון של הספק (Xtream נותן זמני Unix מדויקים) – תיקון הזזת שעות אוטומטי
+            if (manual == 0L && p.isXtream) runCatching {
+                val d = calibrate(p, c)
+                if (d != null && d != auto) {
+                    Prefs.setStrQuiet("epg_auto_${p.id}", d.toString())
+                    parse(f, c, d)
+                }
+            }
             status = if (programs.isEmpty()) L("המדריך ריק") else ""
         } catch (e: OutOfMemoryError) {
             programs = emptyMap(); nameIndex = emptyMap()
@@ -77,6 +87,37 @@ object Epg {
             status = L("שגיאה בטעינת EPG: {0}", e.message ?: "")
         }
         version.intValue = version.intValue + 1
+    }
+
+    /** תיקון אחרון שזוהה (מילישניות) – להצגה בהגדרות */
+    fun autoOffsetHours(p: Playlist): Float = (Prefs.str("epg_auto_${p.id}", "0").toLongOrNull() ?: 0L) / 3_600_000f
+
+    /**
+     * משווה את זמני המדריך לזמני ה-API של הספק לכמה ערוצים.
+     * מחזיר את ההזזה הכוללת הנכונה (כולל מה שכבר הוחל), מעוגלת לחצי שעה, או null אם אין מספיק נתונים.
+     */
+    private fun calibrate(p: Playlist, c: Content): Long? {
+        val x = Xtream(p)
+        val applied = Prefs.str("epg_auto_${p.id}", "0").toLongOrNull() ?: 0L
+        val now = System.currentTimeMillis()
+        val deltas = ArrayList<Long>()
+        for (ch in c.live.asSequence().filter { it.streamId != null && it.epgId != null }.filter { forChannel(it).size > 3 }.take(8)) {
+            val ref = runCatching { x.shortEpg(ch.streamId!!) }.getOrNull().orEmpty().filter { it.start > 0 }
+            val mine = forChannel(ch)
+            for (r in ref) {
+                val t = r.title.trim().lowercase()
+                val m = mine.firstOrNull { it.title.trim().lowercase() == t && kotlin.math.abs(it.start - r.start) < 14 * 3_600_000L } ?: continue
+                deltas += r.start - m.start
+            }
+            if (deltas.size >= 6) break
+        }
+        if (deltas.size < 3) return null
+        val med = deltas.sorted()[deltas.size / 2]
+        // רוב ההתאמות צריכות להסכים (±10 דק')
+        if (deltas.count { kotlin.math.abs(it - med) <= 10 * 60_000L } < deltas.size * 0.6) return null
+        val half = 30 * 60_000L
+        val rounded = Math.round(med.toDouble() / half) * half
+        return applied + rounded
     }
 
     private fun open(f: File): InputStream {

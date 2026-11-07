@@ -331,6 +331,8 @@ object I18nEn {
         "🔒 נעל בקוד" to "🔒 Lock with PIN",
         "🔓 בטל נעילה" to "🔓 Unlock",
         "🔔 תזכורת" to "🔔 Reminder",
+        "בדיקה אוטומטית: השעות במדריך תואמות את השעון של הספק ✓" to "Auto-check: guide times match the provider clock ✓",
+        "תוקן אוטומטית: {0} שעות (לפי השעון של הספק)" to "Auto-corrected: {0} h (provider clock)",
         "ילדים, שעות ודוח צפייה" to "Kids, hours & viewing report", "👧 ילדים · שעות · דוח" to "👧 Kids · hours · report",
         "שמות הילדים (עד 5)" to "Children's names (up to 5)", "מופיעים בברכה במסך הבית, וכל ילד מקבל מועדפים משלו." to "Shown in the home greeting; each child gets their own favorites.",
         "ילד {0}" to "Child {0}", "+ הוסף ילד" to "+ Add child", "שעות צפייה מותרות" to "Allowed viewing hours", "להגביל שעות צפייה" to "Limit viewing hours",
