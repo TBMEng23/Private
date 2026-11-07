@@ -331,6 +331,7 @@ object I18nEn {
         "🔒 נעל בקוד" to "🔒 Lock with PIN",
         "🔓 בטל נעילה" to "🔓 Unlock",
         "🔔 תזכורת" to "🔔 Reminder",
+        "באילו פרופילים להציג את Plex:" to "Show Plex in these profiles:", " · ילדים" to " · kids",
         "🔄 עונות ופרקים חדשים" to "🔄 New seasons & episodes", "🆕 סדרות חדשות על המדף" to "🆕 New series on the shelf",
         "🆕 סרטים חדשים על המדף" to "🆕 New movies on the shelf", "פרקים חדשים" to "New episodes", "חדש" to "New",
         "סנכרון שעות" to "Time sync", "לוח השידורים" to "TV guide", "⏪ אחורה" to "⏪ Back", "קדימה ⏩" to "Forward ⏩",

@@ -247,12 +247,15 @@ object Catalog {
             val pick = k in prof.pickOnly
             val ageIn = k in prof.ageInside
             val lang = k in prof.langOnly
+            val plexHere = Plex.forProfile(prof.id)
             base = all.filter { e ->
                 val gk = "$k|${e.group}"
                 if (e.key in itemExc || gk in exc || isAdult(e.group)) return@filter false
                 // סיווג גיל ידוע (TMDB) מעל גיל הפרופיל – לא מציגים בכלל
                 KidsFilter.cachedAge(e.key)?.let { a -> if (a > prof.age) return@filter false }
                 if (KidsFilter.blocked(e.name, prof.age)) return@filter false
+                // Plex: אם ההורה הפעיל אותו לפרופיל הזה – כל התוכן שלו מוצג (חוץ ממה שסווג מעל הגיל)
+                if (e.group.startsWith("Plex · ")) return@filter plexHere
                 if (lang && !KidsFilter.langOk(e)) return@filter false
                 val chosen = e.key in ki || gk in inc
                 val groupKids = autoOk.getOrPut(e.group) { KidsFilter.matches(e.group, prof.age) || KidsFilter.topicMatch(prof.topics, e.group) }
@@ -275,8 +278,10 @@ object Catalog {
             val allowed = Prefs.allowedCountries(kind)
             val adultMode = Prefs.adultMode
             val ok = HashMap<String, Boolean>()
+            val plexHere = Plex.forProfile()
             val filtered = all.filter { e ->
                 e.key !in hiddenItems && ok.getOrPut(e.group) {
+                    (plexHere || !e.group.startsWith("Plex · ")) &&
                     "${kind.name}|${e.group}" !in hidden &&
                         (allowed.isEmpty() || e.group.startsWith("Plex · ") || Countries.of(e.group) in allowed) &&
                         !(adultMode == "hide" && isAdult(e.group))

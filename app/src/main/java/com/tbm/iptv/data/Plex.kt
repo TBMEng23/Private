@@ -39,6 +39,10 @@ object Plex {
         set(v) = Prefs.setStr("plex_srv_token", v)
 
     val connected get() = token.isNotBlank() && uri.isNotBlank()
+
+    /** באילו פרופילים מוצג Plex (ברירת מחדל – בכולם) */
+    fun forProfile(pid: String = Prefs.profileId): Boolean = pid !in Prefs.stringSet("plex_off")
+    fun setForProfile(pid: String, on: Boolean) = Prefs.toggleIn("plex_off", pid, !on)
     var enabled: Boolean
         get() = Prefs.bool("plex_on", true)
         set(v) = Prefs.setBool("plex_on", v)

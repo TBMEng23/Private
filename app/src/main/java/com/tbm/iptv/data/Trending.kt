@@ -5,6 +5,9 @@ import org.json.JSONObject
 /** "פופולרי היום" לפי TMDB, מותאם לתוכן שקיים אצל הספק */
 object Trending {
     private var cacheDay = ""
+    /** כותרים של ילדים/אנימציה/משפחה מהטרנדים – לא מוצגים בפרופיל מבוגר */
+    private val kidsTitles = java.util.Collections.synchronizedSet(HashSet<String>())
+    private val kidGenres = setOf(16, 10751, 10762)
     private var movieTitles: List<Pair<String, Int?>> = emptyList()
     private var tvTitles: List<Pair<String, Int?>> = emptyList()
 
@@ -20,9 +23,11 @@ object Trending {
                 val o = a.optJSONObject(i) ?: continue
                 val date = o.optString(if (type == "movie") "release_date" else "first_air_date")
                 val year = date.take(4).toIntOrNull()
+                val g = o.optJSONArray("genre_ids")
+                val kid = g != null && (0 until g.length()).any { g.optInt(it) in kidGenres }
                 listOf("title", "original_title", "name", "original_name").forEach { k ->
                     val t = o.optString(k)
-                    if (t.isNotBlank()) res += t to year
+                    if (t.isNotBlank()) { res += t to year; if (kid) kidsTitles += Epg.norm(t) }
                 }
             }
         }
@@ -47,7 +52,9 @@ object Trending {
             if (k.isNotEmpty()) index.getOrPut(k) { ArrayList() } += e
         }
         val out = LinkedHashMap<String, Entry>()
+        val adult = !Prefs.isKids
         for ((t, year) in titles) {
+            if (adult && Epg.norm(t) in kidsTitles) continue
             val cands = index[Epg.norm(t)] ?: continue
             val best = cands.firstOrNull { year == null || TitleParser.parse(it.name).year == null || TitleParser.parse(it.name).year == year }
                 ?: continue
@@ -110,6 +117,8 @@ object Trending {
     }
 
     /** חייב לרוץ ברקע (רשת) */
-    fun movies(items: List<Entry>): List<Entry> { ensure(); return match(movieTitles, items) }
-    fun series(items: List<Entry>): List<Entry> { ensure(); return match(tvTitles, items) }
+    // בפרופיל מבוגר – בלי תוכן ילדים בפופולרי (גם לפי קטגוריית הספק)
+    private fun adultOnly(l: List<Entry>) = if (Prefs.isKids) l else l.filter { !KidsFilter.matches(it.group, 0) }
+    fun movies(items: List<Entry>): List<Entry> { ensure(); return adultOnly(match(movieTitles, items)) }
+    fun series(items: List<Entry>): List<Entry> { ensure(); return adultOnly(match(tvTitles, items)) }
 }

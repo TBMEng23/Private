@@ -838,6 +838,13 @@ private fun PlexPage() {
             if (px.connected) {
                 Text(L("מחובר לשרת {0}", px.serverName), fontWeight = FontWeight.Bold)
                 SwitchRow(L("הצג את ספריות Plex בסרטים ובסדרות"), px.enabled) { px.enabled = it; reload() }
+                if (px.enabled) {
+                    Text(L("באילו פרופילים להציג את Plex:"), fontWeight = FontWeight.Bold, fontSize = 14.sp, modifier = Modifier.padding(top = 8.dp))
+                    Prefs.profiles().forEach { pr ->
+                        SwitchRow((if (pr.avatar.isNotBlank()) pr.avatar + " " else "") + pr.name + (if (pr.kids) L(" · ילדים") else ""),
+                            px.forProfile(pr.id)) { px.setForProfile(pr.id, it) }
+                    }
+                }
                 Text(L("הספריות מופיעות כקטגוריות \"Plex · …\". סרט שקיים גם בספק ה-IPTV יופיע ב\"מקורות\". מה שצופים כאן מסומן כנצפה גם ב-Plex."),
                     fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Row(Modifier.padding(top = 10.dp)) {

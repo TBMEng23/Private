@@ -262,6 +262,9 @@ object Prefs {
         putSet(k, s)
     }
 
+    fun stringSet(k: String): Set<String> = set(k)
+    fun toggleIn(k: String, v: String, on: Boolean) = toggle(k, v, on)
+
     // ================= ילדים: שמות, ילד נבחר, שעות מותרות, דוח צפייה =================
     /** שמות הילדים בפרופיל (עד 5). אם לא הוגדרו – מפרקים את שם הפרופיל ("פלג ושחף") */
     fun kidsNames(pid: String = profileId): List<String> {
