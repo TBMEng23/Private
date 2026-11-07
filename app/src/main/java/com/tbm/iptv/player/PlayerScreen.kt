@@ -365,13 +365,13 @@ private fun Controls(a: PlayerActivity) {
                         Text(L("אם התוכנית שנפתחת לא תואמת לשם שלה – הזז עד שתתאים. ההגדרה נשמרת למקור הזה."), fontSize = 13.sp)
                         Text(if (off == 0f) L("ללא תיקון") else (if (off > 0) "+" else "") + off + L(" שעות"),
                             fontSize = 22.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(vertical = 10.dp))
-                        androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                            listOf(-2f, -1f, -0.5f, 0.5f, 1f, 2f).forEach { d ->
+                        listOf(listOf(-2f, -1f, -0.5f), listOf(0.5f, 1f, 2f)).forEach { rowVals -> Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            rowVals.forEach { d ->
                                 androidx.compose.material3.OutlinedButton(onClick = {
                                     off += d; pl?.let { com.tbm.iptv.data.Catchup.setOffsetHours(it, off) }; a.replayCatchup()
                                 }) { Text((if (d > 0) "+" else "−") + (if (kotlin.math.abs(d) < 1f) L("30 דק'") else L("{0} ש'", kotlin.math.abs(d).toInt()))) }
                             }
-                        }
+                        } }
                     }
                 },
                 confirmButton = { androidx.compose.material3.TextButton(onClick = { cuFix = false }) { Text(L("סגור")) } },
