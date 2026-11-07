@@ -26,13 +26,14 @@ jobs:
         env:
           TBM_KS_B64: ${{ secrets.TBM_KS_B64 }}
         run: |
-          if [ -n "$TBM_KS_B64" ]; then echo "$TBM_KS_B64" | tr -d " \r\n" | base64 -d > app/tbm-release.jks; echo "signing with TBM key"; else echo "::warning::TBM_KS_B64 secret missing – debug signing"; fi
+          if [ -n "$TBM_KS_B64" ]; then echo "$TBM_KS_B64" | tr -d " \r\n" | base64 -d > app/tbm-release.jks; echo "signing with TBM key"; else echo "::error::TBM_KS_B64 secret missing – refusing to build (a differently signed APK would not install as an update)"; exit 1; fi
 
       - name: Build
         env:
           TBM_KS_PASS: ${{ secrets.TBM_KS_PASS }}
         run: |
           set -o pipefail
+          if [ -z "$TBM_KS_PASS" ]; then echo "::error::TBM_KS_PASS secret missing – refusing to build"; exit 1; fi
           gradle assembleRelease --no-daemon --stacktrace 2>&1 | tee build.log
 
       - name: Report errors
