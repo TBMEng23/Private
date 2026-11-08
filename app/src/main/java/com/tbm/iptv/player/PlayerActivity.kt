@@ -125,13 +125,14 @@ class PlayerActivity : FragmentActivity() {
     private var sleepJob: Job? = null
     private var zapJob: Job? = null
     private var retry = 0
+    private var limitRetry = 0
     private var lastIndex = -1
     private var toMini = false
     private var castPlayer: CastPlayer? = null
 
     private val listener = object : Player.Listener {
         override fun onPlaybackStateChanged(state: Int) {
-            if (state == Player.STATE_READY) { retry = 0; ui.error = null; ui.errorActions = false }
+            if (state == Player.STATE_READY) { retry = 0; limitRetry = 0; ui.error = null; ui.errorActions = false }
             if (state == Player.STATE_ENDED) onEnded()
             // נתקע בטעינה יותר מ-20 שניות (למשל אחרי מעבר Wi-Fi ⇄ סלולר) – טוען מחדש מאותו מקום
             stallJob?.cancel()
@@ -375,9 +376,16 @@ class PlayerActivity : FragmentActivity() {
                 runOnUiThread {
                     // הקריאה הראשונה היא הרשת הנוכחית – לא מעבר
                     if (!netReady) { netReady = true; return@runOnUiThread }
-                    runCatching { com.tbm.iptv.data.Http.client.connectionPool.evictAll() }
                     val stuck = player.playbackState == Player.STATE_BUFFERING || player.playerError != null || ui.error != null
-                    if (stuck || player.playWhenReady) { toast(L("הרשת השתנתה – מתחבר מחדש…")); retryNow() }
+                    if (stuck || player.playWhenReady) {
+                        // סוגרים קודם את החיבור הישן (מהרשת הקודמת) ורק אז מתחברים מהחדשה –
+                        // אחרת הספק רואה שני חיבורים מ-IP שונים ודוחה (HTTP 458/460)
+                        if (!ui.isLive && player.currentPosition > 0) lastGoodPos = player.currentPosition
+                        player.stop()
+                        runCatching { com.tbm.iptv.data.Http.client.connectionPool.evictAll() }
+                        ui.errorActions = false; ui.error = L("הרשת השתנתה – מתחבר מחדש…")
+                        lifecycleScope.launch { delay(3000); retry = 0; reload() }
+                    }
                 }
             }
         }
@@ -413,6 +421,19 @@ class PlayerActivity : FragmentActivity() {
             }
         }
         if (!live && player.currentPosition > 0) lastGoodPos = player.currentPosition
+        val code0 = httpCode(e)
+        // הספק עדיין מחזיק את החיבור הקודם (מעבר רשת / מכשיר אחר) – מחכים יותר זמן עד שישחרר
+        if (code0 == 429 || code0 == 509 || (code0 != null && code0 in 456..463) || (code0 == 403 && retry < 4)) {
+            val waits = longArrayOf(3, 5, 8, 10, 15, 20, 20, 20)
+            if (limitRetry < waits.size) {
+                val w = waits[limitRetry++]
+                ui.errorActions = false
+                ui.error = L("הספק עדיין מחזיק את החיבור הקודם – מנסה שוב בעוד {0} שנ' ({1}/{2})", w, limitRetry, waits.size)
+                runCatching { com.tbm.iptv.data.Http.client.connectionPool.evictAll() }
+                lifecycleScope.launch { delay(w * 1000); reload() }
+                return
+            }
+        }
         val max = if (live) 5 else 3
         if (retry < max) {
             retry++
@@ -428,7 +449,7 @@ class PlayerActivity : FragmentActivity() {
         val why = when (code) {
             401, 403 -> L("הספק דחה את הבקשה (מנוי, הרשאה או יותר מדי חיבורים)")
             404 -> L("הקובץ לא נמצא אצל הספק")
-            429, 458, 509 -> L("יותר מדי חיבורים פעילים לחשבון – סגור צפייה במכשיר אחר")
+            429, 509, in 456..463 -> L("יותר מדי חיבורים פעילים לחשבון – סגור צפייה במכשיר אחר, או המתן דקה אחרי מעבר רשת")
             in 500..599 -> L("שגיאת שרת אצל הספק – נסה שוב בעוד רגע")
             else -> e.errorCodeName
         }
