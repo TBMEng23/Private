@@ -148,11 +148,19 @@ object KidsFilter {
 
 /** בניית התצוגה של כל סוג תוכן לפי פרופיל, סינונים, נעילות, שמות וסדר */
 object Catalog {
-    val adultRx = Regex("(?i)(adult|xxx|18\\+|\\+18|porn|for adults|למבוגרים|ארוטי)")
+    val adultRx = Regex("(?i)(adult|xxx|18 ?\\+|\\+ ?18|21 ?\\+|\\+ ?21|porn|for adults|erotic|erotik|\\bsex ?(tv|channel|hot)|playboy|penthouse|hustler|brazzers|" +
+        "dorcel|vivid|private ?(tv|gold|spice)|red ?light|redlight|hot ?(club|xxx)|blue ?hustler|milf|hentai|onlyfans|" +
+        "nsfw|x-rated|xrated|למבוגרים|ארוטי|סקס|פורנו)")
+    /** בשם פריט – רק מילים חד-משמעיות (כדי לא להסתיר "Sex Education" וכדומה) */
+    private val adultNameRx = Regex("(?i)(\\bporn|\\bxxx\\b|hentai|brazzers|onlyfans|nsfw|x-rated|פורנו)")
 
     class View(val items: List<Entry>, val groups: List<String>, val lockedGroups: Set<String>)
 
     fun isAdult(group: String) = adultRx.containsMatchIn(group)
+    /** פריט שהשם שלו מעיד על תוכן למבוגרים (גם בתוך קטגוריה רגילה) */
+    fun isAdultItem(e: Entry) = adultRx.containsMatchIn(e.group) || adultNameRx.containsMatchIn(e.name)
+    /** תוכן למבוגרים מוסתר? ("נעול" בלי קוד הורים = מוסתר, כדי שלא יוצג בטעות) */
+    fun adultHidden() = Prefs.adultMode == "hide" || (Prefs.adultMode == "lock" && !Parental.hasPin())
 
     /** מסנן ההורה לקבוצה: לא מוסתרת, ארץ מותרת, לא תוכן מבוגרים מוסתר */
     fun parentGroupFilter(kind: Kind): (String) -> Boolean {
@@ -164,7 +172,7 @@ object Catalog {
             cache.getOrPut(g) {
                 "${kind.name}|$g" !in hidden &&
                     (allowed.isEmpty() || g.startsWith("Plex · ") || Countries.of(g) in allowed) &&
-                    !(adultMode == "hide" && isAdult(g))
+                    !(adultHidden() && isAdult(g))
             }
         }
     }
@@ -250,7 +258,7 @@ object Catalog {
             val plexHere = Plex.forProfile(prof.id)
             base = all.filter { e ->
                 val gk = "$k|${e.group}"
-                if (e.key in itemExc || gk in exc || isAdult(e.group)) return@filter false
+                if (e.key in itemExc || gk in exc || isAdultItem(e)) return@filter false
                 // סיווג גיל ידוע (TMDB) מעל גיל הפרופיל – לא מציגים בכלל
                 KidsFilter.cachedAge(e.key)?.let { a -> if (a > prof.age) return@filter false }
                 if (KidsFilter.blocked(e.name, prof.age)) return@filter false
@@ -279,13 +287,14 @@ object Catalog {
             val adultMode = Prefs.adultMode
             val ok = HashMap<String, Boolean>()
             val plexHere = Plex.forProfile()
+            val adultOff = adultHidden()
             val filtered = all.filter { e ->
                 e.key !in hiddenItems && ok.getOrPut(e.group) {
                     (plexHere || !e.group.startsWith("Plex · ")) &&
                     "${kind.name}|${e.group}" !in hidden &&
                         (allowed.isEmpty() || e.group.startsWith("Plex · ") || Countries.of(e.group) in allowed) &&
-                        !(adultMode == "hide" && isAdult(e.group))
-                }
+                        !(adultOff && isAdult(e.group))
+                } && !(adultOff && adultNameRx.containsMatchIn(e.name))
             }
             filtered.map { it.group }.distinct().forEach { g -> if (isGroupLocked(kind, g)) locked += g }
             base = if (Parental.hasPin() && !Parental.unlocked) {

@@ -489,6 +489,19 @@ private fun RefreshChoice() {
 private fun ContentPage() {
     Card {
         Column(Modifier.padding(12.dp)) {
+            Text(L("🔞 תוכן למבוגרים (פורנו)"), fontWeight = FontWeight.Bold)
+            listOf("hide" to L("מוסתר לגמרי"), "lock" to L("נעול בקוד הורים"), "show" to L("מוצג")).forEach { (v, l) ->
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    RadioButton(selected = Prefs.adultMode == v, onClick = { Prefs.adultMode = v })
+                    Text(l)
+                }
+            }
+            Hint(L("מזוהה לפי שם הקטגוריה ושם הפריט. \"נעול\" בלי קוד הורים מוגדר = מוסתר. בפרופיל ילדים תוכן למבוגרים לעולם לא מוצג."))
+        }
+    }
+    Spacer(Modifier.height(10.dp))
+    Card {
+        Column(Modifier.padding(12.dp)) {
             Text(L("פופולרי היום (TMDB)"), fontWeight = FontWeight.Bold)
             Field(L("מפתח TMDB API"), Prefs.tmdbKey, secret = true) { Prefs.tmdbKey = it }
             Hint(L("איך משיגים מפתח חינמי (2 דקות): נרשמים ב-themoviedb.org ← הגדרות ← API ← בקשת מפתח (Developer) ← מעתיקים את \"API Key\" או את \"API Read Access Token\" ומדביקים כאן."))

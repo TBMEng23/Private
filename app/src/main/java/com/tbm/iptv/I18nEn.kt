@@ -331,6 +331,8 @@ object I18nEn {
         "🔒 נעל בקוד" to "🔒 Lock with PIN",
         "🔓 בטל נעילה" to "🔓 Unlock",
         "🔔 תזכורת" to "🔔 Reminder",
+        "🔞 תוכן למבוגרים (פורנו)" to "🔞 Adult content", "נעול בקוד הורים" to "Locked with parent PIN",
+        "מזוהה לפי שם הקטגוריה ושם הפריט. \"נעול\" בלי קוד הורים מוגדר = מוסתר. בפרופיל ילדים תוכן למבוגרים לעולם לא מוצג." to "Detected by category and item name. \"Locked\" without a parent PIN = hidden. Adult content is never shown in kids profiles.",
         "אחורה" to "Rewind", "לא ניתן להחזיר אחורה בערוץ הזה" to "Can't rewind this channel",
         "הספק לא מאפשר להחזיר אחורה בערוץ הזה" to "The provider doesn't allow rewinding this channel",
         "⏪ חזרה אחורה – \"חזרה לשידור חי\" מחזיר לשידור" to "⏪ Rewound – \"Back to live\" returns to the broadcast",
