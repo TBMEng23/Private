@@ -398,6 +398,13 @@ private fun MainSettings(nav: (Screen) -> Unit) {
         NavRow(L("בקרת הורים ופרופילים"), Icons.Filled.Shield, sub = L("קוד, נעילות, פרופיל ילדים")) {
             Parental.requireAlways(L("בקרת הורים")) { nav(Screen.Settings("parental")) }
         }
+        // תוכן למבוגרים – כאן, גלוי, בפרופיל הראשי (לחיצה מחליפה מצב; שינוי דורש קוד הורים אם מוגדר)
+        val am = Prefs.adultMode
+        NavRow(L("🔞 תוכן למבוגרים (פורנו)"), Icons.Filled.VisibilityOff, arrow = false,
+            sub = when (am) { "hide" -> L("מוסתר לגמרי"); "lock" -> L("נעול בקוד הורים"); else -> L("מוצג") } + L(" · לחץ לשינוי")) {
+            val next = when (am) { "hide" -> "lock"; "lock" -> "show"; else -> "hide" }
+            if (Parental.hasPin()) Parental.requireAlways(L("תוכן למבוגרים")) { Prefs.adultMode = next } else Prefs.adultMode = next
+        }
     }
     GroupTitle(L("נתונים"))
     Card {
