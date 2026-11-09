@@ -99,12 +99,13 @@ fun FocusItem(
     val interaction = remember { MutableInteractionSource() }
     val focused by interaction.collectIsFocusedAsState()
     val shape = RoundedCornerShape(8.dp)
+    // מיקוד בסגנון נטפליקס: מסגרת לבנה עבה, הגדלה ורקע בהיר – ברור מאוד איפה אתה נמצא
     val bg = when {
-        focused -> MaterialTheme.colorScheme.primary.copy(alpha = 0.32f)
+        focused -> Color.White.copy(alpha = 0.16f)
         selected -> MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)
         else -> Color.Transparent
     }
-    val scale by animateFloatAsState(if (focused) 1.04f else 1f, label = "focusScale")
+    val scale by animateFloatAsState(if (focused) 1.07f else 1f, label = "focusScale")
     // בשלט: לחיצה ארוכה על OK או מקש MENU פותחים את תפריט האפשרויות
     var longFired by remember { mutableStateOf(false) }
     Box(
@@ -126,15 +127,18 @@ fun FocusItem(
             .graphicsLayer { scaleX = scale; scaleY = scale }
             .clip(shape)
             .background(bg)
-            .border(if (focused) 2.dp else 0.dp, if (focused) MaterialTheme.colorScheme.primary else Color.Transparent, shape)
+            .border(if (focused) 3.dp else 0.dp, if (focused) Color.White else Color.Transparent, shape)
             .combinedClickable(
                 interactionSource = interaction,
                 indication = LocalIndication.current,
                 onLongClick = onLongClick,
                 onClick = onClick,
             )
-    ) { content() }
+    ) { androidx.compose.runtime.CompositionLocalProvider(LocalItemFocused provides focused) { content() } }
 }
+
+/** האם הפריט שבתוכו נמצאים מסומן כרגע (לשינוי צבע טקסט בשורות תפריט) */
+val LocalItemFocused = androidx.compose.runtime.compositionLocalOf { false }
 
 @Composable
 fun ScreenHeader(title: String, onBack: () -> Unit, actions: @Composable () -> Unit = {}) {

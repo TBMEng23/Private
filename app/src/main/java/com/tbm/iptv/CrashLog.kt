@@ -58,7 +58,7 @@ object CrashLog {
     fun clear() { file?.delete() }
 }
 
-object BuildConfigLite { const val VERSION = "4.4.5" }
+object BuildConfigLite { const val VERSION = "4.4.6" }
 
 /** הגרסה האמיתית מתוך ה-APK (versionName + versionCode) */
 fun appVersion(ctx: android.content.Context): String = runCatching {

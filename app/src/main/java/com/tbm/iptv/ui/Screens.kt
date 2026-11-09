@@ -399,11 +399,19 @@ private fun MainSettings(nav: (Screen) -> Unit) {
             Parental.requireAlways(L("בקרת הורים")) { nav(Screen.Settings("parental")) }
         }
         // תוכן למבוגרים – כאן, גלוי, בפרופיל הראשי (לחיצה מחליפה מצב; שינוי דורש קוד הורים אם מוגדר)
+        Prefs.version.intValue   // רענון מיידי אחרי שינוי
         val am = Prefs.adultMode
-        NavRow(L("🔞 תוכן למבוגרים (פורנו)"), Icons.Filled.VisibilityOff, arrow = false,
-            sub = when (am) { "hide" -> L("מוסתר לגמרי"); "lock" -> L("נעול בקוד הורים"); else -> L("מוצג") } + L(" · לחץ לשינוי")) {
+        val amName = when (am) { "hide" -> L("🙈 מוסתר לגמרי"); "lock" -> L("🔒 נעול בקוד הורים"); else -> L("👁 מוצג") }
+        NavRow(L("🔞 תוכן למבוגרים (פורנו)"),
+            when (am) { "hide" -> Icons.Filled.VisibilityOff; "lock" -> Icons.Filled.Lock; else -> Icons.Filled.Visibility }, arrow = false,
+            sub = amName + L(" · לחץ לשינוי")) {
             val next = when (am) { "hide" -> "lock"; "lock" -> "show"; else -> "hide" }
-            if (Parental.hasPin()) Parental.requireAlways(L("תוכן למבוגרים")) { Prefs.adultMode = next } else Prefs.adultMode = next
+            val apply = {
+                Prefs.adultMode = next
+                android.widget.Toast.makeText(ctx, L("תוכן למבוגרים: {0}", when (next) { "hide" -> L("מוסתר לגמרי"); "lock" -> L("נעול בקוד הורים"); else -> L("מוצג") }),
+                    android.widget.Toast.LENGTH_SHORT).show()
+            }
+            if (Parental.hasPin()) Parental.requireAlways(L("תוכן למבוגרים")) { apply() } else apply()
         }
     }
     GroupTitle(L("נתונים"))
@@ -956,13 +964,18 @@ private fun GroupTitle(t: String) {
 @Composable
 private fun NavRow(label: String, icon: ImageVector, arrow: Boolean = true, sub: String? = null, onClick: () -> Unit) {
     FocusItem(Modifier.fillMaxWidth(), onClick = onClick) {
-        Row(Modifier.padding(horizontal = 14.dp, vertical = if (sub != null) 11.dp else 16.dp), verticalAlignment = Alignment.CenterVertically) {
-            Icon(icon, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+        // מסומן: רקע לבן וטקסט שחור (כמו בתפריטים של נטפליקס)
+        val f = LocalItemFocused.current
+        val fg = if (f) Color.Black else MaterialTheme.colorScheme.onSurface
+        val fg2 = if (f) Color.Black.copy(alpha = 0.7f) else MaterialTheme.colorScheme.onSurfaceVariant
+        Row(Modifier.background(if (f) Color.White else Color.Transparent)
+            .padding(horizontal = 14.dp, vertical = if (sub != null) 11.dp else 16.dp), verticalAlignment = Alignment.CenterVertically) {
+            Icon(icon, null, tint = fg2)
             Column(Modifier.weight(1f).padding(horizontal = 14.dp)) {
-                Text(label, fontSize = 16.sp)
-                sub?.let { Text(it, fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis) }
+                Text(label, fontSize = 16.sp, color = fg, fontWeight = if (f) FontWeight.Bold else FontWeight.Normal)
+                sub?.let { Text(it, fontSize = 13.sp, color = fg2, maxLines = 1, overflow = TextOverflow.Ellipsis) }
             }
-            if (arrow) Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            if (arrow) Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, null, tint = fg2)
         }
     }
 }
