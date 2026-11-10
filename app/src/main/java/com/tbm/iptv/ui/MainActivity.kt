@@ -154,7 +154,7 @@ private fun KidsBedtime(onSwitch: () -> Unit) {
 private fun UpdateDialog() {
     val u = com.tbm.iptv.data.Updater
     val info = u.available ?: return
-    if (u.dismissed || (u.auto && !u.needsTap && u.progress < 0f)) return
+    if (u.dismissed || (u.auto && !u.needsTap && u.progress < 0f && !u.busy)) return
     val ctx = androidx.compose.ui.platform.LocalContext.current
     androidx.compose.material3.AlertDialog(
         onDismissRequest = { if (!u.busy) u.dismissed = true },

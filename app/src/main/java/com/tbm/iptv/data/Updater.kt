@@ -153,8 +153,9 @@ object Updater {
             if (info == null) return@check
             // גרסה שכבר נכשלה – לא מנסים שוב לבד (מונע לולאת סגירות)
             if (Prefs.str("upd_fail").toLongOrNull() == info.code) { needsTap = true; return@check }
-            // בטלוויזיה ובאנדרואיד ישן אי אפשר להתקין בשקט – מציגים חלון ולא סוגרים את האפליקציה פתאום
-            if (Device.isTv || Build.VERSION.SDK_INT < 31) { needsTap = true; return@check }
+            // הכל אוטומטי: מוריד, מוודא שהקובץ חדש, מתקין (האפליקציה נסגרת) ונפתחת מחדש בגרסה החדשה.
+            // אם אנדרואיד דורש אישור (פעם ראשונה / מכשיר ישן) – מסך האישור נפתח לבד, לחיצה אחת.
+            status = L("מעדכן לגרסה {0}…", info.name)
             downloadAndInstall(ctx, silent = true)
         }
     }

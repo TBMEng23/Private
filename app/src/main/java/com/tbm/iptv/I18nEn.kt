@@ -331,6 +331,7 @@ object I18nEn {
         "🔒 נעל בקוד" to "🔒 Lock with PIN",
         "🔓 בטל נעילה" to "🔓 Unlock",
         "🔔 תזכורת" to "🔔 Reminder",
+        "מעדכן לגרסה {0}…" to "Updating to {0}…",
         "קובץ העדכון עדיין לא התעדכן בענן – ננסה שוב מאוחר יותר" to "The update file hasn't synced to the cloud yet – will retry later",
         "🙈 מוסתר לגמרי" to "🙈 Fully hidden", "🔒 נעול בקוד הורים" to "🔒 Locked with parent PIN", "👁 מוצג" to "👁 Shown", "תוכן למבוגרים: {0}" to "Adult content: {0}",
         " · לחץ לשינוי" to " · tap to change", "תוכן למבוגרים" to "Adult content",
