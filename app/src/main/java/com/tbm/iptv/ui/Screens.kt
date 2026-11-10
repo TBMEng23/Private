@@ -900,8 +900,6 @@ private fun PlexPage() {
 private fun UpdatePage() {
     val ctx = LocalContext.current
     val u = com.tbm.iptv.data.Updater
-    var ver by remember { mutableStateOf(u.verUrl) }
-    var apk by remember { mutableStateOf(u.apkUrl) }
     Card {
         Column(Modifier.padding(14.dp)) {
             Text(L("גרסה מותקנת: {0}", com.tbm.iptv.appVersion(ctx)), fontWeight = FontWeight.Bold)
@@ -918,17 +916,7 @@ private fun UpdatePage() {
             if (u.status.isNotBlank()) Text(u.status, fontSize = 13.sp, modifier = Modifier.padding(top = 6.dp))
         }
     }
-    Spacer(Modifier.height(12.dp))
-    Card {
-        Column(Modifier.padding(14.dp)) {
-            Text(L("מקור העדכונים (OneDrive)"), fontWeight = FontWeight.Bold)
-            Text(L("הדבק את קישורי השיתוף של version.txt ושל TBMPlayer-latest.apk. מספיק להגדיר פעם אחת – זה מסתנכרן לשאר המכשירים דרך החשבון."),
-                fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            OutlinedTextField(ver, { ver = it }, label = { Text(L("קישור ל-version.txt")) }, singleLine = true, modifier = Modifier.fillMaxWidth().padding(top = 6.dp))
-            OutlinedTextField(apk, { apk = it }, label = { Text(L("קישור ל-TBMPlayer-latest.apk")) }, singleLine = true, modifier = Modifier.fillMaxWidth().padding(top = 6.dp))
-            Button(onClick = { u.verUrl = ver; u.apkUrl = apk; u.check(ctx, true) }, modifier = Modifier.padding(top = 8.dp)) { Text(L("שמור ובדוק")) }
-        }
-    }
+    // קישורי העדכון מובנים באפליקציה – לא מוצגים למשתמש
 }
 
 @Composable
