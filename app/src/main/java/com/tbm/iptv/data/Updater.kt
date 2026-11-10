@@ -149,7 +149,14 @@ object Updater {
         val last = Prefs.str("upd_last").toLongOrNull() ?: 0L
         if (System.currentTimeMillis() - last < 3 * 3_600_000L) return
         Prefs.setStrQuiet("upd_last", System.currentTimeMillis().toString())
-        check(ctx, false) { info -> if (info != null) downloadAndInstall(ctx, silent = true) }
+        check(ctx, false) { info ->
+            if (info == null) return@check
+            // גרסה שכבר נכשלה – לא מנסים שוב לבד (מונע לולאת סגירות)
+            if (Prefs.str("upd_fail").toLongOrNull() == info.code) { needsTap = true; return@check }
+            // בטלוויזיה ובאנדרואיד ישן אי אפשר להתקין בשקט – מציגים חלון ולא סוגרים את האפליקציה פתאום
+            if (Device.isTv || Build.VERSION.SDK_INT < 31) { needsTap = true; return@check }
+            downloadAndInstall(ctx, silent = true)
+        }
     }
 
     /** מוריד ומתקין דרך PackageInstaller – עדכון עצמי בלי אישור באנדרואיד 12+ */
@@ -189,7 +196,16 @@ object Updater {
                 val head = f.inputStream().use { val b = ByteArray(2); it.read(b); b }
                 if (head[0] != 'P'.code.toByte() || head[1] != 'K'.code.toByte())
                     throw IOException(L("הקישור לקובץ ה-APK אינו קישור הורדה ישיר"))
+                // בודקים שהקובץ שהורד באמת חדש יותר (OneDrive לפעמים עוד לא סנכרן את ה-APK החדש)
+                val pi = app.packageManager.getPackageArchiveInfo(f.path, 0)
+                @Suppress("DEPRECATION")
+                val fileCode = pi?.let { if (Build.VERSION.SDK_INT >= 28) it.longVersionCode else it.versionCode.toLong() } ?: 0L
+                if (fileCode <= currentCode(app)) {
+                    Prefs.setStrQuiet("upd_fail", (available?.code ?: 0L).toString())
+                    throw IOException(L("קובץ העדכון עדיין לא התעדכן בענן – ננסה שוב מאוחר יותר"))
+                }
                 status = L("מתקין…")
+                Prefs.setStrQuiet("upd_fail", (available?.code ?: 0L).toString())   // יימחק אם ההתקנה תצליח (גרסה חדשה)
                 try { install(app, f) } catch (e: Exception) {
                     if (!systemInstall(app)) throw e
                 }

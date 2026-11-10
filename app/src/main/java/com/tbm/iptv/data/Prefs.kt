@@ -50,7 +50,7 @@ object Prefs {
     private fun isLocalKey(k: String) = k == "profile" || k == "device_id" || k.startsWith("cloud_") ||
         k.startsWith("mini_") || k == "pip_warned" || k == "player_landscape" ||
         k.startsWith("updated_") || k.startsWith("tz_") || k.startsWith("exp_") || k.startsWith("status_") ||
-        k.startsWith("kidsel_") || k == "kh_ovr"
+        k.startsWith("kidsel_") || k == "kh_ovr" || k == "upd_last" || k == "upd_fail"
 
     /** מזהה קבוע למכשיר */
     val deviceId: String get() = str("device_id").ifBlank {
