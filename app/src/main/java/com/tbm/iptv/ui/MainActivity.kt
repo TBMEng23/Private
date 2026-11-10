@@ -199,13 +199,19 @@ fun AppRoot() {
             s is Screen.KidsContent || s is Screen.Account) && (Prefs.settingsLock || Prefs.isKids)
         if (needsPin) Parental.requireAlways(L("כניסה להגדרות")) { stack.add(s) } else stack.add(s)
     }
-    val back: () -> Unit = { if (stack.size > 1) stack.removeAt(stack.lastIndex) }
-    val goHome: () -> Unit = { stack.clear(); stack.add(Screen.Home) }
+    // שומר את מצב כל מסך במחסנית (גלילה, קטגוריה נבחרת…) – חזרה אחורה מחזירה לאותו מקום בדיוק
+    val saver = androidx.compose.runtime.saveable.rememberSaveableStateHolder()
+    fun keyAt(i: Int) = "scr$i:" + stack[i].hashCode()
+    val back: () -> Unit = {
+        if (stack.size > 1) { saver.removeState(keyAt(stack.lastIndex)); stack.removeAt(stack.lastIndex) }
+    }
+    val goHome: () -> Unit = { stack.indices.forEach { saver.removeState(keyAt(it)) }; stack.clear(); stack.add(Screen.Home) }
 
     BackHandler(enabled = stack.size > 1) { back() }
 
     Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).systemBarsPadding()) {
-        when (val top = stack.last()) {
+        val top = stack.last()
+        saver.SaveableStateProvider(keyAt(stack.lastIndex)) { when (top) {
             Screen.Home -> HomeScreen(nav)
             Screen.Playlists -> PlaylistsScreen(onDone = goHome, onBack = if (stack.size > 1) back else null)
             Screen.Profiles -> ProfilesScreen(onDone = goHome, onManage = { stack.add(Screen.Settings("parental")) })
@@ -215,7 +221,7 @@ fun AppRoot() {
             is Screen.Movie -> MovieScreen(top.item, back) { nav(Screen.Movie(it)) }
             Screen.Account -> AccountScreen(back)
             is Screen.KidsContent -> KidsContentScreen(top.profileId, back)
-        }
+        } }
         if (PlayerHolder.miniActive) DraggableMini()
         KidsBedtime { stack.clear(); stack.add(Screen.Profiles) }
         PinDialog()
