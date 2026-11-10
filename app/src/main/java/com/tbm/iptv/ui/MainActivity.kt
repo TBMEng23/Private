@@ -39,7 +39,7 @@ import androidx.compose.material.icons.filled.Replay10
 import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import com.tbm.iptv.ui.TvIconButton as IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -139,10 +139,10 @@ private fun KidsBedtime(onSwitch: () -> Unit) {
             androidx.compose.material3.Text(com.tbm.iptv.L("אפשר לצפות בין {0} ל-{1}", Prefs.kidsFrom(pid), Prefs.kidsTo(pid)),
                 fontSize = 16.sp, color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.8f))
             androidx.compose.foundation.layout.Spacer(Modifier.height(24.dp))
-            androidx.compose.material3.Button(onClick = { Parental.requireAlways(com.tbm.iptv.L("עוד שעה")) { Prefs.kidsOverride(1); tick++ } }) {
+            com.tbm.iptv.ui.TvButton(onClick = { Parental.requireAlways(com.tbm.iptv.L("עוד שעה")) { Prefs.kidsOverride(1); tick++ } }) {
                 androidx.compose.material3.Text(com.tbm.iptv.L("🔑 קוד הורים – עוד שעה"))
             }
-            androidx.compose.material3.TextButton(onClick = onSwitch) {
+            com.tbm.iptv.ui.TvTextButton(onClick = onSwitch) {
                 androidx.compose.material3.Text(com.tbm.iptv.L("החלף פרופיל"), color = androidx.compose.ui.graphics.Color.White)
             }
         }
@@ -165,9 +165,9 @@ private fun UpdateDialog() {
                 if (u.status.isNotBlank()) androidx.compose.material3.Text(u.status, fontSize = 13.sp)
             }
         },
-        confirmButton = { androidx.compose.material3.TextButton(enabled = !u.busy, onClick = { u.needsTap = false; u.downloadAndInstall(ctx) }) {
+        confirmButton = { com.tbm.iptv.ui.TvTextButton(enabled = !u.busy, onClick = { u.needsTap = false; u.downloadAndInstall(ctx) }) {
             androidx.compose.material3.Text(com.tbm.iptv.L("עדכן")) } },
-        dismissButton = { androidx.compose.material3.TextButton(enabled = !u.busy, onClick = { u.dismissed = true }) {
+        dismissButton = { com.tbm.iptv.ui.TvTextButton(enabled = !u.busy, onClick = { u.dismissed = true }) {
             androidx.compose.material3.Text(com.tbm.iptv.L("אחר כך")) } },
     )
 }
@@ -337,14 +337,14 @@ private fun CrashReport() {
             }
         },
         confirmButton = {
-            androidx.compose.material3.TextButton(onClick = {
+            com.tbm.iptv.ui.TvTextButton(onClick = {
                 val cm = ctx.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
                 cm.setPrimaryClip(android.content.ClipData.newPlainText("TBM crash", t))
                 android.widget.Toast.makeText(ctx, L("הועתק"), android.widget.Toast.LENGTH_SHORT).show()
             }) { androidx.compose.material3.Text(L("העתק")) }
         },
         dismissButton = {
-            androidx.compose.material3.TextButton(onClick = { com.tbm.iptv.CrashLog.clear(); text = null }) {
+            com.tbm.iptv.ui.TvTextButton(onClick = { com.tbm.iptv.CrashLog.clear(); text = null }) {
                 androidx.compose.material3.Text(L("סגור"))
             }
         },

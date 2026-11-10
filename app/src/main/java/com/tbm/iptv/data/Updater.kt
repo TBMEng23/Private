@@ -179,20 +179,34 @@ object Updater {
                 val dir = File(app.cacheDir, "updates").apply { mkdirs() }
                 dir.listFiles()?.forEach { it.delete() }
                 val f = File(dir, "TBMPlayer-update.apk")
-                open(apkUrl).use { r ->
-                    val body = r.body ?: throw IOException(L("תגובה ריקה"))
-                    val total = body.contentLength()
-                    body.byteStream().use { inp ->
-                        f.outputStream().use { out ->
-                            val buf = ByteArray(64 * 1024); var done = 0L
-                            while (true) {
-                                val n = inp.read(buf); if (n < 0) break
-                                out.write(buf, 0, n); done += n
-                                if (total > 0) progress = done.toFloat() / total
+                // עד 4 ניסיונות – ניתוק רגעי ("connection abort", מעבר רשת) לא מפיל את העדכון
+                var lastErr: Exception? = null
+                for (attempt in 1..4) {
+                    try {
+                        open(apkUrl).use { r ->
+                            val body = r.body ?: throw IOException(L("תגובה ריקה"))
+                            val total = body.contentLength()
+                            body.byteStream().use { inp ->
+                                f.outputStream().use { out ->
+                                    val buf = ByteArray(64 * 1024); var done = 0L
+                                    while (true) {
+                                        val n = inp.read(buf); if (n < 0) break
+                                        out.write(buf, 0, n); done += n
+                                        if (total > 0) progress = done.toFloat() / total
+                                    }
+                                }
                             }
+                            if (total > 0 && f.length() < total) throw IOException(L("ההורדה נקטעה"))
                         }
+                        lastErr = null; break
+                    } catch (e: Exception) {
+                        lastErr = e
+                        status = L("ההורדה נקטעה – מנסה שוב ({0}/4)…", attempt)
+                        runCatching { Http.client.connectionPool.evictAll() }
+                        kotlinx.coroutines.delay(3000L * attempt)
                     }
                 }
+                lastErr?.let { throw it }
                 // בדיקה שזה באמת APK (ZIP) ולא דף HTML
                 val head = f.inputStream().use { val b = ByteArray(2); it.read(b); b }
                 if (head[0] != 'P'.code.toByte() || head[1] != 'K'.code.toByte())

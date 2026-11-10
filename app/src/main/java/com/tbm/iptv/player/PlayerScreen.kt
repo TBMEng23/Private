@@ -79,12 +79,12 @@ import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import com.tbm.iptv.ui.TvIconButton as IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import com.tbm.iptv.ui.TvOutlinedButton as OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import com.tbm.iptv.ui.TvTextButton as TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
@@ -205,7 +205,7 @@ fun PlayerScreen(a: PlayerActivity) {
             ) {
                 Text(it, color = Color.White, textAlign = TextAlign.Center)
                 if (ui.errorActions) Row(Modifier.padding(top = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    androidx.compose.material3.Button(onClick = { a.retryNow() }) { Text(L("🔄 נסה שוב")) }
+                    com.tbm.iptv.ui.TvButton(onClick = { a.retryNow() }) { Text(L("🔄 נסה שוב")) }
                     if (!ui.isLive) OutlinedButton(onClick = { a.restartFromBeginning() }) { Text(L("⏮ מההתחלה"), color = Color.White) }
                     OutlinedButton(onClick = { a.openExternal() }) { Text(L("נגן חיצוני"), color = Color.White) }
                     if (ui.hasNext) OutlinedButton(onClick = { ui.error = null; a.next() }) { Text(L("הבא ⏭"), color = Color.White) }
@@ -362,9 +362,9 @@ private fun Controls(a: PlayerActivity) {
             @Composable
             fun Shifter(value: Float, onShift: (Float) -> Unit) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    androidx.compose.material3.OutlinedButton(onClick = { onShift(-0.5f) }) { Text(L("⏪ אחורה")) }
+                    com.tbm.iptv.ui.TvOutlinedButton(onClick = { onShift(-0.5f) }) { Text(L("⏪ אחורה")) }
                     Text(fmtH(value), fontSize = 18.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 6.dp))
-                    androidx.compose.material3.OutlinedButton(onClick = { onShift(0.5f) }) { Text(L("קדימה ⏩")) }
+                    com.tbm.iptv.ui.TvOutlinedButton(onClick = { onShift(0.5f) }) { Text(L("קדימה ⏩")) }
                 }
             }
             androidx.compose.material3.AlertDialog(
@@ -387,8 +387,8 @@ private fun Controls(a: PlayerActivity) {
                         Text(L("ההגדרות נשמרות למקור הזה."), fontSize = 11.sp, modifier = Modifier.padding(top = 10.dp))
                     }
                 },
-                confirmButton = { androidx.compose.material3.TextButton(onClick = { cuFix = false }) { Text(L("סגור")) } },
-                dismissButton = { androidx.compose.material3.TextButton(onClick = {
+                confirmButton = { com.tbm.iptv.ui.TvTextButton(onClick = { cuFix = false }) { Text(L("סגור")) } },
+                dismissButton = { com.tbm.iptv.ui.TvTextButton(onClick = {
                     ep = 0f; cu = 0f
                     pl?.let { Prefs.setStr("epg_off_${it.id}", "0"); com.tbm.iptv.data.Catchup.setOffsetHours(it, 0f); com.tbm.iptv.data.Repo.refreshEpg() }
                     if (ui.inCatchup) a.replayCatchup()
@@ -503,14 +503,14 @@ private fun NetflixExtras(a: PlayerActivity, modifier: Modifier) {
     }
     Column(modifier.padding(end = 24.dp, bottom = 120.dp), horizontalAlignment = Alignment.End) {
         if (!ui.introSkipped && pos in 15_000..240_000) {
-            androidx.compose.material3.OutlinedButton(
+            com.tbm.iptv.ui.TvOutlinedButton(
                 onClick = { a.seekBy(85_000); ui.introSkipped = true },
                 colors = androidx.compose.material3.ButtonDefaults.outlinedButtonColors(containerColor = Color(0xCC000000)),
             ) { Text(L("דלג על הפתיח"), color = Color.White) }
         }
         val left = dur - pos
         if (ui.hasNext && dur > 120_000 && left in 1..30_000) {
-            androidx.compose.material3.Button(
+            com.tbm.iptv.ui.TvButton(
                 onClick = { a.next() },
                 colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = Color.White),
             ) { Text(L("הפרק הבא בעוד {0}", left / 1000), color = Color.Black, fontWeight = FontWeight.Bold) }
@@ -820,7 +820,7 @@ private fun RecordDialog(a: PlayerActivity) {
             Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (rec == null) {
                     Text(L("אין הקלטה פעילה לערוץ הזה"), style = MaterialTheme.typography.titleMedium)
-                    androidx.compose.material3.Button(onClick = { ui.showRecord = false; a.startRecording() }, modifier = Modifier.fillMaxWidth()) {
+                    com.tbm.iptv.ui.TvButton(onClick = { ui.showRecord = false; a.startRecording() }, modifier = Modifier.fillMaxWidth()) {
                         Text(L("⏺ התחל להקליט"))
                     }
                 } else {
@@ -833,7 +833,7 @@ private fun RecordDialog(a: PlayerActivity) {
                         color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 13.sp)
                     if (ui.fromRecording) Text(L("צופה מתוך ההקלטה (חיבור אחד לספק) – אפשר להשהות"), fontSize = 12.sp,
                         color = Color(0xFF22C997))
-                    androidx.compose.material3.Button(
+                    com.tbm.iptv.ui.TvButton(
                         onClick = { a.stopRecording() },
                         colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = Color(0xFFE50914)),
                         modifier = Modifier.fillMaxWidth(),
@@ -889,7 +889,7 @@ private fun SubtitleDialog(a: PlayerActivity) {
                     Text(L("שמע:"), fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     androidx.compose.foundation.lazy.LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         items(ui.audio) { e ->
-                            androidx.compose.material3.FilterChip(selected = e.selected, onClick = { a.selectAudio(e) },
+                            com.tbm.iptv.ui.TvFilterChip(selected = e.selected, onClick = { a.selectAudio(e) },
                                 label = { Text(e.name, fontSize = 12.sp) })
                         }
                     }
@@ -910,7 +910,7 @@ private fun SubtitleDialog(a: PlayerActivity) {
                         label = { Text(L("שם לחיפוש (אפשר שם מקורי או tt1234567)")) },
                     )
                     Spacer(Modifier.width(6.dp))
-                    androidx.compose.material3.Button(onClick = { a.searchManual(manual) }) { Text(L("חפש")) }
+                    com.tbm.iptv.ui.TvButton(onClick = { a.searchManual(manual) }) { Text(L("חפש")) }
                 }
                 val active = com.tbm.iptv.subs.SubtitleManager.providers.filter { it.enabled() }.map { it.name }
                 val off = com.tbm.iptv.subs.SubtitleManager.providers.filter { !it.enabled() }.map { it.name }
@@ -937,13 +937,13 @@ private fun SubtitleDialog(a: PlayerActivity) {
                     Text(L("כתוביות מובנות בקובץ:"), fontSize = 12.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 6.dp))
                     androidx.compose.foundation.lazy.LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         items(ui.embedded) { e ->
-                            androidx.compose.material3.FilterChip(selected = e.selected, onClick = { a.selectEmbedded(e); ui.showSubs = false },
+                            com.tbm.iptv.ui.TvFilterChip(selected = e.selected, onClick = { a.selectEmbedded(e); ui.showSubs = false },
                                 label = { Text(e.name, fontSize = 12.sp) })
                         }
                     }
                 }
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 4.dp)) {
-                    androidx.compose.material3.Switch(checked = Prefs.subBox, onCheckedChange = { Prefs.subBox = it })
+                    com.tbm.iptv.ui.TvSwitch(checked = Prefs.subBox, onCheckedChange = { Prefs.subBox = it })
                     Text(L("רקע שחור (מכסה כתוביות צרובות בתמונה)"), fontSize = 12.sp, modifier = Modifier.weight(1f).padding(horizontal = 6.dp))
                     TextButton(onClick = { Prefs.subPos = Prefs.subPos + 0.03f }) { Text("▲") }
                     TextButton(onClick = { Prefs.subPos = Prefs.subPos - 0.03f }) { Text("▼") }

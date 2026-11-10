@@ -59,15 +59,15 @@ import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.filled.VideoLibrary
-import androidx.compose.material3.Button
+import com.tbm.iptv.ui.TvButton as Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
+import com.tbm.iptv.ui.TvFilterChip as FilterChip
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import com.tbm.iptv.ui.TvIconButton as IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import com.tbm.iptv.ui.TvOutlinedButton as OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -933,11 +933,11 @@ private fun RecordingsSection(ver: Int) {
             title = { Text(if (list.size == 1) L("למחוק את ההקלטה?") else L("למחוק {0} הקלטות?", list.size)) },
             text = { Text(if (list.size == 1) list[0].nameWithoutExtension.replace("__", " · ") else
                 L("{0} MB יפונו מהמכשיר. לא ניתן לשחזר.", list.sumOf { it.length() } / 1_000_000)) },
-            confirmButton = { androidx.compose.material3.TextButton(onClick = {
+            confirmButton = { com.tbm.iptv.ui.TvTextButton(onClick = {
                 list.forEach { it.delete() }
                 selected.clear(); selecting = false; confirm = null; tick++
             }) { Text(L("מחק"), color = MaterialTheme.colorScheme.error) } },
-            dismissButton = { androidx.compose.material3.TextButton(onClick = { confirm = null }) { Text(L("ביטול")) } },
+            dismissButton = { com.tbm.iptv.ui.TvTextButton(onClick = { confirm = null }) { Text(L("ביטול")) } },
         )
     }
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(12.dp)) {
@@ -973,15 +973,15 @@ private fun RecordingsSection(ver: Int) {
                 Box(Modifier.weight(1f)) { SectionTitle(L("הקלטות שמורות")) }
                 if (files.isNotEmpty()) {
                     if (selecting) {
-                        androidx.compose.material3.TextButton(onClick = {
+                        com.tbm.iptv.ui.TvTextButton(onClick = {
                             if (selected.size == files.size) selected.clear()
                             else { selected.clear(); selected.addAll(files.map { it.absolutePath }) }
                         }) { Text(if (selected.size == files.size) L("נקה בחירה") else L("בחר הכל")) }
-                        androidx.compose.material3.TextButton(enabled = selected.isNotEmpty(), onClick = {
+                        com.tbm.iptv.ui.TvTextButton(enabled = selected.isNotEmpty(), onClick = {
                             confirm = files.filter { it.absolutePath in selected }
                         }) { Text(L("מחק ({0})", selected.size), color = if (selected.isNotEmpty()) MaterialTheme.colorScheme.error else Color.Gray) }
-                        androidx.compose.material3.TextButton(onClick = { selecting = false; selected.clear() }) { Text(L("ביטול")) }
-                    } else androidx.compose.material3.TextButton(onClick = { selecting = true }) { Text(L("☑ בחירה מרובה")) }
+                        com.tbm.iptv.ui.TvTextButton(onClick = { selecting = false; selected.clear() }) { Text(L("ביטול")) }
+                    } else com.tbm.iptv.ui.TvTextButton(onClick = { selecting = true }) { Text(L("☑ בחירה מרובה")) }
                 }
             }
         }
@@ -1193,9 +1193,9 @@ private fun RowsView(
     LazyColumn(modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 16.dp)) {
         if (kind != Kind.LIVE) item {
             Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                androidx.compose.material3.FilterChip(selected = curated, onClick = { curated = true; Prefs.setStrQuiet("rows_src_${kind.name}", "curated") },
+                com.tbm.iptv.ui.TvFilterChip(selected = curated, onClick = { curated = true; Prefs.setStrQuiet("rows_src_${kind.name}", "curated") },
                     label = { Text(L("✨ מומלץ")) })
-                androidx.compose.material3.FilterChip(selected = !curated, onClick = { curated = false; Prefs.setStrQuiet("rows_src_${kind.name}", "provider") },
+                com.tbm.iptv.ui.TvFilterChip(selected = !curated, onClick = { curated = false; Prefs.setStrQuiet("rows_src_${kind.name}", "provider") },
                     label = { Text(L("📂 קטגוריות הספק")) })
             }
         }
@@ -1288,7 +1288,7 @@ private fun CategoryStrip(
     Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp, top = 14.dp), verticalAlignment = Alignment.CenterVertically) {
         Text("$title (${list.size})", fontSize = 17.sp, fontWeight = FontWeight.Bold, maxLines = 1,
             overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
-        if (onSeeAll != null) androidx.compose.material3.TextButton(onClick = onSeeAll) { Text(L("הכל ›"), fontWeight = FontWeight.Bold) }
+        if (onSeeAll != null) com.tbm.iptv.ui.TvTextButton(onClick = onSeeAll) { Text(L("הכל ›"), fontWeight = FontWeight.Bold) }
         else Spacer(Modifier.height(44.dp))
     }
     LazyRow(contentPadding = PaddingValues(horizontal = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -1457,7 +1457,7 @@ private fun KidsHome(content: Content, ver: Int, nav: (Screen) -> Unit) {
                 Text(L("מי צופה?"), fontWeight = FontWeight.Bold, modifier = Modifier.padding(end = 8.dp))
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     items(kids) { n ->
-                        androidx.compose.material3.FilterChip(selected = n == child, onClick = { Prefs.kidChild = if (n == child) "" else n },
+                        com.tbm.iptv.ui.TvFilterChip(selected = n == child, onClick = { Prefs.kidChild = if (n == child) "" else n },
                             label = { Text(n, fontSize = 16.sp, fontWeight = FontWeight.Bold) })
                     }
                 }

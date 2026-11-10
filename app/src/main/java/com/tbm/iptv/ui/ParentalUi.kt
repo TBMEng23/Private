@@ -32,7 +32,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import com.tbm.iptv.ui.TvTextButton as TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -212,7 +212,7 @@ fun ProfilesScreen(onDone: () -> Unit, onManage: () -> Unit = {}) {
             }
         }
         Spacer(Modifier.height(24.dp))
-        androidx.compose.material3.OutlinedButton(onClick = { Parental.requireAlways(L("ניהול פרופילים")) { onManage() } }) {
+        com.tbm.iptv.ui.TvOutlinedButton(onClick = { Parental.requireAlways(L("ניהול פרופילים")) { onManage() } }) {
             Text(L("✏ ניהול פרופילים"))
         }
     }
@@ -303,12 +303,12 @@ fun ProfileEditDialog(edit: Profile?, onDone: () -> Unit) {
                     Text(L("גיל הילד – יוצג רק תוכן שמתאים עד הגיל הזה:"), fontSize = 13.sp, modifier = Modifier.padding(top = 6.dp))
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         listOf(3, 5, 7, 10, 13, 16).forEach { a ->
-                            androidx.compose.material3.FilterChip(selected = age == a, onClick = { age = a }, label = { Text(L("עד {0}", a)) })
+                            com.tbm.iptv.ui.TvFilterChip(selected = age == a, onClick = { age = a }, label = { Text(L("עד {0}", a)) })
                         }
                     }
                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 4.dp)) {
                         Text(L("סינון אוטומטי (ערוצים וקטגוריות ילדים)"), modifier = Modifier.weight(1f), fontSize = 14.sp)
-                        androidx.compose.material3.Switch(checked = auto, onCheckedChange = { auto = it })
+                        com.tbm.iptv.ui.TvSwitch(checked = auto, onCheckedChange = { auto = it })
                     }
                     Text(L("בנוסף אפשר לאשר ידנית כל ערוץ, סרט או קבוצה (לחיצה ארוכה ← \"אשר לפרופיל ילדים\"). תוכן אימה, פשע ולמבוגרים נחסם לפי הגיל, ועם מפתח TMDB נבדק גם סיווג הגיל הרשמי של כל סרט וסדרה."),
                         fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -414,29 +414,29 @@ fun KidsContentScreen(profileId: String, onBack: () -> Unit) {
             Text(L("גיל מקסימלי:"), fontSize = 13.sp)
             FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 listOf(3, 5, 7, 10, 13, 16).forEach { a ->
-                    androidx.compose.material3.FilterChip(selected = prof.age == a, onClick = { saveProf(prof.copy(age = a)) }, label = { Text(L("עד {0}", a)) })
+                    com.tbm.iptv.ui.TvFilterChip(selected = prof.age == a, onClick = { saveProf(prof.copy(age = a)) }, label = { Text(L("עד {0}", a)) })
                 }
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(L("סינון אוטומטי לפי שמות קטגוריות וערוצים"), modifier = Modifier.weight(1f), fontSize = 14.sp)
-                androidx.compose.material3.Switch(checked = prof.auto, onCheckedChange = { saveProf(prof.copy(auto = it)) })
+                com.tbm.iptv.ui.TvSwitch(checked = prof.auto, onCheckedChange = { saveProf(prof.copy(auto = it)) })
             }
             // נושאים נוספים
             Text(L("נושאים נוספים שמותרים:"), fontSize = 13.sp, modifier = Modifier.padding(top = 4.dp))
             FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 listOf("nature" to L("🌿 טבע ובעלי חיים"), "sport" to L("⚽ ספורט"), "docu" to L("🔬 מדע ודוקו"),
                     "music" to L("🎵 מוזיקה"), "edu" to L("📚 חינוכי")).forEach { (t, label) ->
-                    androidx.compose.material3.FilterChip(selected = t in prof.topics, label = { Text(label) }, onClick = {
+                    com.tbm.iptv.ui.TvFilterChip(selected = t in prof.topics, label = { Text(label) }, onClick = {
                         saveProf(prof.copy(topics = if (t in prof.topics) prof.topics - t else prof.topics + t))
                     })
                 }
             }
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 listOf(com.tbm.iptv.data.Kind.LIVE, com.tbm.iptv.data.Kind.MOVIE, com.tbm.iptv.data.Kind.SERIES).forEach { k ->
-                    androidx.compose.material3.FilterChip(selected = kind == k, onClick = { kind = k }, label = { Text(k.label) })
+                    com.tbm.iptv.ui.TvFilterChip(selected = kind == k, onClick = { kind = k }, label = { Text(k.label) })
                 }
                 Spacer(Modifier.weight(1f))
-                androidx.compose.material3.FilterChip(selected = onlyAllowed, onClick = { onlyAllowed = !onlyAllowed }, label = { Text(L("רק מה שמוצג")) })
+                com.tbm.iptv.ui.TvFilterChip(selected = onlyAllowed, onClick = { onlyAllowed = !onlyAllowed }, label = { Text(L("רק מה שמוצג")) })
             }
             // ---- הגדרות לסוג התוכן הנבחר (ערוצים / סרטים / סדרות)
             androidx.compose.material3.Surface(shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
@@ -455,13 +455,13 @@ fun KidsContentScreen(profileId: String, onBack: () -> Unit) {
                     if (pick) Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(if (kind == com.tbm.iptv.data.Kind.LIVE) L("בתוך הקטגוריות שבחרתי – רק ערוצים שמתאימים לגיל (ילדים + הנושאים)")
                             else L("בתוך הקטגוריות שבחרתי – לחסום תוכן שלא מתאים לגיל"), fontSize = 13.sp, modifier = Modifier.weight(1f))
-                        androidx.compose.material3.Switch(checked = k in prof.ageInside, onCheckedChange = {
+                        com.tbm.iptv.ui.TvSwitch(checked = k in prof.ageInside, onCheckedChange = {
                             saveProf(prof.copy(ageInside = if (it) prof.ageInside + k else prof.ageInside - k))
                         })
                     }
                     if (kind != com.tbm.iptv.data.Kind.LIVE) Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(L("רק עברית ואנגלית"), fontSize = 13.sp, modifier = Modifier.weight(1f))
-                        androidx.compose.material3.Switch(checked = k in prof.langOnly, onCheckedChange = {
+                        com.tbm.iptv.ui.TvSwitch(checked = k in prof.langOnly, onCheckedChange = {
                             saveProf(prof.copy(langOnly = if (it) prof.langOnly + k else prof.langOnly - k))
                         })
                     }
@@ -481,9 +481,9 @@ fun KidsContentScreen(profileId: String, onBack: () -> Unit) {
                     }
                     if (showC) FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         val setC: (Set<String>) -> Unit = { n -> saveProf(prof.copy(kindCountries = prof.kindCountries + (k to n))) }
-                        androidx.compose.material3.FilterChip(selected = cset.isEmpty(), label = { Text(L("כולן")) }, onClick = { setC(emptySet()) })
+                        com.tbm.iptv.ui.TvFilterChip(selected = cset.isEmpty(), label = { Text(L("כולן")) }, onClick = { setC(emptySet()) })
                         countryCounts.take(30).forEach { (c, _) ->
-                            androidx.compose.material3.FilterChip(selected = c in cset, label = { Text(com.tbm.iptv.data.Countries.label(c)) },
+                            com.tbm.iptv.ui.TvFilterChip(selected = c in cset, label = { Text(com.tbm.iptv.data.Countries.label(c)) },
                                 onClick = { setC(if (c in cset) cset - c else cset + c) })
                         }
                     }
@@ -517,7 +517,7 @@ fun KidsContentScreen(profileId: String, onBack: () -> Unit) {
                                 (if (blockedHere > 0) " · " + L("{0} חסומים", blockedHere) else ""), fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                         // פתיחת הקטגוריה – חסימה של ערוץ/סרט בודד
-                        androidx.compose.material3.TextButton(onClick = { expanded = if (expanded == g) null else g }) {
+                        com.tbm.iptv.ui.TvTextButton(onClick = { expanded = if (expanded == g) null else g }) {
                             Text(if (expanded == g || itemHit(g)) L("סגור ▲") else L("פריטים ▼"), fontSize = 12.sp)
                         }
                     }
