@@ -412,7 +412,7 @@ private fun EntryRowStrip(
         items(list) { e ->
             val r = Prefs.resume(e.key)
             Poster(e.name, e.logo, Prefs.isFav(e.key), r?.let { it.first.toFloat() / it.second.coerceAtLeast(1) },
-                rating = e.rating(), badge = tag?.invoke(e), onLong = { onLong(e) }) {
+                rating = e.rating(), badge = tag?.invoke(e), focusKey = e.key, onLong = { onLong(e) }) {
                 if (kind == Kind.SERIES && e is SeriesItem) nav(Screen.Series(e))
                 else if (e is Channel) nav(Screen.Movie(e))
             }
@@ -424,9 +424,15 @@ private fun EntryRowStrip(
 private fun Poster(
     name: String, logo: String?, fav: Boolean, progress: Float?, sub: String? = null,
     width: androidx.compose.ui.unit.Dp? = 118.dp, rating: Float = 0f, platform: com.tbm.iptv.data.Platforms.P? = null,
-    badge: String? = null, onLong: (() -> Unit)? = null, onClick: () -> Unit,
+    badge: String? = null, focusKey: String? = null, onLong: (() -> Unit)? = null, onClick: () -> Unit,
 ) {
-    FocusItem(onLongClick = onLong, onClick = onClick) {
+    // בשלט: אחרי חזרה מדף הסרט/הסדרה – הסימון חוזר לפוסטר שנלחץ
+    val fr = remember { androidx.compose.ui.focus.FocusRequester() }
+    if (focusKey != null && focusKey == FocusMemory.last) LaunchedEffect(Unit) {
+        kotlinx.coroutines.delay(120); runCatching { fr.requestFocus() }; FocusMemory.last = null
+    }
+    FocusItem(Modifier.then(if (focusKey != null) Modifier.focusRequester(fr) else Modifier), onLongClick = onLong,
+        onClick = { if (focusKey != null) FocusMemory.last = focusKey; onClick() }) {
         Column((if (width != null) Modifier.width(width) else Modifier.fillMaxWidth()).padding(4.dp)) {
             Box(Modifier.fillMaxWidth().aspectRatio(2f / 3f).clip(RoundedCornerShape(6.dp)).background(MaterialTheme.colorScheme.surfaceVariant)) {
                 if (logo == null) Text(name, Modifier.align(Alignment.Center).padding(6.dp), textAlign = TextAlign.Center, fontSize = 13.sp)
@@ -852,7 +858,7 @@ fun PosterGrid(items: List<Entry>, favs: Set<String>, modifier: Modifier, onLong
         gridItemsIndexed(items) { _, e ->
             val r = remember(e.key, ver) { Prefs.resume(e.key) }
             Poster(e.name, e.logo, e.key in favs, r?.let { it.first.toFloat() / it.second.coerceAtLeast(1) },
-                width = null, rating = e.rating(), platform = com.tbm.iptv.data.Platforms.detect(e), onLong = { onLong(e) }) { onClick(e) }
+                width = null, rating = e.rating(), platform = com.tbm.iptv.data.Platforms.detect(e), focusKey = e.key, onLong = { onLong(e) }) { onClick(e) }
         }
     }
 }
@@ -1301,7 +1307,7 @@ private fun CategoryStrip(
         } else items(shown) { e ->
             val r = remember(e.key) { Prefs.resume(e.key) }
             Poster(e.name, e.logo, e.key in favs, r?.let { it.first.toFloat() / it.second.coerceAtLeast(1) },
-                width = 124.dp, rating = e.rating(), platform = com.tbm.iptv.data.Platforms.detect(e), onLong = { onLong(e) }) {
+                width = 124.dp, rating = e.rating(), platform = com.tbm.iptv.data.Platforms.detect(e), focusKey = e.key, onLong = { onLong(e) }) {
                 if (e is SeriesItem) nav(Screen.Series(e)) else if (e is Channel) nav(Screen.Movie(e))
             }
         }
@@ -1483,3 +1489,7 @@ private fun KidsHome(content: Content, ver: Int, nav: (Screen) -> Unit) {
     }
     menu?.let { ItemMenu(it) { menu = null } }
 }
+
+
+/** הפוסטר האחרון שנלחץ – כדי להחזיר אליו את הסימון בשלט אחרי חזרה */
+object FocusMemory { @Volatile var last: String? = null }
