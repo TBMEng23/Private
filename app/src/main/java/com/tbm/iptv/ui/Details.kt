@@ -601,7 +601,7 @@ private fun AgeGate(info: MediaInfo?, tv: Boolean, title: String, onBack: () -> 
         // נשמר – ואם לא מתאים, הפריט יוסתר מהרשימות של הפרופיל
         if (itemKey != null) {
             val before = com.tbm.iptv.data.KidsFilter.cachedAge(itemKey)
-            com.tbm.iptv.data.KidsFilter.cacheAge(itemKey, r)
+            com.tbm.iptv.data.KidsFilter.cacheAge(itemKey, r); com.tbm.iptv.data.KidsFilter.saveAges()
             if (r != null && r > prof.age && before != r) Prefs.bump()
         }
     }

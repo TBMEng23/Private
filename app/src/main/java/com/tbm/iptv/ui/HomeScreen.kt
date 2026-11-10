@@ -218,16 +218,16 @@ private fun SideRail(section: Section, kids: Boolean, onSelect: (Section) -> Uni
     val sections = Section.entries.filter { !kids || (it != Section.RECORDINGS && it != Section.MULTI) }
     val extra = if (kids) 1 else 3
     BoxWithConstraints(Modifier.width(84.dp).fillMaxHeight().background(MaterialTheme.colorScheme.surface)) {
-        // גובה לכל פריט כך שכולם ייכנסו במסך (בטלוויזיה); אם עדיין צפוף – גלילה
-        val itemH = ((maxHeight - 36.dp) / (sections.size + extra)).coerceIn(38.dp, 58.dp)
+        // כל הפריטים נכנסים במסך בלי גלילה (בסטרימר הגלילה "הקפיצה" את החלק העליון החוצה)
+        val itemH = ((maxHeight - 34.dp) / (sections.size + extra)).coerceIn(26.dp, 58.dp)
         Column(
-            Modifier.fillMaxSize().verticalScroll(androidx.compose.foundation.rememberScrollState()).padding(vertical = 4.dp, horizontal = 4.dp),
+            Modifier.fillMaxSize().padding(vertical = 2.dp, horizontal = 4.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Text("TBM", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Black, fontSize = 16.sp,
-                modifier = Modifier.height(28.dp))
+            Text("TBM", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Black, fontSize = 15.sp,
+                modifier = Modifier.height(24.dp))
             sections.forEach { s -> RailItem(s.label, s.icon, s == section, itemH) { onSelect(s) } }
-            androidx.compose.material3.HorizontalDivider(Modifier.padding(vertical = 2.dp))
+            androidx.compose.material3.HorizontalDivider()
             RailItem(Prefs.profile().name, Icons.Filled.Person, false, itemH) { nav(Screen.Profiles) }
             if (!kids) {
                 RailItem(L("רשימות"), Icons.AutoMirrored.Filled.PlaylistPlay, false, itemH) { nav(Screen.Playlists) }
@@ -239,11 +239,13 @@ private fun SideRail(section: Section, kids: Boolean, onSelect: (Section) -> Uni
 
 @Composable
 private fun RailItem(label: String, icon: ImageVector, selected: Boolean, h: androidx.compose.ui.unit.Dp = 52.dp, onClick: () -> Unit) {
-    FocusItem(Modifier.fillMaxWidth().height(h), selected = selected, onClick = onClick) {
+    FocusItem(Modifier.fillMaxWidth().height(h).padding(vertical = 1.dp), selected = selected, onClick = onClick) {
         Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
             Icon(icon, label, tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(if (h < 46.dp) 20.dp else 24.dp))
-            Text(label, fontSize = if (h < 46.dp) 9.sp else 10.sp, maxLines = 1, textAlign = TextAlign.Center, lineHeight = 11.sp)
+                modifier = Modifier.size(if (h < 34.dp) 18.dp else if (h < 46.dp) 20.dp else 24.dp))
+            // צפוף מאוד – רק אייקון (התווית מופיעה כשהפריט מסומן)
+            if (h >= 34.dp || LocalItemFocused.current)
+                Text(label, fontSize = if (h < 46.dp) 9.sp else 10.sp, maxLines = 1, textAlign = TextAlign.Center, lineHeight = 10.sp)
         }
     }
 }

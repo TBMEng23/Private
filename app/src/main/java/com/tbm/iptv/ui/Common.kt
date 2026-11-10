@@ -124,7 +124,8 @@ fun FocusItem(
                     else -> false
                 }
             }
-            .graphicsLayer { scaleX = scale; scaleY = scale }
+            // שכבת גרפיקה רק לפריט המסומן (בלי זה כל פריט ברשימה יוצר שכבה – כבד מאוד בסטרימר)
+            .then(if (scale != 1f) Modifier.graphicsLayer { scaleX = scale; scaleY = scale } else Modifier)
             .clip(shape)
             .background(bg)
             .border(if (focused) 3.dp else 0.dp, if (focused) Color.White else Color.Transparent, shape)

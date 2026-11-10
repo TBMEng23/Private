@@ -81,10 +81,29 @@ object KidsFilter {
 
     /** בודק ב-TMDB את סיווג הגיל של סרט/סדרה. null = לא ידוע */
     // ---- מטמון גיל לכל פריט (מקומי במכשיר) – כדי לא להציג בכלל תוכן שלא מתאים לגיל ----
-    private val ageSp by lazy { com.tbm.iptv.App.instance.getSharedPreferences("tbm_age", android.content.Context.MODE_PRIVATE) }
+    // נשמר בקובץ פשוט ונכתב פעם אחת בסוף כל סריקה (לא SharedPreferences: מאות כתיבות apply() גורמות
+    // לאנדרואיד להמתין להן על ה-thread הראשי ביציאה מהמסך → "האפליקציה לא מגיבה")
+    private val ageFile by lazy { java.io.File(com.tbm.iptv.App.instance.filesDir, "age_cache.tsv") }
+    private val ages: java.util.concurrent.ConcurrentHashMap<String, Int> by lazy {
+        val m = java.util.concurrent.ConcurrentHashMap<String, Int>()
+        runCatching { if (ageFile.exists()) ageFile.forEachLine { l -> val i = l.lastIndexOf('\t'); if (i > 0) l.substring(i + 1).toIntOrNull()?.let { m[l.substring(0, i)] = it } } }
+        m
+    }
+    @Volatile private var agesDirty = false
     /** גיל סיווג ידוע לפריט, -1 = נבדק ולא נמצא סיווג, null = עוד לא נבדק */
-    fun cachedAge(key: String): Int? = if (ageSp.contains(key)) ageSp.getInt(key, -1) else null
-    fun cacheAge(key: String, age: Int?) = ageSp.edit().putInt(key, age ?: -1).apply()
+    fun cachedAge(key: String): Int? = ages[key]
+    fun cacheAge(key: String, age: Int?) { ages[key] = age ?: -1; agesDirty = true }
+    fun saveAges() {
+        if (!agesDirty) return
+        agesDirty = false
+        Repo.scope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            runCatching {
+                val tmp = java.io.File(ageFile.path + ".tmp")
+                tmp.bufferedWriter().use { w -> ages.forEach { (k, v) -> w.append(k).append('\t').append(v.toString()).append('\n') } }
+                tmp.renameTo(ageFile)
+            }
+        }
+    }
 
     /** מוצא את הכותר ב-TMDB לפי השם (והשנה) ומחזיר את גיל הסיווג */
     fun ageByName(name: String, tv: Boolean): Int? {
@@ -118,6 +137,7 @@ object KidsFilter {
                         async { val a = ageByName(e.name, e is SeriesItem); cacheAge(e.key, a); a }
                     }.forEachIndexed { _, d -> val a = d.await(); if (a != null && a > maxAge) hidden++ }
                 }
+                saveAges()
                 if (hidden > 0) kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) { Prefs.bump() }
             } finally { scanning.set(false) }
         }

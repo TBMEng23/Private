@@ -27,7 +27,19 @@ object Prefs {
         mt = c.getSharedPreferences("tbm_mt", Context.MODE_PRIVATE)
     }
 
-    private fun touch(k: String) { if (!isLocalKey(k)) mt.edit().putLong(k, System.currentTimeMillis()).apply() }
+    // זמני שינוי נאספים בזיכרון ונכתבים יחד (פחות כתיבות לדיסק)
+    private val pendingMt = java.util.concurrent.ConcurrentHashMap<String, Long>()
+    private val mtFlush = Runnable {
+        val e = mt.edit(); pendingMt.keys.toList().forEach { k -> pendingMt.remove(k)?.let { e.putLong(k, it) } }; e.apply()
+    }
+    private val mtHandler by lazy { android.os.Handler(android.os.Looper.getMainLooper()) }
+    private fun touch(k: String) {
+        if (isLocalKey(k)) return
+        pendingMt[k] = System.currentTimeMillis()
+        mtHandler.removeCallbacks(mtFlush); mtHandler.postDelayed(mtFlush, 1500)
+    }
+    /** לפני ייצוא לענן – לכתוב זמנים שממתינים */
+    private fun flushMt() { mtHandler.removeCallbacks(mtFlush); mtFlush.run() }
 
     /** נקרא בכל שינוי (לסנכרון בענן) */
     @Volatile var onChange: (() -> Unit)? = null
@@ -49,7 +61,8 @@ object Prefs {
     fun exportCloud(): String {
         val o = JSONObject()
         val m = JSONObject()
-        mt.all.forEach { (k, v) -> if (!isLocalKey(k) && v is Long) m.put(k, v) }
+        pendingMt.forEach { (k, v) -> m.put(k, v) }
+        mt.all.forEach { (k, v) -> if (!isLocalKey(k) && v is Long && !m.has(k)) m.put(k, v) }
         o.put("_mt", m)
         sp.all.forEach { (k, v) ->
             if (isLocalKey(k)) return@forEach
@@ -80,6 +93,7 @@ object Prefs {
      * מחזיר true אם במכשיר יש שינויים חדשים יותר שצריך להעלות.
      */
     fun importCloud(text: String, replace: Boolean = false): Boolean {
+        flushMt()
         val o = JSONObject(text)
         val rmt = o.optJSONObject("_mt")
         val e = sp.edit(); val me = mt.edit()
