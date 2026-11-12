@@ -411,9 +411,10 @@ private fun RowTitle(t: String) {
 
 @Composable
 private fun EntryRowStrip(
-    title: String, list: List<Entry>, kind: Kind, ctx: android.content.Context, nav: (Screen) -> Unit,
+    title: String, list0: List<Entry>, kind: Kind, ctx: android.content.Context, nav: (Screen) -> Unit,
     tag: ((Entry) -> String?)? = null, onLong: (Entry) -> Unit,
 ) {
+    val list = remember(list0) { dedupeTitles(list0) }
     RowTitle(title)
     LazyRow(contentPadding = PaddingValues(horizontal = 12.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         items(list) { e ->
@@ -1325,7 +1326,8 @@ private fun isPreferred(e: Entry): Boolean {
 }
 
 @Composable
-private fun FeaturedHero(list: List<Entry>, kind: Kind, favs: Set<String>, nav: (Screen) -> Unit) {
+private fun FeaturedHero(list0: List<Entry>, kind: Kind, favs: Set<String>, nav: (Screen) -> Unit) {
+    val list = remember(list0) { dedupeTitles(list0) }
     // אפשר לגלול הצידה בעצמך; כשלא נוגעים – מתחלף לבד כל 8 שניות
     val pager = androidx.compose.foundation.pager.rememberPagerState { list.size }
     LaunchedEffect(list, pager.currentPage, pager.isScrollInProgress) {
@@ -1381,9 +1383,10 @@ private fun FeaturedHero(list: List<Entry>, kind: Kind, favs: Set<String>, nav: 
 
 @Composable
 private fun CategoryStrip(
-    title: String, list: List<Entry>, kind: Kind, favs: Set<String>, nav: (Screen) -> Unit, onSeeAll: (() -> Unit)?, onLong: (Entry) -> Unit,
+    title: String, list0: List<Entry>, kind: Kind, favs: Set<String>, nav: (Screen) -> Unit, onSeeAll: (() -> Unit)?, onLong: (Entry) -> Unit,
 ) {
     val ctx = LocalContext.current
+    val list = remember(list0) { dedupeTitles(list0) }
     val shown = remember(list) { list.take(30) }
     Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp, top = 14.dp), verticalAlignment = Alignment.CenterVertically) {
         Text("$title (${list.size})", fontSize = 17.sp, fontWeight = FontWeight.Bold, maxLines = 1,
@@ -1444,7 +1447,8 @@ private fun TmdbBadge() {
 
 /** שורת טרנדים עם מספרי דירוג גדולים (כמו MyTVOnline / נטפליקס) */
 @Composable
-private fun RankedStrip(title: String, list: List<Entry>, nav: (Screen) -> Unit, onLong: (Entry) -> Unit) {
+private fun RankedStrip(title: String, list0: List<Entry>, nav: (Screen) -> Unit, onLong: (Entry) -> Unit) {
+    val list = remember(list0) { dedupeTitles(list0) }
     Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 18.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
         Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
         TmdbBadge()
@@ -1587,3 +1591,24 @@ private fun KidsHome(content: Content, ver: Int, nav: (Screen) -> Unit) {
 
 /** הפוסטר האחרון שנלחץ – כדי להחזיר אליו את הסימון בשלט אחרי חזרה */
 object FocusMemory { @Volatile var last: String? = null }
+
+
+/**
+ * אותו סרט/סדרה מכמה קטגוריות של הספק (למשל "AMZ - X" ו-"4K-AMZ - X") מוצג בשורות פעם אחת;
+ * בדף הפרטים כל הגרסאות מופיעות תחת "מקורות". עדיפות לגרסה שכבר התחלת לצפות בה, אחריה ל-HD (4K כבד לסטרימר).
+ */
+fun dedupeTitles(l: List<Entry>): List<Entry> {
+    if (l.size < 2) return l
+    val groups = LinkedHashMap<String, MutableList<Entry>>()
+    for (e in l) {
+        val k = com.tbm.iptv.data.Sources.norm(e.name).ifBlank { e.key } + "|" + (com.tbm.iptv.data.Sources.year(e.name) ?: "")
+        groups.getOrPut(k) { ArrayList() } += e
+    }
+    if (groups.size == l.size) return l
+    return groups.values.map { g ->
+        if (g.size == 1) g[0]
+        else g.firstOrNull { Prefs.resume(it.key) != null }
+            ?: g.firstOrNull { com.tbm.iptv.data.Sources.quality(it) !in setOf("4K", "CAM") }
+            ?: g[0]
+    }
+}
