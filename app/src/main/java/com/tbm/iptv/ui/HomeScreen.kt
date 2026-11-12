@@ -122,6 +122,8 @@ import com.tbm.iptv.rec.RecordingService
 import com.tbm.iptv.rec.Scheduler
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.rememberCoroutineScope
 import java.io.File
 
 enum class Section(private val he: String, val icon: ImageVector) {
@@ -1324,41 +1326,54 @@ private fun isPreferred(e: Entry): Boolean {
 
 @Composable
 private fun FeaturedHero(list: List<Entry>, kind: Kind, favs: Set<String>, nav: (Screen) -> Unit) {
-    var idx by remember(list) { mutableStateOf(0) }
-    LaunchedEffect(list) { while (true) { kotlinx.coroutines.delay(8000); idx = (idx + 1) % list.size } }
-    val e = list[idx.coerceIn(0, list.size - 1)]
-    val open = { if (e is SeriesItem) nav(Screen.Series(e)) else if (e is Channel) nav(Screen.Movie(e)) }
-    Box(Modifier.fillMaxWidth().height(440.dp).padding(horizontal = 12.dp, vertical = 6.dp).clip(RoundedCornerShape(10.dp))
-        .background(MaterialTheme.colorScheme.surfaceVariant).clickable { open() }) {
-        androidx.compose.animation.Crossfade(e.logo, label = "hero") { img ->
-            AsyncImage(img, null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+    // אפשר לגלול הצידה בעצמך; כשלא נוגעים – מתחלף לבד כל 8 שניות
+    val pager = androidx.compose.foundation.pager.rememberPagerState { list.size }
+    LaunchedEffect(list, pager.currentPage, pager.isScrollInProgress) {
+        if (!pager.isScrollInProgress && list.size > 1) {
+            kotlinx.coroutines.delay(8000)
+            runCatching { pager.animateScrollToPage((pager.currentPage + 1) % list.size) }
         }
-        Box(Modifier.fillMaxSize().background(androidx.compose.ui.graphics.Brush.verticalGradient(
-            0.55f to Color.Transparent, 1f to Color(0xEE0B0C10))))
-        Column(Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(14.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(e.name, color = Color.White, fontWeight = FontWeight.Black, fontSize = 22.sp, maxLines = 2,
-                overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
-            Row(Modifier.padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-                if (e.rating() > 0f) Text("★ %.1f".format(e.rating()), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp,
-                    modifier = Modifier.background(MaterialTheme.colorScheme.primary, RoundedCornerShape(50)).padding(horizontal = 10.dp, vertical = 3.dp))
-                Spacer(Modifier.width(8.dp))
-                Text(e.group, color = Color(0xFFCFD0D6), fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+    }
+    Box(Modifier.fillMaxWidth().height(440.dp).padding(horizontal = 12.dp, vertical = 6.dp).clip(RoundedCornerShape(10.dp))
+        .background(MaterialTheme.colorScheme.surfaceVariant)) {
+        androidx.compose.foundation.pager.HorizontalPager(pager, Modifier.fillMaxSize(), key = { list[it].key }) { page ->
+            val e = list[page.coerceIn(0, list.size - 1)]
+            val open = { if (e is SeriesItem) nav(Screen.Series(e)) else if (e is Channel) nav(Screen.Movie(e)) }
+            Box(Modifier.fillMaxSize().clickable { open() }) {
+                AsyncImage(e.logo, null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+                Box(Modifier.fillMaxSize().background(androidx.compose.ui.graphics.Brush.verticalGradient(
+                    0.55f to Color.Transparent, 1f to Color(0xEE0B0C10))))
+                Column(Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(start = 14.dp, end = 14.dp, top = 14.dp, bottom = 26.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(e.name, color = Color.White, fontWeight = FontWeight.Black, fontSize = 22.sp, maxLines = 2,
+                        overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
+                    Row(Modifier.padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                        if (e.rating() > 0f) Text("★ %.1f".format(e.rating()), color = Color.White, fontWeight = FontWeight.Bold, fontSize = 13.sp,
+                            modifier = Modifier.background(MaterialTheme.colorScheme.primary, RoundedCornerShape(50)).padding(horizontal = 10.dp, vertical = 3.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text(e.group, color = Color(0xFFCFD0D6), fontSize = 12.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    }
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Button(onClick = open, shape = RoundedCornerShape(6.dp)) {
+                            Icon(Icons.Filled.Info, null, Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)); Text(L("פרטים"))
+                        }
+                        val fav = e.key in favs
+                        OutlinedButton(onClick = { Prefs.toggleFav(e.key) }, shape = RoundedCornerShape(6.dp)) {
+                            Icon(if (fav) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder, null, Modifier.size(18.dp), tint = if (fav) Color(0xFFE53935) else Color.White)
+                            Spacer(Modifier.width(6.dp)); Text(L("מועדף"), color = Color.White)
+                        }
+                    }
+                }
             }
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                Button(onClick = open, shape = RoundedCornerShape(6.dp)) {
-                    Icon(Icons.Filled.Info, null, Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)); Text(L("פרטים"))
-                }
-                val fav = e.key in favs
-                OutlinedButton(onClick = { Prefs.toggleFav(e.key) }, shape = RoundedCornerShape(6.dp)) {
-                    Icon(if (fav) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder, null, Modifier.size(18.dp), tint = if (fav) Color(0xFFE53935) else Color.White)
-                    Spacer(Modifier.width(6.dp)); Text(L("מועדף"), color = Color.White)
-                }
-            }
-            Row(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-                list.indices.forEach { i ->
-                    Box(Modifier.size(if (i == idx) 8.dp else 6.dp).clip(RoundedCornerShape(50))
-                        .background(if (i == idx) Color.White else Color(0x66FFFFFF)))
-                }
+        }
+        // נקודות – לחיצה על נקודה קופצת אליה
+        val scope = rememberCoroutineScope()
+        Row(Modifier.align(Alignment.BottomCenter).padding(bottom = 10.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            list.indices.forEach { i ->
+                val cur = i == pager.currentPage
+                Box(Modifier.size(if (cur) 9.dp else 7.dp).clip(RoundedCornerShape(50))
+                    .background(if (cur) Color.White else Color(0x66FFFFFF))
+                    .clickable { scope.launch { pager.animateScrollToPage(i) } })
             }
         }
     }
