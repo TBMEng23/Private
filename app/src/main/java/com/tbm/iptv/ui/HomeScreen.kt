@@ -308,6 +308,7 @@ private fun HomeRows(content: Content, ver: Int, wide: Boolean, nav: (Screen) ->
                 item { QuickTile(L("לוח שידורים"), Icons.Filled.DateRange) { go(Section.GUIDE) } }
                 if (!Prefs.isKids) {
                     item { QuickTile(L("הקלטות"), Icons.Filled.FiberManualRecord) { go(Section.RECORDINGS) } }
+                    item { QuickTile(L("קבצים במכשיר"), Icons.Filled.Folder) { go(Section.LOCAL) } }
                     item { QuickTile(L("מולטי-ויו"), Icons.Filled.GridView) { go(Section.MULTI) } }
                 }
                 item { QuickTile(L("חיפוש"), Icons.Filled.Search) { go(Section.SEARCH) } }
