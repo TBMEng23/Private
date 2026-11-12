@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.material.icons.filled.PlayCircle
+import androidx.compose.material.icons.filled.Folder
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Mic
@@ -131,6 +133,7 @@ enum class Section(private val he: String, val icon: ImageVector) {
     FAV("מועדפים", Icons.Filled.Star),
     RECORDINGS("הקלטות", Icons.Filled.FiberManualRecord),
     MULTI("מולטי-ויו", Icons.Filled.GridView),
+    LOCAL("קבצים במכשיר", Icons.Filled.Folder),
     SEARCH("חיפוש", Icons.Filled.Search);
 
     val label: String get() = L(he)
@@ -261,6 +264,7 @@ private fun SectionContent(section: Section, content: Content, ver: Int, wide: B
         Section.FAV -> FavoritesSection(content, ver, nav)
         Section.RECORDINGS -> RecordingsSection(ver)
         Section.MULTI -> MultiViewSection(content)
+        Section.LOCAL -> LocalFilesSection()
         Section.SEARCH -> SearchSection(content, ver, nav)
     }
 }
@@ -918,6 +922,80 @@ private fun EntryRow(e: Entry, fav: Boolean, sub: String? = null, onLong: (() ->
 }
 
 // ============================================================ הקלטות
+@Composable
+private fun LocalFilesSection() {
+    val ctx = LocalContext.current
+    val ver = Prefs.version.intValue
+    val folders = remember(ver) { com.tbm.iptv.data.LocalMedia.folders() }
+    var videos by remember { mutableStateOf<List<com.tbm.iptv.data.LocalVideo>>(emptyList()) }
+    var scanning by remember { mutableStateOf(false) }
+    LaunchedEffect(folders) {
+        scanning = true
+        videos = withContext(Dispatchers.IO) { folders.flatMap { runCatching { com.tbm.iptv.data.LocalMedia.scan(ctx, it) }.getOrDefault(emptyList()) } }
+            .sortedWith(compareBy({ it.show ?: "" }, { it.season ?: 0 }, { it.episode ?: 0 }, { it.name.lowercase() }))
+        scanning = false
+    }
+    val pickFile = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) Launcher.play(ctx, listOf(com.tbm.iptv.data.LocalMedia.fromPicked(ctx, uri)), 0)
+    }
+    val pickDir = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.OpenDocumentTree()) { uri ->
+        if (uri != null) com.tbm.iptv.data.LocalMedia.addFolder(ctx, uri)
+    }
+    fun play(list: List<com.tbm.iptv.data.LocalVideo>, i: Int) =
+        Launcher.play(ctx, list.map { com.tbm.iptv.data.LocalMedia.toPlay(it) }, i)
+    val movies = videos.filter { it.show == null }
+    val shows = videos.filter { it.show != null }.groupBy { it.show!! }
+    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(12.dp)) {
+        item {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Button(onClick = { runCatching { pickFile.launch(arrayOf("video/*")) } }) { Text(L("🎬 בחר קובץ")) }
+                OutlinedButton(onClick = { runCatching { pickDir.launch(null) } }) { Text(L("📁 הוסף תיקייה")) }
+            }
+            Text(L("סרטים וסדרות מהמכשיר, מכרטיס זיכרון או מ-USB. כתוביות בעברית נמצאות ומתורגמות אוטומטית, וקובץ כתוביות באותו שם ליד הסרט נטען לבד."),
+                fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(vertical = 8.dp))
+        }
+        if (folders.isNotEmpty()) item {
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                items(folders) { f ->
+                    FilterChip(selected = true, onClick = {}, label = { Text("📁 " + com.tbm.iptv.data.LocalMedia.folderName(f), maxLines = 1) },
+                        trailingIcon = { IconButton(onClick = { com.tbm.iptv.data.LocalMedia.removeFolder(ctx, f) }, Modifier.size(24.dp)) {
+                            Icon(Icons.Filled.Close, L("הסר"), Modifier.size(16.dp)) } })
+                }
+            }
+        }
+        if (scanning) item { Text(L("סורק…"), modifier = Modifier.padding(8.dp)) }
+        if (!scanning && folders.isNotEmpty() && videos.isEmpty()) item { Text(L("לא נמצאו קבצי וידאו בתיקיות"), modifier = Modifier.padding(8.dp)) }
+        if (movies.isNotEmpty()) {
+            item { SectionTitle(L("🎬 סרטים ({0})", movies.size)) }
+            items(movies, key = { it.key }) { v -> LocalRow(v, Prefs.resume(v.key)) { play(movies, movies.indexOf(v)) } }
+        }
+        shows.forEach { (show, eps) ->
+            item(key = "sh:$show") { SectionTitle("📺 $show (${eps.size})") }
+            items(eps, key = { it.key }) { v -> LocalRow(v, Prefs.resume(v.key)) { play(eps, eps.indexOf(v)) } }
+        }
+    }
+}
+
+@Composable
+private fun LocalRow(v: com.tbm.iptv.data.LocalVideo, r: Pair<Long, Long>?, onClick: () -> Unit) {
+    FocusItem(Modifier.fillMaxWidth().padding(vertical = 2.dp), onClick = onClick) {
+        Row(Modifier.padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
+            Icon(Icons.Filled.PlayCircle, null, tint = MaterialTheme.colorScheme.primary)
+            Column(Modifier.weight(1f).padding(horizontal = 10.dp)) {
+                val t = if (v.season != null) "S%02dE%02d · ".format(v.season, v.episode ?: 0) + v.title else v.title
+                Text(t, maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.Bold)
+                Text(listOfNotNull("%.1f GB".format(v.size / 1e9).takeIf { v.size > 0 }, v.folder,
+                    if (v.subtitle != null) L("כתוביות מקומיות ✓") else null).joinToString(" · "),
+                    fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+                if (r != null && r.second > 0) LinearProgressIndicator(progress = { (r.first.toFloat() / r.second).coerceIn(0f, 1f) },
+                    modifier = Modifier.fillMaxWidth().padding(top = 4.dp).height(3.dp))
+            }
+        }
+    }
+}
+
 @Composable
 private fun RecordingsSection(ver: Int) {
     val ctx = LocalContext.current

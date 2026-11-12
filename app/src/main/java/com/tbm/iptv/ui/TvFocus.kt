@@ -69,6 +69,7 @@ fun TvSwitch(checked: Boolean, onCheckedChange: ((Boolean) -> Unit)?, modifier: 
 @Composable
 fun TvFilterChip(
     selected: Boolean, onClick: () -> Unit, label: @Composable () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true,
-    leadingIcon: @Composable (() -> Unit)? = null, colors: SelectableChipColors = androidx.compose.material3.FilterChipDefaults.filterChipColors(),
+    leadingIcon: @Composable (() -> Unit)? = null, trailingIcon: @Composable (() -> Unit)? = null,
+    colors: SelectableChipColors = androidx.compose.material3.FilterChipDefaults.filterChipColors(),
 ) = androidx.compose.material3.FilterChip(selected, onClick, label, modifier.tvFocus(RoundedCornerShape(8.dp)), enabled,
-    leadingIcon = leadingIcon, colors = colors)
+    leadingIcon = leadingIcon, trailingIcon = trailingIcon, colors = colors)

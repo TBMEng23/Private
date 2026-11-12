@@ -292,8 +292,8 @@ class PlayerActivity : FragmentActivity() {
         ui.item = item
         ui.title = item.title
         ui.isLive = item.kind == Kind.LIVE && !item.isCatchup
-        ui.hasNext = !item.isLocal && item.kind != Kind.MOVIE && !item.isCatchup && i < q.size - 1
-        ui.hasPrev = !item.isLocal && item.kind != Kind.MOVIE && !item.isCatchup && i > 0
+        ui.hasNext = !com.tbm.iptv.data.LocalMedia.isRecording(item) && item.kind != Kind.MOVIE && !item.isCatchup && i < q.size - 1
+        ui.hasPrev = !com.tbm.iptv.data.LocalMedia.isRecording(item) && item.kind != Kind.MOVIE && !item.isCatchup && i > 0
         PlayerHolder.miniTitle = item.title
     }
 
@@ -334,7 +334,17 @@ class PlayerActivity : FragmentActivity() {
 
         voice?.stop()
         if (Prefs.voiceDefault && item.kind != Kind.LIVE && !ui.voiceOn) toggleVoice()
-        if (item.kind != Kind.LIVE && !item.isCatchup && !item.isLocal) {
+        // קובץ מקומי עם כתובית באותו שם – נטענת מיד
+        val side = if (item.isLocal) com.tbm.iptv.data.LocalMedia.sidecars[item.key] else null
+        if (side != null && runCatching {
+                val txt = contentResolver.openInputStream(side)!!.use { SubtitleManager.decode(it.readBytes(), "he") }
+                val ext = (side.lastPathSegment ?: "").substringAfterLast('.', "srt").lowercase()
+                val heb = Regex("[\u0590-\u05FF]").containsMatchIn(txt.take(4000))
+                subFile = com.tbm.iptv.subs.SubtitleFile(if (heb) SubtitleManager.fixRtl(txt) else txt, ext, if (heb) "he" else "en")
+                ui.subLabel = L("כתוביות מקומיות")
+                reloadWithSubtitle()
+            }.isSuccess) Unit
+        else if (item.kind != Kind.LIVE && !item.isCatchup && !com.tbm.iptv.data.LocalMedia.isRecording(item)) {
             val cached = SubtitleManager.loadCache(item.key)
             if (cached != null) {
                 subFile = cached.first
@@ -485,7 +495,7 @@ class PlayerActivity : FragmentActivity() {
 
     private fun saveProgress() {
         val item = current ?: return
-        if (item.kind == Kind.LIVE || item.isCatchup || item.isLocal) return
+        if (item.kind == Kind.LIVE || item.isCatchup || com.tbm.iptv.data.LocalMedia.isRecording(item)) return
         val dur = player.duration
         val pos = player.currentPosition
         if (dur > 0 && pos > 5_000) Prefs.saveResume(item, pos, dur)
