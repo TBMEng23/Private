@@ -218,7 +218,7 @@ private fun BottomNav(section: Section, onSelect: (Section) -> Unit) {
 
 @Composable
 private fun SideRail(section: Section, kids: Boolean, onSelect: (Section) -> Unit, nav: (Screen) -> Unit) {
-    val sections = Section.entries.filter { !kids || (it != Section.RECORDINGS && it != Section.MULTI) }
+    val sections = Section.entries.filter { !kids || (it != Section.RECORDINGS && it != Section.MULTI && it != Section.LOCAL) }
     val extra = if (kids) 1 else 3
     BoxWithConstraints(Modifier.width(84.dp).fillMaxHeight().background(MaterialTheme.colorScheme.surface)) {
         // כל הפריטים נכנסים במסך בלי גלילה (בסטרימר הגלילה "הקפיצה" את החלק העליון החוצה)
