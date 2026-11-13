@@ -291,8 +291,8 @@ private fun HomeRows(content: Content, ver: Int, wide: Boolean, nav: (Screen) ->
     // המדף: סדרות חדשות ועונות/פרקים חדשים (מה שהשתנה אצל הספק מאז הטעינה הקודמת)
     val shelfVer = com.tbm.iptv.data.Shelf.ready.intValue
     val seriesByKey = remember(series) { series.associateBy { it.key } }
-    val shelfNew = remember(seriesByKey, shelfVer) { com.tbm.iptv.data.Shelf.newSeries.mapNotNull { seriesByKey[it] } }
-    val shelfUpd = remember(seriesByKey, shelfVer) { com.tbm.iptv.data.Shelf.updated.mapNotNull { seriesByKey[it.first] } }
+    val shelfNew = remember(seriesByKey, shelfVer) { com.tbm.iptv.data.Shelf.newSeries.mapNotNull { seriesByKey[it] }.filter { isPreferred(it) } }
+    val shelfUpd = remember(seriesByKey, shelfVer) { com.tbm.iptv.data.Shelf.updated.mapNotNull { seriesByKey[it.first] }.filter { isPreferred(it) } }
     var trendMovies by remember { mutableStateOf<List<Entry>>(emptyList()) }
     var trendSeries by remember { mutableStateOf<List<Entry>>(emptyList()) }
     val tmdb = Prefs.tmdbKey
@@ -1272,8 +1272,8 @@ private fun RowsView(
     val ctx2 = LocalContext.current
     val shelfV = com.tbm.iptv.data.Shelf.ready.intValue
     val itemsByKey = remember(items) { if (kind == Kind.SERIES) items.associateBy { it.key } else emptyMap() }
-    val shelfUpd2 = remember(itemsByKey, shelfV) { com.tbm.iptv.data.Shelf.updated.mapNotNull { itemsByKey[it.first] } }
-    val shelfNew2 = remember(itemsByKey, shelfV) { com.tbm.iptv.data.Shelf.newSeries.mapNotNull { itemsByKey[it] } }
+    val shelfUpd2 = remember(itemsByKey, shelfV) { com.tbm.iptv.data.Shelf.updated.mapNotNull { itemsByKey[it.first] }.filter { isPreferred(it) } }
+    val shelfNew2 = remember(itemsByKey, shelfV) { com.tbm.iptv.data.Shelf.newSeries.mapNotNull { itemsByKey[it] }.filter { isPreferred(it) } }
     val heroes = remember(pref, top) {
         if (kind == Kind.LIVE) emptyList()
         else (top.ifEmpty { newest.ifEmpty { topRated } }).filter { it.logo != null }.take(8)
