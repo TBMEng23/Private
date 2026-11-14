@@ -149,6 +149,28 @@ private fun KidsBedtime(onSwitch: () -> Unit) {
     }
 }
 
+/** התראה כשמנוי הספק עומד לפוג (7 ימים ומטה), פעם ביום */
+@Composable
+private fun ExpiryDialog() {
+    val ver = Prefs.version.intValue
+    val p = remember(ver) { Prefs.activePlaylist() } ?: return
+    val days = remember(ver, p.id) { com.tbm.iptv.data.Expiry.daysLeft(p) } ?: return
+    val today = remember { java.text.SimpleDateFormat("yyyyMMdd", java.util.Locale.US).format(java.util.Date()) }
+    var shown by remember(p.id) { mutableStateOf(Prefs.str("exp_warn_${p.id}") == today) }
+    if (shown || days > 7 || Prefs.isKids) return
+    val date = java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault()).format(java.util.Date((Prefs.str("exp_${p.id}").toLongOrNull() ?: 0L) * 1000))
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = { Prefs.setStrQuiet("exp_warn_${p.id}", today); shown = true },
+        title = { androidx.compose.material3.Text(if (days < 0) com.tbm.iptv.L("⚠️ המנוי פג תוקף") else com.tbm.iptv.L("⚠️ המנוי עומד לפוג")) },
+        text = { androidx.compose.material3.Text(
+            if (days < 0) com.tbm.iptv.L("המנוי של \"{0}\" פג ב-{1}. פנה לספק לחידוש.", p.name, date)
+            else if (days == 0) com.tbm.iptv.L("המנוי של \"{0}\" פג היום ({1}). כדאי לחדש מול הספק.", p.name, date)
+            else com.tbm.iptv.L("המנוי של \"{0}\" יפוג בעוד {1} ימים ({2}). כדאי לחדש מול הספק. תזכורת נוספת מחר.", p.name, days, date)) },
+        confirmButton = { com.tbm.iptv.ui.TvButton(onClick = { Prefs.setStrQuiet("exp_warn_${p.id}", today); shown = true }) {
+            androidx.compose.material3.Text(com.tbm.iptv.L("הבנתי")) } },
+    )
+}
+
 /** חלון עדכון – רק כשהעדכון האוטומטי לא הצליח לבד או כשהעדכון האוטומטי כבוי */
 @Composable
 private fun UpdateDialog() {
@@ -225,6 +247,7 @@ fun AppRoot() {
         if (PlayerHolder.miniActive) DraggableMini()
         KidsBedtime { stack.clear(); stack.add(Screen.Profiles) }
         PinDialog()
+        ExpiryDialog()
         UpdateDialog()
         CrashReport()
     }

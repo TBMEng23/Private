@@ -108,7 +108,7 @@ class Xtream(private val p: Playlist) {
     }
 
     fun load(force: Boolean): Content {
-        if (force || Prefs.str("tz_${p.id}").isBlank()) accountInfo()
+        accountInfo()   // תאריך תפוגה ואזור זמן מעודכנים בכל טעינה
         val liveCats = cats("get_live_categories", force)
         val vodCats = cats("get_vod_categories", force)
         val serCats = cats("get_series_categories", force)

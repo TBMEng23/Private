@@ -1090,7 +1090,13 @@ fun PlaylistsScreen(onDone: () -> Unit, onBack: (() -> Unit)?) {
                                 Text(if (p.isXtream) "XCAPI" else if (p.url.startsWith("file://")) L("M3U · קובץ מקומי") else "M3U",
                                     fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 upd?.let { Text(L("עדכון אחרון: {0}", it), fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant) }
-                                exp?.let { Text(L("תוקף: {0}", it), fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                                exp?.let {
+                                    val days = com.tbm.iptv.data.Expiry.daysLeft(p)
+                                    Text(L("תוקף: {0}", it) + (days?.let { d -> if (d < 0) L(" · פג תוקף") else L(" · עוד {0} ימים", d) } ?: ""),
+                                        fontSize = 12.sp, fontWeight = if (days != null && days <= 7) FontWeight.Bold else FontWeight.Normal,
+                                        color = when { days == null -> MaterialTheme.colorScheme.onSurfaceVariant; days <= 3 -> Color(0xFFFF5252)
+                                            days <= 7 -> Color(0xFFFFA726); else -> MaterialTheme.colorScheme.onSurfaceVariant })
+                                }
                                 if (p.isXtream && p.user.isNotBlank()) Text(L("משתמש: {0}", p.user), fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 Text(if (disabled) L("מושבת") else if (p.id == active) L("● פעיל כעת") else L("לחץ כדי לעבור למקור הזה"), fontSize = 12.sp,
                                     color = if (p.id == active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
