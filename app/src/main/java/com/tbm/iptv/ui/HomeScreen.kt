@@ -286,12 +286,12 @@ private fun HomeRows(content: Content, ver: Int, wide: Boolean, nav: (Screen) ->
     val allowedKeys = remember(movies, series) { (movies.map { it.key } + series.map { it.key }).toHashSet() }
     val recentMovies = remember(recent, allowedKeys) { recent.filter { it.item.kind == Kind.MOVIE && it.item.key in allowedKeys } }
     val recentEps = remember(recent) { recent.filter { it.item.kind == Kind.SERIES }.distinctBy { it.item.seriesName } }
-    val newMovies = remember(movies) { movies.filterIsInstance<Channel>().filter { it.added > 0 && isPreferred(it) }.sortedByDescending { it.added }.take(30) }
+    val newMovies = remember(movies) { movies.filterIsInstance<Channel>().filter { it.added > 0 && isPreferred(it) && it.isFreshTitle() }.sortedByDescending { it.added }.take(30) }
     val newSeries = remember(series) { series.filterIsInstance<SeriesItem>().filter { it.added > 0 && isPreferred(it) }.sortedByDescending { it.added }.take(30) }
     // המדף: סדרות חדשות ועונות/פרקים חדשים (מה שהשתנה אצל הספק מאז הטעינה הקודמת)
     val shelfVer = com.tbm.iptv.data.Shelf.ready.intValue
     val seriesByKey = remember(series) { series.associateBy { it.key } }
-    val shelfNew = remember(seriesByKey, shelfVer) { com.tbm.iptv.data.Shelf.newSeries.mapNotNull { seriesByKey[it] }.filter { isPreferred(it) } }
+    val shelfNew = remember(seriesByKey, shelfVer) { com.tbm.iptv.data.Shelf.newSeries.mapNotNull { seriesByKey[it] }.filter { isPreferred(it) && it.isFreshTitle() } }
     val shelfUpd = remember(seriesByKey, shelfVer) { com.tbm.iptv.data.Shelf.updated.mapNotNull { seriesByKey[it.first] }.filter { isPreferred(it) } }
     var trendMovies by remember { mutableStateOf<List<Entry>>(emptyList()) }
     var trendSeries by remember { mutableStateOf<List<Entry>>(emptyList()) }
@@ -509,7 +509,7 @@ private fun BrowseSection(kind: Kind, all: List<Entry>, ver: Int, nav: (Screen) 
             null -> filtered
             FAV_GROUP -> filtered.filter { it.key in favs }
             RECENT_GROUP -> { val m = filtered.associateBy { it.key }; recentKeys.mapNotNull { m[it] } }
-            NEW_GROUP -> filtered.sortedByDescending { (it as? Channel)?.added ?: (it as? SeriesItem)?.added ?: 0L }.take(200)
+            NEW_GROUP -> filtered.filter { kind != Kind.MOVIE || it.isFreshTitle() }.sortedByDescending { (it as? Channel)?.added ?: (it as? SeriesItem)?.added ?: 0L }.take(200)
             else -> filtered.filter { it.group == group }
         }
         if (query.isBlank()) base else base.filter { it.name.contains(query, true) }
@@ -1198,6 +1198,11 @@ private fun SearchSection(content: Content, ver: Int, nav: (Screen) -> Unit) {
 
 fun Entry.rating(): Float = (this as? Channel)?.rating ?: (this as? SeriesItem)?.rating ?: 0f
 private fun Entry.addedAt(): Long = (this as? Channel)?.added ?: (this as? SeriesItem)?.added ?: 0L
+/** ל"חדש": סרט ישן (לפי השנה בשם) שרק עכשיו עלה לשרת לא נחשב חדש. בלי שנה – נשאר */
+internal fun Entry.isFreshTitle(): Boolean {
+    val y = com.tbm.iptv.data.TitleParser.parse(name).year ?: return true
+    return y >= java.util.Calendar.getInstance().get(java.util.Calendar.YEAR) - 5
+}
 
 // ============================================================ תצוגת קטגוריות (כמו Televizo)
 @Composable
@@ -1252,7 +1257,7 @@ private fun RowsView(
             }
         }
     }
-    val newest = remember(pref) { pref.filter { it.addedAt() > 0 }.sortedByDescending { it.addedAt() }.take(40) }
+    val newest = remember(pref) { pref.filter { it.addedAt() > 0 && (kind != Kind.MOVIE || it.isFreshTitle()) }.sortedByDescending { it.addedAt() }.take(40) }
     // שורה לכל פלטפורמה (Netflix, Prime, Disney+…) לפי מה שהספק מסמן
     val platformRows = remember(pref) {
         if (kind == Kind.LIVE) emptyList() else {
@@ -1273,7 +1278,7 @@ private fun RowsView(
     val shelfV = com.tbm.iptv.data.Shelf.ready.intValue
     val itemsByKey = remember(items) { if (kind == Kind.SERIES) items.associateBy { it.key } else emptyMap() }
     val shelfUpd2 = remember(itemsByKey, shelfV) { com.tbm.iptv.data.Shelf.updated.mapNotNull { itemsByKey[it.first] }.filter { isPreferred(it) } }
-    val shelfNew2 = remember(itemsByKey, shelfV) { com.tbm.iptv.data.Shelf.newSeries.mapNotNull { itemsByKey[it] }.filter { isPreferred(it) } }
+    val shelfNew2 = remember(itemsByKey, shelfV) { com.tbm.iptv.data.Shelf.newSeries.mapNotNull { itemsByKey[it] }.filter { isPreferred(it) && it.isFreshTitle() } }
     val heroes = remember(pref, top) {
         if (kind == Kind.LIVE) emptyList()
         else (top.ifEmpty { newest.ifEmpty { topRated } }).filter { it.logo != null }.take(8)
@@ -1516,7 +1521,7 @@ private fun KidsHome(content: Content, ver: Int, nav: (Screen) -> Unit) {
             if (l.size >= 3) L(title) to l else null
         }
     }
-    val fresh = remember(movies, series) { (movies + series).filter { it.addedAt() > 0 }.sortedByDescending { it.addedAt() }.take(30) }
+    val fresh = remember(movies, series) { (movies.filter { it.isFreshTitle() } + series).filter { it.addedAt() > 0 }.sortedByDescending { it.addedAt() }.take(30) }
     val resume = remember(movies, ver) {
         val recent = Prefs.recent()
         val keys = recent.map { it.item.key }.toSet()

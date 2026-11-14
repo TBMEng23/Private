@@ -44,7 +44,7 @@ object Trending {
         cacheDay = day
     }
 
-    private fun match(titles: List<Pair<String, Int?>>, items: List<Entry>): List<Entry> {
+    private fun match(titles: List<Pair<String, Int?>>, items: List<Entry>, tv: Boolean = false): List<Entry> {
         if (titles.isEmpty()) return emptyList()
         val index = HashMap<String, MutableList<Entry>>()
         items.forEach { e ->
@@ -56,7 +56,8 @@ object Trending {
         for ((t, year) in titles) {
             if (adult && Epg.norm(t) in kidsTitles) continue
             val cands = index[Epg.norm(t)] ?: continue
-            val best = cands.firstOrNull { year == null || TitleParser.parse(it.name).year == null || TitleParser.parse(it.name).year == year }
+            // סדרות: השנה אצל הספק היא לרוב של העונה האחרונה – לא בודקים שנה. סרטים: סטייה של שנה מותרת
+            val best = (if (tv) cands.firstOrNull() else cands.firstOrNull { val y = TitleParser.parse(it.name).year; year == null || y == null || kotlin.math.abs(y - year) <= 1 })
                 ?: continue
             out.putIfAbsent(Epg.norm(t), best)
             if (out.size >= 40) break
@@ -110,7 +111,7 @@ object Trending {
             val ck = "${if (tv) "tv" else "movie"}|$id|${System.currentTimeMillis() / 86_400_000L}"
             val titles = synchronized(discoverCache) { discoverCache[ck] } ?: runCatching { fetchDiscover(if (tv) "tv" else "movie", id, key) }
                 .getOrDefault(emptyList()).also { synchronized(discoverCache) { discoverCache[ck] = it } }
-            match(titles, items).forEach { out[it.key] = it }
+            match(titles, items, tv).forEach { out[it.key] = it }
         }
         if (out.size < 30) items.asSequence().filter { g.rx.containsMatchIn(it.group) }.take(60).forEach { out.putIfAbsent(it.key, it) }
         return out.values.take(40)
@@ -120,5 +121,5 @@ object Trending {
     // בפרופיל מבוגר – בלי תוכן ילדים בפופולרי (גם לפי קטגוריית הספק)
     private fun adultOnly(l: List<Entry>) = if (Prefs.isKids) l else l.filter { !KidsFilter.matches(it.group, 0) }
     fun movies(items: List<Entry>): List<Entry> { ensure(); return adultOnly(match(movieTitles, items)) }
-    fun series(items: List<Entry>): List<Entry> { ensure(); return adultOnly(match(tvTitles, items)) }
+    fun series(items: List<Entry>): List<Entry> { ensure(); return adultOnly(match(tvTitles, items, tv = true)) }
 }
