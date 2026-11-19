@@ -23,7 +23,14 @@ import java.io.File
 class SubTrack(val file: File, val mime: String, val lang: String, val label: String)
 
 object PlayerFactory {
+    /** מכשיר חלש / מעט זיכרון (למשל Mi Box 3: 224MB לאפליקציה) – באפר לפי נפח ופענוח שמע בחומרה */
+    fun lowMem(ctx: Context): Boolean {
+        val am = ctx.getSystemService(Context.ACTIVITY_SERVICE) as? android.app.ActivityManager
+        return am?.isLowRamDevice == true || Runtime.getRuntime().maxMemory() <= 320L * 1024 * 1024
+    }
+
     fun create(ctx: Context): ExoPlayer {
+        val low = lowMem(ctx)
         // לקוח לזרימה: זמן קריאה קצר – אחרי מעבר Wi-Fi⇄סלולר חיבור מת מתגלה תוך שניות ולא 90 שניות
         val streamClient = Http.client.newBuilder()
             .connectTimeout(10, java.util.concurrent.TimeUnit.SECONDS)
@@ -34,7 +41,8 @@ object PlayerFactory {
         // DefaultDataSource: קבצים מקומיים (הקלטות, כתוביות) + http דרך OkHttp
         val ds = DefaultDataSource.Factory(ctx, http)
         val renderers = DefaultRenderersFactory(ctx)
-            .setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER)
+            // במכשיר חלש: FFmpeg רק כשאין מפענח חומרה (AC3/DTS וכו') – פענוח בתוכנה מעמיס על המעבד
+            .setExtensionRendererMode(if (low) DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON else DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER)
             .setEnableDecoderFallback(true)
         // באפר לפי ההגדרה: (מינימום, מקסימום, להתחלת ניגון, אחרי עצירה) בשניות + באפר אחורה
         val (minB, maxB, startB, reB) = when (Prefs.str("buffer_size", "normal")) {
@@ -43,7 +51,16 @@ object PlayerFactory {
             "max" -> listOf(120, 600, 5, 12)
             else -> listOf(40, 150, 2, 6)
         }
-        val load = DefaultLoadControl.Builder()
+        val load = if (low) {
+            // מעט זיכרון: תקרה לפי נפח (רבע מהזיכרון, עד 48MB) – אחרת באפר של דקות HD ממלא את הזיכרון והתמונה נתקעת
+            val bytes = (Runtime.getRuntime().maxMemory() / 4).coerceIn(16L * 1024 * 1024, 48L * 1024 * 1024).toInt()
+            DefaultLoadControl.Builder()
+                .setBufferDurationsMs(minOf(minB, 20) * 1000, minOf(maxB, 60) * 1000, startB * 1000, reB * 1000)
+                .setTargetBufferBytes(bytes)
+                .setPrioritizeTimeOverSizeThresholds(false)
+                .setBackBuffer(5_000, false)
+                .build()
+        } else DefaultLoadControl.Builder()
             .setBufferDurationsMs(minB * 1000, maxB * 1000, startB * 1000, reB * 1000)
             .setBackBuffer(30_000, true)
             .setPrioritizeTimeOverSizeThresholds(true)
