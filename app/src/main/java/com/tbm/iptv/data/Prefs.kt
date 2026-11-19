@@ -129,14 +129,19 @@ object Prefs {
         version.intValue = version.intValue + 1
     }
 
-    fun str(k: String, d: String = ""): String = sp.getString(k, d) ?: d
+    // קריאה סלחנית: ערך שנשמר בסוג אחר (למשל מסנכרון ענן: 1 במקום 1.0) לא מקריס. sp.all רק במקרה החריג
+    private fun raw(k: String): Any? = runCatching { sp.all[k] }.getOrNull()
+    fun str(k: String, d: String = ""): String = try { sp.getString(k, d) ?: d } catch (_: ClassCastException) { raw(k)?.takeIf { it !is Set<*> }?.toString() ?: d }
     fun setStr(k: String, v: String) { sp.edit().putString(k, v).apply(); touch(k); bump() }
     fun setStrQuiet(k: String, v: String) { sp.edit().putString(k, v).apply(); touch(k) }
-    fun bool(k: String, d: Boolean): Boolean = sp.getBoolean(k, d)
+    fun bool(k: String, d: Boolean): Boolean = try { sp.getBoolean(k, d) } catch (_: ClassCastException) {
+        when (val v = raw(k)) { is String -> v.toBooleanStrictOrNull() ?: d; is Number -> v.toInt() != 0; else -> d } }
     fun setBool(k: String, v: Boolean) { sp.edit().putBoolean(k, v).apply(); touch(k); bump() }
-    fun float(k: String, d: Float): Float = sp.getFloat(k, d)
+    fun float(k: String, d: Float): Float = try { sp.getFloat(k, d) } catch (_: ClassCastException) {
+        when (val v = raw(k)) { is Number -> v.toFloat(); is String -> v.toFloatOrNull() ?: d; else -> d } }
     fun setFloat(k: String, v: Float) { sp.edit().putFloat(k, v).apply(); touch(k); bump() }
-    fun int(k: String, d: Int): Int = sp.getInt(k, d)
+    fun int(k: String, d: Int): Int = try { sp.getInt(k, d) } catch (_: ClassCastException) {
+        when (val v = raw(k)) { is Number -> v.toInt(); is String -> v.toIntOrNull() ?: d; else -> d } }
     fun setInt(k: String, v: Int) { sp.edit().putInt(k, v).apply(); touch(k); bump() }
 
     private fun set(k: String): Set<String> = sp.getStringSet(k, emptySet())?.toSet() ?: emptySet()
