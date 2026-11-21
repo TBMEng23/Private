@@ -143,11 +143,13 @@ object Updater {
         get() = Prefs.bool("upd_auto", true)
         set(v) = Prefs.setBool("upd_auto", v)
 
+    private const val THROTTLE = 3_600_000L   // שעה – נבדק בכל חזרה לאפליקציה (onResume), לא רק בפתיחה מלאה
+
     /** בדיקה אוטומטית בפתיחה: אם יש גרסה חדשה – מוריד ומתקין לבד (באנדרואיד 12+ בלי שאלות) */
     fun autoCheck(ctx: Context) {
         if (!configured || !auto) return
         val last = Prefs.str("upd_last").toLongOrNull() ?: 0L
-        if (System.currentTimeMillis() - last < 3 * 3_600_000L) return
+        if (System.currentTimeMillis() - last < THROTTLE) return
         Prefs.setStrQuiet("upd_last", System.currentTimeMillis().toString())
         check(ctx, false) { info ->
             if (info == null) return@check
@@ -216,7 +218,8 @@ object Updater {
                 @Suppress("DEPRECATION")
                 val fileCode = pi?.let { if (Build.VERSION.SDK_INT >= 28) it.longVersionCode else it.versionCode.toLong() } ?: 0L
                 if (fileCode <= currentCode(app)) {
-                    Prefs.setStrQuiet("upd_fail", (available?.code ?: 0L).toString())
+                    // ה-APK בענן עוד ישן (OneDrive עדיין מעלה) – לא חוסמים את הגרסה; ניסיון חוזר אוטומטי בעוד ~15 דקות
+                    Prefs.setStrQuiet("upd_last", (System.currentTimeMillis() - THROTTLE + 15 * 60_000L).toString())
                     throw IOException(L("קובץ העדכון עדיין לא התעדכן בענן – ננסה שוב מאוחר יותר"))
                 }
                 status = L("מתקין…")

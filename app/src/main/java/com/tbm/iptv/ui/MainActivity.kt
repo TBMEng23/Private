@@ -109,6 +109,12 @@ class MainActivity : FragmentActivity() {
             epgId = i.getStringExtra("play_epg")?.ifBlank { null }, channelName = title)), 0)
     }
 
+    override fun onResume() {
+        super.onResume()
+        // בדיקת עדכון גם בחזרה מהרקע (בסטרימר האפליקציה כמעט אף פעם לא נפתחת מאפס). מוגבל לפעם בשעה
+        runCatching { com.tbm.iptv.data.Updater.autoCheck(this) }
+    }
+
     override fun onStop() {
         super.onStop()
         if (PlayerHolder.miniActive) PlayerHolder.current()?.pause()

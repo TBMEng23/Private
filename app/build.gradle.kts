@@ -13,8 +13,8 @@ android {
         applicationId = "com.tbm.iptv"
         minSdk = 24
         targetSdk = 35
-        versionCode = 76
-        versionName = "4.6.9"
+        versionCode = 77
+        versionName = "4.7.0"
     }
 
     // מפתח חתימה קבוע – כל גרסה מתעדכנת מעל הקודמת בלי להסיר.
