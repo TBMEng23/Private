@@ -286,8 +286,13 @@ private fun HomeRows(content: Content, ver: Int, wide: Boolean, nav: (Screen) ->
     }
     val recent = remember(ver) { Prefs.recent() }
     val allowedKeys = remember(movies, series) { (movies.map { it.key } + series.map { it.key }).toHashSet() }
-    val recentMovies = remember(recent, allowedKeys) { recent.filter { it.item.kind == Kind.MOVIE && it.item.key in allowedKeys } }
-    val recentEps = remember(recent) { recent.filter { it.item.kind == Kind.SERIES }.distinctBy { it.item.seriesName } }
+    // "המשך צפייה" – אף פעם לא תוכן למבוגרים (גם כשהוא מוצג/פתוח בהגדרות)
+    val adultKeys = remember(content) { content.movies.filter { Catalog.isAdultItem(it) }.mapTo(HashSet()) { it.key } }
+    val adultSeries = remember(content) { content.series.filter { Catalog.isAdultItem(it) }.mapTo(HashSet()) { it.name } }
+    val recentMovies = remember(recent, allowedKeys, adultKeys) { recent.filter { it.item.kind == Kind.MOVIE && it.item.key in allowedKeys &&
+        it.item.key !in adultKeys && !Catalog.isAdultName(it.item.title) } }
+    val recentEps = remember(recent, adultSeries) { recent.filter { it.item.kind == Kind.SERIES && it.item.seriesName !in adultSeries &&
+        !Catalog.isAdultName(it.item.seriesName ?: it.item.title) }.distinctBy { it.item.seriesName } }
     val newMovies = remember(movies) { movies.filterIsInstance<Channel>().filter { it.added > 0 }.sortedByDescending { it.added }.asSequence().filter { isPreferred(it) && it.isFreshTitle() }.take(30).toList() }
     val newSeries = remember(series) { series.filterIsInstance<SeriesItem>().filter { it.added > 0 && isPreferred(it) }.sortedByDescending { it.added }.take(30) }
     // המדף: סדרות חדשות ועונות/פרקים חדשים (מה שהשתנה אצל הספק מאז הטעינה הקודמת)
@@ -491,9 +496,12 @@ private fun BrowseSection(kind: Kind, all: List<Entry>, ver: Int, nav: (Screen) 
     val recentKeys = remember(ver, filtered) {
         when (kind) {
             Kind.LIVE -> Prefs.recentChannels()
-            Kind.MOVIE -> Prefs.recent().filter { it.item.kind == Kind.MOVIE }.map { it.item.key }
+            Kind.MOVIE -> {
+                val adult = filtered.filter { Catalog.isAdultItem(it) }.mapTo(HashSet()) { it.key }
+                Prefs.recent().filter { it.item.kind == Kind.MOVIE && it.item.key !in adult && !Catalog.isAdultName(it.item.title) }.map { it.item.key }
+            }
             Kind.SERIES -> {
-                val byName = filtered.associateBy { it.name }
+                val byName = filtered.filterNot { Catalog.isAdultItem(it) }.associateBy { it.name }
                 Prefs.recent().filter { it.item.kind == Kind.SERIES }.mapNotNull { r -> r.item.seriesName?.let { byName[it]?.key } }.distinct()
             }
         }
@@ -1283,7 +1291,7 @@ private fun RowsView(
     val resume = remember(items, Prefs.version.intValue) {
         val rm = Prefs.resumeMap()
         if (rm.isEmpty()) emptyList()
-        else items.mapNotNull { e -> rm[e.key]?.let { r -> if (r.first < r.second * 0.95) e else null } }.take(30)
+        else items.mapNotNull { e -> rm[e.key]?.let { r -> if (r.first < r.second * 0.95 && !Catalog.isAdultItem(e)) e else null } }.take(30)
     }
     // המדף (סדרות): עונות/פרקים חדשים וסדרות חדשות
     val ctx2 = LocalContext.current
@@ -1544,7 +1552,7 @@ private fun KidsHome(content: Content, ver: Int, nav: (Screen) -> Unit) {
     val resume = remember(movies, ver) {
         val recent = Prefs.recent()
         val keys = recent.map { it.item.key }.toSet()
-        movies.filter { it.key in keys } + series.filter { s -> recent.any { it.item.seriesName == s.name } }
+        (movies.filter { it.key in keys } + series.filter { s -> recent.any { it.item.seriesName == s.name } }).filterNot { Catalog.isAdultItem(it) }
     }
     val topicRows = remember(live, movies, series) {
         prof.topics.mapNotNull { t ->

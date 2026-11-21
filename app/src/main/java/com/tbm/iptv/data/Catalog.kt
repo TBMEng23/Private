@@ -179,6 +179,7 @@ object Catalog {
     fun isAdult(group: String) = adultRx.containsMatchIn(group)
     /** פריט שהשם שלו מעיד על תוכן למבוגרים (גם בתוך קטגוריה רגילה) */
     fun isAdultItem(e: Entry) = adultRx.containsMatchIn(e.group) || adultNameRx.containsMatchIn(e.name)
+    fun isAdultName(name: String) = adultNameRx.containsMatchIn(name)
     /** תוכן למבוגרים מוסתר? ("נעול" בלי קוד הורים = מוסתר, כדי שלא יוצג בטעות) */
     fun adultHidden() = Prefs.adultMode == "hide" || (Prefs.adultMode == "lock" && !Parental.hasPin())
 
