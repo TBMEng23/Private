@@ -171,8 +171,8 @@ object Catalog {
     val adultRx = Regex("(?i)(adult|xxx|18 ?\\+|\\+ ?18|21 ?\\+|\\+ ?21|porn|for adults|erotic|erotik|\\bsex ?(tv|channel|hot)|playboy|penthouse|hustler|brazzers|" +
         "dorcel|vivid|private ?(tv|gold|spice)|red ?light|redlight|hot ?(club|xxx)|blue ?hustler|milf|hentai|onlyfans|" +
         "nsfw|x-rated|xrated|למבוגרים|ארוטי|סקס|פורנו)")
-    /** בשם פריט – רק מילים חד-משמעיות (כדי לא להסתיר "Sex Education" וכדומה) */
-    private val adultNameRx = Regex("(?i)(\\bporn|\\bxxx\\b|hentai|brazzers|onlyfans|nsfw|x-rated|פורנו)")
+    /** בשם פריט (בקטגוריה רגילה) – רק שמות ערוצים/מותגים חד-משמעיים. לא "xXx" (וין דיזל), לא סרטים תיעודיים כמו "The Rise of OnlyFans" / "Hippy Porn" */
+    private val adultNameRx = Regex("(?i)(brazzers|hentai|\\bxxx ?(tv|channel|hd|\\d)|\\bporn ?(tv|channel|hub|hd)|\\bx-rated ?(tv|channel))")
 
     class View(val items: List<Entry>, val groups: List<String>, val lockedGroups: Set<String>)
 
