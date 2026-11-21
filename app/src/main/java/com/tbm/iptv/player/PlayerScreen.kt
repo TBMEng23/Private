@@ -171,7 +171,7 @@ fun PlayerScreen(a: PlayerActivity) {
         if (!ui.pip) GestureLayer(a)
 
         if (ui.controlsVisible && !ui.pip) {
-            if (ui.locked) LockedOverlay(a) else Controls(a)
+            if (ui.locked) LockedOverlay(a) else { Controls(a); if (!com.tbm.iptv.data.Device.isTv) SideLevelBars(a) }
         }
 
         if (!ui.controlsVisible && !ui.pip) {
@@ -257,7 +257,7 @@ fun PlayerScreen(a: PlayerActivity) {
     }
 }
 
-/** ג'סטות: הקשה = פקדים, הקשה כפולה בצדדים = ±10 שנ', לחיצה ארוכה = 2×, גרירה אנכית = בהירות/עוצמה */
+/** ג'סטות: הקשה = פקדים, הקשה כפולה בצדדים = ±10 שנ', לחיצה ארוכה = 2×. בהירות/עוצמה – רק דרך הפסים בצדדים (SideLevelBars) */
 @Composable
 private fun GestureLayer(a: PlayerActivity) {
     val ui = a.ui
@@ -285,20 +285,56 @@ private fun GestureLayer(a: PlayerActivity) {
                     },
                 )
             }
-            .pointerInput(ui.locked) {
-                var side = 0
-                detectVerticalDragGestures(
-                    onDragStart = { o -> side = if (o.x < width / 2f) -1 else 1 },
-                    onVerticalDrag = { change, dy ->
-                        if (!ui.locked) {
-                            change.consume()
-                            val d = -dy / height * 1.6f
-                            if (side < 0) a.adjustBrightness(d) else a.adjustVolume(d)
-                        }
-                    },
-                )
-            }
     )
+}
+
+/** פסים אנכיים לבהירות (שמאל) ועוצמה (ימין) – מופיעים רק כשהפקדים גלויים, ומגיבים רק לגרירה/נגיעה על הפס עצמו */
+@Composable
+private fun SideLevelBars(a: PlayerActivity) {
+    var bright by androidx.compose.runtime.remember { androidx.compose.runtime.mutableFloatStateOf(a.brightnessLevel()) }
+    var vol by androidx.compose.runtime.remember { androidx.compose.runtime.mutableFloatStateOf(a.volumeLevel()) }
+    LaunchedEffect(Unit) { while (true) { vol = a.volumeLevel(); kotlinx.coroutines.delay(500) } }   // גם כפתורי עוצמה פיזיים
+    Box(Modifier.fillMaxSize()) {
+        LevelBar("🔆", bright, Modifier.align(androidx.compose.ui.AbsoluteAlignment.CenterLeft).padding(start = 12.dp)) {
+            bright = it; a.setBrightnessLevel(it)
+        }
+        LevelBar("🔊", vol, Modifier.align(androidx.compose.ui.AbsoluteAlignment.CenterRight).padding(end = 12.dp)) {
+            vol = it; a.setVolumeLevel(it)
+        }
+    }
+}
+
+@Composable
+private fun LevelBar(icon: String, level: Float, modifier: Modifier, onChange: (Float) -> Unit) {
+    val trackH = 150.dp
+    Column(modifier.width(52.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+        Text("${(level * 100).toInt()}%", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+        Spacer(Modifier.height(6.dp))
+        // אזור מגע רחב (52dp) סביב פס דק – הנגיעה/גרירה קובעת ערך לפי הגובה
+        Box(
+            Modifier.width(52.dp).height(trackH)
+                .pointerInput(Unit) {
+                    fun at(y: Float) = (1f - y / size.height).coerceIn(0f, 1f)
+                    awaitPointerEventScope {
+                        while (true) {
+                            val down = awaitPointerEvent().changes.firstOrNull { it.pressed } ?: continue
+                            onChange(at(down.position.y)); down.consume()
+                            while (true) {
+                                val ev = awaitPointerEvent(); val c = ev.changes.firstOrNull() ?: break
+                                if (!c.pressed) break
+                                onChange(at(c.position.y)); c.consume()
+                            }
+                        }
+                    }
+                },
+            contentAlignment = Alignment.BottomCenter,
+        ) {
+            Box(Modifier.width(6.dp).fillMaxHeight().background(Color(0x55FFFFFF), RoundedCornerShape(3.dp)))
+            Box(Modifier.width(6.dp).fillMaxHeight(level.coerceIn(0f, 1f)).background(Color.White, RoundedCornerShape(3.dp)))
+        }
+        Spacer(Modifier.height(6.dp))
+        Text(icon, fontSize = 18.sp)
+    }
 }
 
 @Composable

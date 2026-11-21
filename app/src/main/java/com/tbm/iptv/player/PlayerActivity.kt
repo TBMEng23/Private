@@ -636,6 +636,23 @@ class PlayerActivity : FragmentActivity() {
         ui.gesture = "🔊 ${v * 100 / max.coerceAtLeast(1)}%"
     }
 
+    fun brightnessLevel(): Float = window.attributes.screenBrightness.let { if (it < 0) 0.5f else it }
+    fun setBrightnessLevel(f: Float) {
+        val lp = window.attributes; lp.screenBrightness = f.coerceIn(0.02f, 1f); window.attributes = lp; touched()
+    }
+    fun volumeLevel(): Float {
+        val am = getSystemService(AUDIO_SERVICE) as android.media.AudioManager
+        val max = am.getStreamMaxVolume(android.media.AudioManager.STREAM_MUSIC).coerceAtLeast(1)
+        return am.getStreamVolume(android.media.AudioManager.STREAM_MUSIC).toFloat() / max
+    }
+    fun setVolumeLevel(f: Float) {
+        val am = getSystemService(AUDIO_SERVICE) as android.media.AudioManager
+        val max = am.getStreamMaxVolume(android.media.AudioManager.STREAM_MUSIC)
+        val v = Math.round(f.coerceIn(0f, 1f) * max)
+        if (v != am.getStreamVolume(android.media.AudioManager.STREAM_MUSIC)) am.setStreamVolume(android.media.AudioManager.STREAM_MUSIC, v, 0)
+        touched()
+    }
+
     fun setResize(m: Int) { ui.resize = m }
 
     /** מעבר לנגן חיצוני (VLC/MX) מהמיקום הנוכחי, עם הכתובית שנטענה */
