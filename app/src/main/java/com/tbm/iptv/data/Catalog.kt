@@ -177,7 +177,7 @@ object Catalog {
     class View(val items: List<Entry>, val groups: List<String>, val lockedGroups: Set<String>)
 
     /** כשתוכן למבוגרים מותר – כולו מרוכז בקטגוריה אחת (בסוף), לא מפוזר בין קטגוריות הספק */
-    const val ADULT_GROUP = "🔞 XXX למבוגרים"
+    const val ADULT_GROUP = "🔞 18+ למבוגרים"
     private fun toAdultGroup(e: Entry): Entry = when (e) {
         is Channel -> e.copy(group = ADULT_GROUP)
         is SeriesItem -> e.copy(group = ADULT_GROUP)
