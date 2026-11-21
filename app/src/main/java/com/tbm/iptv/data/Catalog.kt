@@ -176,6 +176,14 @@ object Catalog {
 
     class View(val items: List<Entry>, val groups: List<String>, val lockedGroups: Set<String>)
 
+    /** כשתוכן למבוגרים מותר – כולו מרוכז בקטגוריה אחת (בסוף), לא מפוזר בין קטגוריות הספק */
+    const val ADULT_GROUP = "🔞 XXX למבוגרים"
+    private fun toAdultGroup(e: Entry): Entry = when (e) {
+        is Channel -> e.copy(group = ADULT_GROUP)
+        is SeriesItem -> e.copy(group = ADULT_GROUP)
+        else -> e
+    }
+
     fun isAdult(group: String) = adultRx.containsMatchIn(group)
     /** פריט שהשם שלו מעיד על תוכן למבוגרים (גם בתוך קטגוריה רגילה) */
     fun isAdultItem(e: Entry) = adultRx.containsMatchIn(e.group) || adultNameRx.containsMatchIn(e.name)
@@ -309,7 +317,7 @@ object Catalog {
             val ok = HashMap<String, Boolean>()
             val plexHere = Plex.forProfile()
             val adultOff = adultHidden()
-            val filtered = all.filter { e ->
+            val filtered0 = all.filter { e ->
                 e.key !in hiddenItems && ok.getOrPut(e.group) {
                     (plexHere || !e.group.startsWith("Plex · ")) &&
                     "${kind.name}|${e.group}" !in hidden &&
@@ -317,13 +325,17 @@ object Catalog {
                         !(adultOff && isAdult(e.group))
                 } && !(adultOff && adultNameRx.containsMatchIn(e.name))
             }
+            val filtered = if (adultOff) filtered0 else filtered0.map { if (isAdultItem(it)) toAdultGroup(it) else it }
             filtered.map { it.group }.distinct().forEach { g -> if (isGroupLocked(kind, g)) locked += g }
             base = if (Parental.hasPin() && !Parental.unlocked) {
                 val li = Prefs.lockedItems()
                 filtered.filter { it.group !in locked && it.key !in li }
             } else filtered
             // קבוצות נעולות נשארות ברשימת הקבוצות (מוצגות עם מנעול)
-            val groups = orderGroups(kind, filtered.map { it.group }.distinct())
+            val groups = orderGroups(kind, filtered.map { it.group }.distinct()).let { gs ->
+                // קטגוריית המבוגרים בסוף – אלא אם המשתמש נעץ/סידר אותה בעצמו
+                if (ADULT_GROUP in gs && ADULT_GROUP !in Prefs.pinnedGroups(kind) && ADULT_GROUP !in Prefs.groupOrder(kind)) gs - ADULT_GROUP + ADULT_GROUP else gs
+            }
             return View(sortAndRename(base, order, renames, groups), groups, locked)
         }
         val groups = orderGroups(kind, base.map { it.group }.distinct())
