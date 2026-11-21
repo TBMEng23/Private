@@ -54,6 +54,7 @@ object Repo {
             val plex = if (Plex.connected && Plex.enabled) runCatching { Plex.load() }.getOrNull() else null
             val c = if (plex == null) c0 else c0.copy(movies = c0.movies + plex.first, series = c0.series + plex.second)
             seriesCache.clear()
+            runCatching { Prefs.trackNewGroups(p.id, c) }   // קטגוריה חדשה מהספק – מוסתרת עד שתאשר
             state.value = LoadState.Ready(c)
             Shelf.update(p, c)
             if (force || Prefs.str("updated_${p.id}").isBlank())

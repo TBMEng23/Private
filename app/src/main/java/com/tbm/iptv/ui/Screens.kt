@@ -251,6 +251,27 @@ fun ManageGroupsScreen(startKind: Kind, onBack: () -> Unit, onKids: (String) -> 
                 }
                 Text(L("לחיצה על קבוצה: נעילה, אישור לילדים, שינוי סדר"), fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
+            // קטגוריות חדשות שהספק הוסיף – מוסתרות עד שתחליט
+            val pend = Prefs.newGroups().filter { it.startsWith("${kind.name}|") }.map { it.substringAfter('|') }.filter { it in groupsRaw }
+            if (pend.isNotEmpty()) {
+                item {
+                    GroupHeader(L("🆕 קטגוריות חדשות ({0}) – מוסתרות עד שתחליט", pend.size))
+                    Row {
+                        TextButton(onClick = { Prefs.resolveNewGroups(kind, pend, true) }) { Text(L("הצג את כולן")) }
+                        TextButton(onClick = { Prefs.resolveNewGroups(kind, pend, false) }) { Text(L("השאר את כולן מוסתרות")) }
+                    }
+                }
+                items(pend, key = { "new:$it" }) { g ->
+                    Row(Modifier.fillMaxWidth().padding(vertical = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Column(Modifier.weight(1f)) {
+                            Text(g, maxLines = 1, overflow = TextOverflow.Ellipsis, fontWeight = FontWeight.Bold)
+                            if ((counts[g] ?: 0) > 0) Text(L("{0} פריטים", counts[g] ?: 0), fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        TextButton(onClick = { Prefs.resolveNewGroups(kind, listOf(g), true) }) { Text(L("הצג")) }
+                        TextButton(onClick = { Prefs.resolveNewGroups(kind, listOf(g), false) }) { Text(L("השאר מוסתר")) }
+                    }
+                }
+            }
             val pinnedShown = shown.filter { it in pinned }
             if (pinnedShown.isNotEmpty()) {
                 item { GroupHeader(L("📌 קבוצות נעוצות")) }
@@ -382,7 +403,13 @@ private fun MainSettings(nav: (Screen) -> Unit) {
         NavRow(L("תצוגת ערוצים"), Icons.Filled.LiveTv, sub = modeName(Kind.LIVE)) { viewPick = Kind.LIVE }
         NavRow(L("תצוגת סרטים"), Icons.Filled.Movie, sub = modeName(Kind.MOVIE)) { viewPick = Kind.MOVIE }
         NavRow(L("תצוגת סדרות"), Icons.Filled.VideoLibrary, sub = modeName(Kind.SERIES)) { viewPick = Kind.SERIES }
-        NavRow(L("סידור והסתרת קטגוריות"), Icons.Filled.Folder, sub = L("סדר, הסתרה, הצמדה, סינון ארצות")) { nav(Screen.Groups(Kind.LIVE)) }
+        val pendN = Prefs.newGroups().size
+        NavRow(L("סידור והסתרת קטגוריות"), Icons.Filled.Folder,
+            sub = if (pendN > 0) L("🆕 {0} קטגוריות חדשות ממתינות לאישור", pendN) else L("סדר, הסתרה, הצמדה, סינון ארצות")) {
+            // פותח בלשונית שיש בה קטגוריות חדשות
+            val k = Prefs.newGroups().firstOrNull()?.substringBefore('|')?.let { n -> Kind.entries.firstOrNull { it.name == n } } ?: Kind.LIVE
+            nav(Screen.Groups(k))
+        }
         NavRow(L("תוכן ופופולרי היום"), Icons.Filled.Tune, sub = L("מפתח TMDB")) { nav(Screen.Settings("content")) }
         val trOn = Prefs.bool("translate_meta", true)
         NavRow(L("תרגום תקצירים, ז'אנרים ושמות"), Icons.Filled.Translate, arrow = false,

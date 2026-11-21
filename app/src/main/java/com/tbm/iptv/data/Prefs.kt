@@ -231,6 +231,32 @@ object Prefs {
     fun setKidsItem(key: String, on: Boolean) = toggle("kids_items", key, on)
 
     // ================= ניהול ערוצים =================
+    /** קטגוריות חדשות מהספק: מוסתרות אוטומטית עד שהמשתמש מחליט ("KIND|group") */
+    fun newGroups(pid: String = activePlaylist()?.id ?: ""): Set<String> = set("newgrp_$pid")
+    fun resolveNewGroups(kind: Kind, groups: Collection<String>, show: Boolean) {
+        val pid = activePlaylist()?.id ?: return
+        if (show) setHidden(kind, groups, false)
+        val s = newGroups(pid).toMutableSet(); groups.forEach { s.remove("${kind.name}|$it") }; putSet("newgrp_$pid", s)
+    }
+    /** נקרא אחרי כל טעינה: בפעם הראשונה רק לומדים את הקיים; אחר כך כל קטגוריה שלא הכרנו – מוסתרת וממתינה לבדיקה */
+    fun trackNewGroups(pid: String, c: Content) {
+        val now = HashSet<String>()
+        fun add(kind: Kind, gs: Collection<String>) = gs.forEach { g -> if (g.isNotBlank() && !g.startsWith("Plex · ")) now += "${kind.name}|$g" }
+        add(Kind.LIVE, c.live.mapTo(HashSet()) { it.group }); add(Kind.MOVIE, c.movies.mapTo(HashSet()) { it.group })
+        add(Kind.SERIES, c.series.mapTo(HashSet()) { it.group })
+        c.allGroups.forEach { (k, gs) -> add(k, gs) }
+        if (now.isEmpty()) return
+        val known = set("kgrp_$pid")
+        if (known.isEmpty()) { putSet("kgrp_$pid", now); return }
+        val fresh = now - known
+        if (fresh.isEmpty()) return
+        val h = hidden().toMutableSet(); h += fresh
+        val pend = newGroups(pid).toMutableSet(); pend += fresh
+        sp.edit().putStringSet("hidden", HashSet(h)).putStringSet("newgrp_$pid", HashSet(pend))
+            .putStringSet("kgrp_$pid", HashSet(known + fresh)).apply()
+        touch("hidden"); touch("newgrp_$pid"); touch("kgrp_$pid"); bump()
+    }
+
     fun hidden(): Set<String> = set("hidden")
     fun setHidden(kind: Kind, groups: Collection<String>, hide: Boolean) {
         val s = hidden().toMutableSet()
