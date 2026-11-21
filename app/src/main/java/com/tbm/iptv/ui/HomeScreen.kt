@@ -1,5 +1,7 @@
 package com.tbm.iptv.ui
 
+import androidx.compose.foundation.interaction.collectIsDraggedAsState
+
 import com.tbm.iptv.L
 
 import androidx.compose.foundation.background
@@ -1342,19 +1344,25 @@ private fun isPreferred(e: Entry): Boolean {
 
 @Composable
 private fun FeaturedHero(list0: List<Entry>, kind: Kind, favs: Set<String>, nav: (Screen) -> Unit) {
-    val list = remember(list0) { dedupeTitles(list0) }
-    // אפשר לגלול הצידה בעצמך; כשלא נוגעים – מתחלף לבד כל 8 שניות
-    val pager = androidx.compose.foundation.pager.rememberPagerState { list.size }
-    LaunchedEffect(list, pager.currentPage, pager.isScrollInProgress) {
-        if (!pager.isScrollInProgress && list.size > 1) {
+    // יציב לפי המפתחות – רענון נתונים (סנכרון, מועדפים) לא בונה רשימה חדשה ולא מקפיץ את הבאנר
+    val keys = list0.map { it.key }
+    val list = remember(keys) { dedupeTitles(list0) }
+    val n = list.size.coerceAtLeast(1)
+    // מעגלי: אפשר לגלול לשני הכיוונים בלי "קיר" בהתחלה, והמעבר מהאחרון לראשון לא רץ אחורה דרך כולם
+    val virtual = if (n > 1) n * 1000 else 1
+    val pager = androidx.compose.foundation.pager.rememberPagerState(initialPage = if (n > 1) n * 500 else 0) { virtual }
+    val dragged by pager.interactionSource.collectIsDraggedAsState()
+    // מתחלף לבד כל 8 שניות רק כשלא נוגעים; אחרי גלילה ידנית – הספירה מתחילה מחדש מהעמוד שנבחר
+    LaunchedEffect(n, pager.settledPage, dragged) {
+        if (!dragged && n > 1) {
             kotlinx.coroutines.delay(8000)
-            runCatching { pager.animateScrollToPage((pager.currentPage + 1) % list.size) }
+            if (!pager.isScrollInProgress) runCatching { pager.animateScrollToPage(pager.settledPage + 1) }
         }
     }
     Box(Modifier.fillMaxWidth().height(440.dp).padding(horizontal = 12.dp, vertical = 6.dp).clip(RoundedCornerShape(10.dp))
         .background(MaterialTheme.colorScheme.surfaceVariant)) {
-        androidx.compose.foundation.pager.HorizontalPager(pager, Modifier.fillMaxSize(), key = { list[it].key }) { page ->
-            val e = list[page.coerceIn(0, list.size - 1)]
+        androidx.compose.foundation.pager.HorizontalPager(pager, Modifier.fillMaxSize(), beyondViewportPageCount = 1) { page ->
+            val e = list[page % n]
             val open = { if (e is SeriesItem) nav(Screen.Series(e)) else if (e is Channel) nav(Screen.Movie(e)) }
             Box(Modifier.fillMaxSize().clickable { open() }) {
                 AsyncImage(e.logo, null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
@@ -1386,11 +1394,12 @@ private fun FeaturedHero(list0: List<Entry>, kind: Kind, favs: Set<String>, nav:
         // נקודות – לחיצה על נקודה קופצת אליה
         val scope = rememberCoroutineScope()
         Row(Modifier.align(Alignment.BottomCenter).padding(bottom = 10.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            val curIdx = pager.currentPage % n
             list.indices.forEach { i ->
-                val cur = i == pager.currentPage
+                val cur = i == curIdx
                 Box(Modifier.size(if (cur) 9.dp else 7.dp).clip(RoundedCornerShape(50))
                     .background(if (cur) Color.White else Color(0x66FFFFFF))
-                    .clickable { scope.launch { pager.animateScrollToPage(i) } })
+                    .clickable { scope.launch { pager.animateScrollToPage(pager.currentPage - curIdx + i) } })
             }
         }
     }
