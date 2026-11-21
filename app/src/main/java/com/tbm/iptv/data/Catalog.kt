@@ -171,8 +171,14 @@ object Catalog {
     val adultRx = Regex("(?i)(adult|xxx|18 ?\\+|\\+ ?18|21 ?\\+|\\+ ?21|porn|for adults|erotic|erotik|\\bsex ?(tv|channel|hot)|playboy|penthouse|hustler|brazzers|" +
         "dorcel|vivid|private ?(tv|gold|spice)|red ?light|redlight|hot ?(club|xxx)|blue ?hustler|milf|hentai|onlyfans|" +
         "nsfw|x-rated|xrated|למבוגרים|ארוטי|סקס|פורנו)")
-    /** בשם פריט (בקטגוריה רגילה) – רק שמות ערוצים/מותגים חד-משמעיים. לא "xXx" (וין דיזל), לא סרטים תיעודיים כמו "The Rise of OnlyFans" / "Hippy Porn" */
-    private val adultNameRx = Regex("(?i)(brazzers|hentai|\\bxxx ?(tv|channel|hd|\\d)|\\bporn ?(tv|channel|hub|hd)|\\bx-rated ?(tv|channel))")
+    /** פורנו בתוך קטגוריה רגילה של הספק – לפי שמות אולפנים/אתרים ותגיות XXX מפורשות.
+     *  לא נתפסים: "xXx" (וין דיזל), "XXX: State of the Union", תיעודיים כמו "The Rise of OnlyFans" / "Hippy Porn" */
+    private val adultNameRx = Regex("(?i)(brazzers|bang ?bros|reality ?kings|naughty ?america|digital ?playground|evil ?angel|" +
+        "marc ?dorcel|\\bdorcel\\b|blacked(raw)?\\b|\\btushy\\b|vixen ?(\\.com|xxx)|mofos|team ?skeet|fake ?taxi|public ?agent|" +
+        "pornhub|xvideos|xhamster|\\bhentai|pornstar|\\bporno? ?(movie|film|tv|channel|hub|xxx)|" +
+        "\\bxxx ?(tv|channel)|x-rated ?(tv|channel|movie)|פורנו)")
+    /** תגית XXX באותיות גדולות כתגית: "[XXX]", "(XXX)", "XXX | …", "… | XXX" (לא "xXx", "xXx 2" או "NF - XXX") */
+    private val xxxTagRx = Regex("\\[XXX]|\\(XXX\\)|\\|\\s*XXX\\b|\\bXXX\\s*\\|")
 
     class View(val items: List<Entry>, val groups: List<String>, val lockedGroups: Set<String>)
 
@@ -186,8 +192,8 @@ object Catalog {
 
     fun isAdult(group: String) = adultRx.containsMatchIn(group)
     /** פריט שהשם שלו מעיד על תוכן למבוגרים (גם בתוך קטגוריה רגילה) */
-    fun isAdultItem(e: Entry) = adultRx.containsMatchIn(e.group) || adultNameRx.containsMatchIn(e.name)
-    fun isAdultName(name: String) = adultNameRx.containsMatchIn(name)
+    fun isAdultItem(e: Entry) = adultRx.containsMatchIn(e.group) || isAdultName(e.name)
+    fun isAdultName(name: String) = adultNameRx.containsMatchIn(name) || xxxTagRx.containsMatchIn(name)
     /** תוכן למבוגרים מוסתר? ("נעול" בלי קוד הורים = מוסתר, כדי שלא יוצג בטעות) */
     fun adultHidden() = Prefs.adultMode == "hide" || (Prefs.adultMode == "lock" && !Parental.hasPin())
 
@@ -323,7 +329,7 @@ object Catalog {
                     "${kind.name}|${e.group}" !in hidden &&
                         (allowed.isEmpty() || e.group.startsWith("Plex · ") || Countries.of(e.group) in allowed) &&
                         !(adultOff && isAdult(e.group))
-                } && !(adultOff && adultNameRx.containsMatchIn(e.name))
+                } && !(adultOff && isAdultName(e.name))
             }
             val filtered = if (adultOff) filtered0 else filtered0.map { if (isAdultItem(it)) toAdultGroup(it) else it }
             filtered.map { it.group }.distinct().forEach { g -> if (isGroupLocked(kind, g)) locked += g }
