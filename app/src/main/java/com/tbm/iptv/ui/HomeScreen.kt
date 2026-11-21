@@ -1345,6 +1345,7 @@ private val okCountries = setOf("IL", "EN", "US", "GB", "CA", "AU", "IE", "NZ", 
 /** תוכן בשפה שהמשתמש קורא (עברית/אנגלית או מדינות שבחר בסינון) – לבאנר ולשורות "מומלץ" */
 private fun isPreferred(e: Entry): Boolean {
     if (arabicRx.containsMatchIn(e.name) || arabicRx.containsMatchIn(e.group)) return false
+    if (Catalog.isAdultItem(e)) return false   // תוכן למבוגרים – רק בקטגוריה שלו בתחתית, לא בשורות המומלצות/באנר
     val c = Countries.of(e.group)
     val chosen = Prefs.str("pref_countries").split(",").filter { it.isNotBlank() }.toSet()
     return c in (if (chosen.isEmpty()) okCountries else chosen + Countries.OTHER)
