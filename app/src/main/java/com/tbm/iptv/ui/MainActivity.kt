@@ -183,11 +183,12 @@ private fun ExpiryDialog() {
 private fun UpdateDialog() {
     val u = com.tbm.iptv.data.Updater
     val info = u.available ?: return
-    if (u.dismissed || (u.auto && !u.needsTap && u.progress < 0f && !u.busy)) return
+    if (u.dismissed || (u.auto && !u.needsTap && u.progress < 0f)) return   // באוטומטי: מופיע רק בזמן הורדה/התקנה, לא בכל בדיקה
     val ctx = androidx.compose.ui.platform.LocalContext.current
     androidx.compose.material3.AlertDialog(
         onDismissRequest = { if (!u.busy) u.dismissed = true },
-        title = { androidx.compose.material3.Text(com.tbm.iptv.L("גרסה {0} זמינה", info.name)) },
+        title = { androidx.compose.material3.Text(
+            if (u.progress >= 0f) com.tbm.iptv.L("מעדכן לגרסה {0}…", info.name) else com.tbm.iptv.L("גרסה {0} זמינה", info.name)) },
         text = {
             androidx.compose.foundation.layout.Column {
                 if (u.progress >= 0f) androidx.compose.material3.LinearProgressIndicator(progress = { u.progress }, modifier = Modifier.fillMaxWidth())

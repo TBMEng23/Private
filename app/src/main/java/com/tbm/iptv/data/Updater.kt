@@ -143,14 +143,14 @@ object Updater {
         get() = Prefs.bool("upd_auto", true)
         set(v) = Prefs.setBool("upd_auto", v)
 
-    private const val THROTTLE = 3_600_000L   // שעה – נבדק בכל חזרה לאפליקציה (onResume), לא רק בפתיחה מלאה
 
     /** בדיקה אוטומטית בפתיחה: אם יש גרסה חדשה – מוריד ומתקין לבד (באנדרואיד 12+ בלי שאלות) */
     fun autoCheck(ctx: Context) {
         if (!configured || !auto) return
-        val last = Prefs.str("upd_last").toLongOrNull() ?: 0L
-        if (System.currentTimeMillis() - last < THROTTLE) return
-        Prefs.setStrQuiet("upd_last", System.currentTimeMillis().toString())
+        // בלי הגבלת זמן: נבדק בכל פתיחה / חזרה לאפליקציה (בקשה קטנה של קובץ הגרסה).
+        // חריג יחיד: ה-APK בענן עוד לא התעדכן – ממתינים ~15 דק' כדי לא להוריד 26MB שוב ושוב
+        val wait = Prefs.str("upd_wait").toLongOrNull() ?: 0L
+        if (System.currentTimeMillis() < wait) return
         check(ctx, false) { info ->
             if (info == null) return@check
             // גרסה שכבר נכשלה – לא מנסים שוב לבד (מונע לולאת סגירות)
@@ -219,7 +219,7 @@ object Updater {
                 val fileCode = pi?.let { if (Build.VERSION.SDK_INT >= 28) it.longVersionCode else it.versionCode.toLong() } ?: 0L
                 if (fileCode <= currentCode(app)) {
                     // ה-APK בענן עוד ישן (OneDrive עדיין מעלה) – לא חוסמים את הגרסה; ניסיון חוזר אוטומטי בעוד ~15 דקות
-                    Prefs.setStrQuiet("upd_last", (System.currentTimeMillis() - THROTTLE + 15 * 60_000L).toString())
+                    Prefs.setStrQuiet("upd_wait", (System.currentTimeMillis() + 15 * 60_000L).toString())
                     throw IOException(L("קובץ העדכון עדיין לא התעדכן בענן – ננסה שוב מאוחר יותר"))
                 }
                 status = L("מתקין…")
