@@ -294,7 +294,7 @@ private fun HomeRows(content: Content, ver: Int, wide: Boolean, nav: (Screen) ->
     val recentEps = remember(recent, adultSeries) { recent.filter { it.item.kind == Kind.SERIES && it.item.seriesName !in adultSeries &&
         !Catalog.isAdultName(it.item.seriesName ?: it.item.title) }.distinctBy { it.item.seriesName } }
     val newMovies = remember(movies) { movies.filterIsInstance<Channel>().filter { it.added > 0 }.sortedByDescending { it.added }.asSequence().filter { isPreferred(it) && it.isFreshTitle() }.take(30).toList() }
-    val newSeries = remember(series) { series.filterIsInstance<SeriesItem>().filter { it.added > 0 && isPreferred(it) }.sortedByDescending { it.added }.take(30) }
+    val newSeries = remember(series) { series.filterIsInstance<SeriesItem>().filter { it.added > 0 }.sortedByDescending { it.added }.asSequence().filter { isPreferred(it) }.take(30).toList() }
     // המדף: סדרות חדשות ועונות/פרקים חדשים (מה שהשתנה אצל הספק מאז הטעינה הקודמת)
     val shelfVer = com.tbm.iptv.data.Shelf.ready.intValue
     val seriesByKey = remember(series) { series.associateBy { it.key } }
@@ -1262,7 +1262,10 @@ private fun RowsView(
     val shownGroups = remember(groups, byGroup, locked) { groups.filter { it !in locked && byGroup[it] != null } }
     val favItems = remember(items, favs) { items.filter { it.key in favs } }
     // תוכן "מומלץ": רק בשפות שהמשתמש מבין (בלי ערבית וכו')
-    val pref = remember(items) { items.filter { isPreferred(it) } }
+    // מחושב ברקע (regex על אלפי פריטים) – אחרת המסך קופא במכשירים חלשים
+    val pref by androidx.compose.runtime.produceState<List<Entry>>(emptyList(), items) {
+        value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) { preferredOf(items) }
+    }
     var curated by remember(kind) { mutableStateOf(kind != Kind.LIVE && Prefs.str("rows_src_${kind.name}", "curated") == "curated") }
     var top by remember(items) { mutableStateOf<List<Entry>>(emptyList()) }
     var genreRows by remember(items) { mutableStateOf<List<Pair<String, List<Entry>>>>(emptyList()) }
@@ -1279,8 +1282,8 @@ private fun RowsView(
     }
     val newest = remember(pref) { pref.filter { it.addedAt() > 0 }.sortedByDescending { it.addedAt() }.asSequence().filter { kind != Kind.MOVIE || it.isFreshTitle() }.take(40).toList() }
     // שורה לכל פלטפורמה (Netflix, Prime, Disney+…) לפי מה שהספק מסמן
-    val platformRows = remember(pref) {
-        if (kind == Kind.LIVE) emptyList() else {
+    val platformRows by androidx.compose.runtime.produceState<List<Pair<String, List<Entry>>>>(emptyList(), pref) {
+        value = if (kind == Kind.LIVE) emptyList() else kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
             val g = pref.groupBy { com.tbm.iptv.data.Platforms.detect(it) }
             com.tbm.iptv.data.Platforms.all.mapNotNull { p ->
                 g[p]?.takeIf { it.size >= 6 }?.let { l -> L("ב-{0}", p.name) to l.sortedByDescending { it.addedAt() }.take(40) }
@@ -1343,12 +1346,32 @@ private val arabicRx = Regex("[\\u0600-\\u06FF]")
 private val okCountries = setOf("IL", "EN", "US", "GB", "CA", "AU", "IE", "NZ", Countries.OTHER)
 
 /** תוכן בשפה שהמשתמש קורא (עברית/אנגלית או מדינות שבחר בסינון) – לבאנר ולשורות "מומלץ" */
-private fun isPreferred(e: Entry): Boolean {
-    if (arabicRx.containsMatchIn(e.name) || arabicRx.containsMatchIn(e.group)) return false
-    if (Catalog.isAdultItem(e)) return false   // תוכן למבוגרים – רק בקטגוריה שלו בתחתית, לא בשורות המומלצות/באנר
-    val c = Countries.of(e.group)
+/** כמו isPreferred על רשימה שלמה – בדיקות הקבוצה פעם אחת לכל קבוצה, ההגדרה נקראת פעם אחת */
+internal fun preferredOf(items: List<Entry>): List<Entry> {
     val chosen = Prefs.str("pref_countries").split(",").filter { it.isNotBlank() }.toSet()
-    return c in (if (chosen.isEmpty()) okCountries else chosen + Countries.OTHER)
+    val okSet = if (chosen.isEmpty()) okCountries else chosen + Countries.OTHER
+    val groupOk = HashMap<String, Boolean>()
+    return items.filter { e ->
+        groupOk.getOrPut(e.group) { !arabicRx.containsMatchIn(e.group) && !Catalog.isAdult(e.group) && Countries.of(e.group) in okSet } &&
+            !arabicRx.containsMatchIn(e.name) && !Catalog.isAdultName(e.name)
+    }
+}
+
+// מטמון לבדיקות לפי קבוצה (מתאפס כשהגדרת הארצות משתנה) – isPreferred נקרא על אלפי פריטים
+private var prefKey: String? = null
+private val prefGroupOk = HashMap<String, Boolean>()
+private fun isPreferred(e: Entry): Boolean {
+    // תוכן למבוגרים – רק בקטגוריה שלו בתחתית, לא בשורות המומלצות/באנר
+    val ok = synchronized(prefGroupOk) {
+        val k = Prefs.str("pref_countries")
+        if (k != prefKey) { prefKey = k; prefGroupOk.clear() }
+        prefGroupOk.getOrPut(e.group) {
+            val chosen = k.split(",").filter { it.isNotBlank() }.toSet()
+            !arabicRx.containsMatchIn(e.group) && !Catalog.isAdult(e.group) &&
+                Countries.of(e.group) in (if (chosen.isEmpty()) okCountries else chosen + Countries.OTHER)
+        }
+    }
+    return ok && !arabicRx.containsMatchIn(e.name) && !Catalog.isAdultName(e.name)
 }
 
 @Composable

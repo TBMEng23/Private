@@ -24,16 +24,18 @@ object Platforms {
         P("cellcom", "Cellcom tv", "cellcom", 0xFF6C2DC7, Regex("(?i)(cellcom)")),
     )
     private val byName = all.associateBy { it.name.lowercase() }
-    private val cache = HashMap<String, P?>()
+    private val NONE = P("", "", "", 0, Regex("$^"))
+    private val byGroup = HashMap<String, P>()
+    private val byPrefix = HashMap<String, P>()
 
-    /** מזהה לפי שם הקבוצה ואז לפי שם הכותר (קידומת כמו "4K-AMZ -") */
-    fun detect(e: Entry): P? = synchronized(cache) {
-        cache.getOrPut(e.key) {
-            all.firstOrNull { it.rx.containsMatchIn(e.group) } ?: run {
-                val prefix = e.name.substringBefore(" - ", "").take(14)
-                if (prefix.isNotBlank()) all.firstOrNull { it.rx.containsMatchIn(prefix) } else null
-            }
-        }
+    /** מזהה לפי שם הקבוצה ואז לפי שם הכותר (קידומת כמו "4K-AMZ -"). מטמון לפי קבוצה/קידומת – מעט regex גם על אלפי פריטים */
+    fun detect(e: Entry): P? {
+        val g = synchronized(byGroup) { byGroup.getOrPut(e.group) { all.firstOrNull { it.rx.containsMatchIn(e.group) } ?: NONE } }
+        if (g !== NONE) return g
+        val prefix = e.name.substringBefore(" - ", "").take(14)
+        if (prefix.isBlank()) return null
+        val p = synchronized(byPrefix) { byPrefix.getOrPut(prefix) { all.firstOrNull { it.rx.containsMatchIn(prefix) } ?: NONE } }
+        return if (p === NONE) null else p
     }
 
     /** שמות הפלטפורמות שבהן הכותר זמין (TMDB watch providers – ישראל, אחרת ארה"ב) */
