@@ -172,10 +172,10 @@ object Catalog {
         "dorcel|vivid|private ?(tv|gold|spice)|red ?light|redlight|hot ?(club|xxx)|blue ?hustler|milf|hentai|onlyfans|" +
         "nsfw|x-rated|xrated|למבוגרים|ארוטי|סקס|פורנו)")
     /** פורנו בתוך קטגוריה רגילה של הספק – לפי שמות אולפנים/אתרים ותגיות XXX מפורשות.
-     *  לא נתפסים: "xXx" (וין דיזל), "XXX: State of the Union", תיעודיים כמו "The Rise of OnlyFans" / "Hippy Porn" */
+     *  לא נתפסים: "xXx" (וין דיזל), "XXX: State of the Union", תיעודיים כמו "The Rise of OnlyFans" / "Hippy Porn" / "Pornhub History" (שמות אתרים ו-pornstar לא נחשבים) */
     private val adultNameRx = Regex("(?i)(brazzers|bang ?bros|reality ?kings|naughty ?america|digital ?playground|evil ?angel|" +
         "marc ?dorcel|\\bdorcel\\b|blacked(raw)?\\b|\\btushy\\b|vixen ?(\\.com|xxx)|mofos|team ?skeet|fake ?taxi|public ?agent|" +
-        "pornhub|xvideos|xhamster|\\bhentai|pornstar|\\bporno? ?(movie|film|tv|channel|hub|xxx)|" +
+        "\\bhentai|\\bporno? ?(movie|film|tv|channel|hub|xxx)|" +
         "\\bxxx ?(tv|channel)|x-rated ?(tv|channel|movie)|פורנו)")
     /** תגית XXX באותיות גדולות כתגית: "[XXX]", "(XXX)", "XXX | …", "… | XXX" (לא "xXx", "xXx 2" או "NF - XXX") */
     private val xxxTagRx = Regex("\\[XXX]|\\(XXX\\)|\\|\\s*XXX\\b|\\bXXX\\s*\\|")
