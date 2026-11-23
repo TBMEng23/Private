@@ -287,8 +287,15 @@ private fun HomeRows(content: Content, ver: Int, wide: Boolean, nav: (Screen) ->
     val recent = remember(ver) { Prefs.recent() }
     val allowedKeys = remember(movies, series) { (movies.map { it.key } + series.map { it.key }).toHashSet() }
     // "המשך צפייה" – אף פעם לא תוכן למבוגרים (גם כשהוא מוצג/פתוח בהגדרות)
-    val adultKeys = remember(content) { content.movies.filter { Catalog.isAdultItem(it) }.mapTo(HashSet()) { it.key } }
-    val adultSeries = remember(content) { content.series.filter { Catalog.isAdultItem(it) }.mapTo(HashSet()) { it.name } }
+    // נבדק רק על מה שבאמת נצפה (עשרות פריטים) – לא regex על כל הקטלוג בכל כניסה למסך הבית
+    val adultKeys = remember(content, recent) {
+        val keys = recent.filter { it.item.kind == Kind.MOVIE }.mapTo(HashSet()) { it.item.key }
+        content.movies.filter { it.key in keys && Catalog.isAdultItem(it) }.mapTo(HashSet()) { it.key }
+    }
+    val adultSeries = remember(content, recent) {
+        val names = recent.mapNotNullTo(HashSet()) { it.item.seriesName }
+        content.series.filter { it.name in names && Catalog.isAdultItem(it) }.mapTo(HashSet()) { it.name }
+    }
     val recentMovies = remember(recent, allowedKeys, adultKeys) { recent.filter { it.item.kind == Kind.MOVIE && it.item.key in allowedKeys &&
         it.item.key !in adultKeys && !Catalog.isAdultName(it.item.title) } }
     val recentEps = remember(recent, adultSeries) { recent.filter { it.item.kind == Kind.SERIES && it.item.seriesName !in adultSeries &&
@@ -1269,8 +1276,8 @@ private fun RowsView(
     var curated by remember(kind) { mutableStateOf(kind != Kind.LIVE && Prefs.str("rows_src_${kind.name}", "curated") == "curated") }
     var top by remember(items) { mutableStateOf<List<Entry>>(emptyList()) }
     var genreRows by remember(items) { mutableStateOf<List<Pair<String, List<Entry>>>>(emptyList()) }
-    LaunchedEffect(items, kind) {
-        if (kind == Kind.LIVE) return@LaunchedEffect
+    LaunchedEffect(pref, kind) {
+        if (kind == Kind.LIVE || pref.isEmpty()) return@LaunchedEffect
         withContext(Dispatchers.IO) {
             top = runCatching { if (kind == Kind.MOVIE) Trending.movies(pref) else Trending.series(pref) }.getOrDefault(emptyList())
             val rows = ArrayList<Pair<String, List<Entry>>>()
