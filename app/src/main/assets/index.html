@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ספינר אוטומטי</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+/*
+VOICE: משחק משפחתי, שמח וברור מרחוק
+IDEA: לוח הספינר עצמו – יד/רגל וצבע, מוגרלים לבד
+PICTURE: עיגול צבע ענק עם אייקון האבר, טבעת ספירה לאחור סביבו
+COLOUR and TYPE: אדום/כחול/צהוב/ירוק על רקע לבן או לילה כהה; Rubik
+LAYOUT: תוצאה גדולה למעלה, פקדים מתחת בעמודה אחת
+*/
+:root{color-scheme:light dark;--bg:light-dark(#f6f5f1,#121318);--card:light-dark(#fff,#1d1f27);--ink:light-dark(#16171c,#f2f2f4);--mute:light-dark(#5d6070,#a6a9b8);--line:light-dark(#e2e0da,#2d303b);--c:#9aa0b0}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Rubik,system-ui,sans-serif;overflow-x:clip}
+main{max-width:620px;margin:0 auto;padding:clamp(16px,4vw,32px) 16px 40px}
+h1{font-size:clamp(24px,6vw,34px);line-height:1.05;margin:0 0 14px;font-weight:900}
+.stage{background:var(--card);border:1px solid var(--line);border-radius:28px;padding:clamp(16px,4vw,28px);text-align:center}
+.ring{position:relative;width:min(78vw,340px);aspect-ratio:1;margin:0 auto}
+.ring svg.prog{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
+.ring circle.track{stroke:var(--line)}
+.ring circle.bar{stroke:var(--c);transition:stroke .3s}
+.dot{position:absolute;inset:9%;border-radius:50%;background:var(--c);display:grid;place-items:center;box-shadow:inset 0 -14px 0 rgba(0,0,0,.12),0 10px 24px rgba(0,0,0,.18);transition:background .3s}
+.dot svg{width:56%;height:56%}
+.dot.pop{animation:pop .45s ease}
+@keyframes pop{0%{transform:scale(.82)}60%{transform:scale(1.05)}100%{transform:scale(1)}}
+@media(prefers-reduced-motion:reduce){.dot.pop{animation:none}}
+.call{font-size:clamp(30px,8vw,46px);font-weight:900;line-height:1.1;margin:18px 0 4px;text-wrap:balance}
+.call b{color:var(--cText,var(--ink))}
+.sub{color:var(--mute);font-size:16px;min-height:24px}
+.ctrl{margin-top:16px;background:var(--card);border:1px solid var(--line);border-radius:22px;padding:18px;display:grid;gap:16px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+label{font-weight:700}
+.secs{display:flex;align-items:center;gap:10px;flex:1 1 220px}
+input[type=range]{flex:1;accent-color:#1e5bd8;height:44px}
+input[type=number]{width:84px;font:inherit;font-size:18px;padding:8px 10px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);text-align:center}
+.presets button{flex:1 1 60px}
+button{font:inherit;font-weight:700;min-height:48px;padding:0 18px;border-radius:14px;border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer}
+button:focus-visible,input:focus-visible{outline:3px solid #1e5bd8;outline-offset:2px}
+button.on{background:var(--ink);color:var(--bg)}
+#go{flex:2 1 160px;font-size:20px;min-height:56px;background:#2e9e44;color:#fff;border:0}
+#go.run{background:#e53935}
+#next{flex:1 1 120px;min-height:56px}
+.chk{display:flex;align-items:center;gap:8px;min-height:44px}
+.chk input{width:22px;height:22px;accent-color:#1e5bd8}
+.vstat{font-size:14px;color:var(--mute)}.vstat.ok{color:#2e9e44}.vstat.bad{color:#c62828;line-height:1.6}
+.hist{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:12px;min-height:20px}
+.hist span{width:18px;height:18px;border-radius:50%;opacity:.8}
+</style>
+</head>
+<body>
+<main>
+  <h1>ספינר אוטומטי</h1>
+  <section class="stage" aria-live="polite">
+    <div class="ring">
+      <svg class="prog" viewBox="0 0 100 100" aria-hidden="true">
+        <circle class="track" cx="50" cy="50" r="47" fill="none" stroke-width="4"/>
+        <circle class="bar" id="bar" cx="50" cy="50" r="47" fill="none" stroke-width="4" stroke-linecap="round" pathLength="100" stroke-dasharray="100" stroke-dashoffset="0"/>
+      </svg>
+      <div class="dot" id="dot"><svg id="icon" viewBox="0 0 100 100" aria-hidden="true"></svg></div>
+    </div>
+    <div class="call" id="call">לחץ "התחל"</div>
+    <div class="sub" id="sub">ההגרלה תתחלף לבד כל כמה שניות</div>
+    <div class="hist" id="hist" aria-hidden="true"></div>
+  </section>
+
+  <section class="ctrl">
+    <div class="row">
+      <label for="num">כל כמה שניות:</label>
+      <div class="secs">
+        <input type="range" id="rng" min="3" max="60" step="1" value="10" aria-label="שניות">
+        <input type="number" id="num" min="2" max="300" value="10" inputmode="numeric">
+      </div>
+    </div>
+    <div class="row presets" id="presets">
+      <button data-s="5">5</button><button data-s="10">10</button><button data-s="15">15</button><button data-s="20">20</button><button data-s="30">30</button>
+    </div>
+    <div class="row">
+      <button id="go">▶ התחל</button>
+      <button id="next">הגרל עכשיו</button>
+    </div>
+    <div class="row">
+      <label class="chk"><input type="checkbox" id="voice" checked> הקראה בקול</label>
+      <label class="chk"><input type="checkbox" id="beep" checked> צפצוף לפני החלפה</label>
+      <button id="test">🔊 בדיקת קול</button>
+    </div>
+    <div class="vstat" id="vstat"></div>
+  </section>
+</main>
+
+<script>
+{
+const LIMBS=[
+  {t:'יד ימין',hand:1,right:1},{t:'יד שמאל',hand:1,right:0},
+  {t:'רגל ימין',hand:0,right:1},{t:'רגל שמאל',hand:0,right:0}];
+const COLORS=[
+  {t:'אדום',c:'#e53935',txt:'#e53935'},{t:'כחול',c:'#1e5bd8',txt:'#1e5bd8'},
+  {t:'צהוב',c:'#fdd835',txt:'#c9a400'},{t:'ירוק',c:'#2e9e44',txt:'#2e9e44'}];
+
+const $=id=>document.getElementById(id);
+const dot=$('dot'),icon=$('icon'),bar=$('bar'),call=$('call'),sub=$('sub'),go=$('go'),rng=$('rng'),num=$('num'),hist=$('hist'),vstat=$('vstat');
+let secs=10,running=false,start=0,raf=0,last=-1,beeped=false,ctx=null,wake=null,history=[];
+
+try{const s=+localStorage.getItem('spinSecs');if(s>=2&&s<=300)secs=s}catch(e){}
+setSecs(secs);
+
+// shapes: white hand / foot, mirrored for left
+const HAND='<g fill="#fff" stroke="rgba(0,0,0,.25)" stroke-width="2"><rect x="30" y="44" width="40" height="40" rx="14"/><rect x="31" y="18" width="9" height="34" rx="4.5"/><rect x="42" y="12" width="9" height="38" rx="4.5"/><rect x="53" y="14" width="9" height="36" rx="4.5"/><rect x="63" y="22" width="8" height="30" rx="4"/><rect x="12" y="46" width="9" height="28" rx="4.5" transform="rotate(-38 16 60)"/></g>';
+const FOOT='<g fill="#fff" stroke="rgba(0,0,0,.25)" stroke-width="2"><path d="M36 34c10-4 26-2 30 10 4 13-2 30-6 40-3 7-20 8-24 0-5-12-12-44 0-50z"/><circle cx="38" cy="22" r="7"/><circle cx="50" cy="18" r="5.5"/><circle cx="60" cy="20" r="5"/><circle cx="68" cy="25" r="4.5"/><circle cx="74" cy="32" r="4"/></g>';
+
+function setSecs(v){
+  v=Math.round(+v);if(!(v>=2))v=2;if(v>300)v=300;
+  secs=v;num.value=v;rng.value=Math.min(60,Math.max(3,v));
+  document.querySelectorAll('#presets button').forEach(b=>b.classList.toggle('on',+b.dataset.s===v));
+  try{localStorage.setItem('spinSecs',v)}catch(e){}
+}
+
+function tone(f,d){
+  if(!ctx)return;
+  try{const o=ctx.createOscillator(),g=ctx.createGain();o.frequency.value=f;o.connect(g);g.connect(ctx.destination);
+  const t=ctx.currentTime;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.25,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.start(t);o.stop(t+d+.02)}catch(e){}
+}
+
+let heVoice=null;
+const APP=typeof AndroidTTS!=='undefined';
+function findVoice(){
+  if(APP){
+    if(AndroidTTS.hebrew()){vstat.textContent='הקראה בעברית: פעילה';vstat.className='vstat ok'}
+    else{vstat.innerHTML='לא נמצא קול עברי בטלפון. הגדרות ← ניהול כללי/נגישות ← המרת טקסט לדיבור ← מנוע Google ← הגדרות ← התקנת נתוני קול ← <b>עברית</b>. אחר כך סגור ופתח את האפליקציה.';vstat.className='vstat bad'}
+    return}
+  if(!('speechSynthesis' in window)){vstat.textContent='הדפדפן הזה לא תומך בהקראה. נסה Chrome או Safari.';return}
+  const vs=speechSynthesis.getVoices();
+  heVoice=vs.find(x=>/^(he|iw)/i.test(x.lang)&&/google/i.test(x.name))||vs.find(x=>/^(he|iw)/i.test(x.lang))||null;
+  if(heVoice){vstat.textContent='קול עברי: '+heVoice.name;vstat.className='vstat ok'}
+  else if(vs.length){vstat.innerHTML='לא נמצא קול עברי במכשיר. <b>אנדרואיד:</b> הגדרות ← נגישות/שפה ← המרת טקסט לדיבור ← מנוע Google ← התקן נתוני קול "עברית". <b>Windows:</b> הגדרות ← זמן ושפה ← דיבור ← הוסף קולות ← עברית. <b>אייפון:</b> הגדרות ← נגישות ← תוכן מוקרא ← קולות ← עברית ← כרמית.';vstat.className='vstat bad'}
+}
+function speak(text){
+  if(!$('voice').checked)return;
+  if(APP){try{AndroidTTS.speak(text)}catch(e){}return}
+  if(!('speechSynthesis' in window))return;
+  try{
+    speechSynthesis.cancel();
+    if(!heVoice)findVoice();
+    const u=new SpeechSynthesisUtterance(text);u.lang='he-IL';u.rate=.9;u.volume=1;
+    if(heVoice)u.voice=heVoice;
+    setTimeout(()=>{try{speechSynthesis.resume();speechSynthesis.speak(u)}catch(e){}},60);
+  }catch(e){}
+}
+
+function spin(){
+  let i;do{i=Math.floor(Math.random()*16)}while(i===last);last=i;
+  const L=LIMBS[i>>2],C=COLORS[i&3];
+  document.documentElement.style.setProperty('--c',C.c);
+  icon.innerHTML=`<g transform="${L.right?'':'translate(100 0) scale(-1 1)'}">${L.hand?HAND:FOOT}</g>`;
+  call.innerHTML=`${L.t} על <b style="color:${C.txt}">${C.t}</b>`;
+  dot.classList.remove('pop');void dot.offsetWidth;dot.classList.add('pop');
+  tone(880,.18);
+  speak(`${L.t}, ${C.t}`);
+  history.unshift(C.c);history=history.slice(0,12);
+  hist.innerHTML=history.map(c=>`<span style="background:${c}"></span>`).join('');
+  start=performance.now();beeped=false;
+}
+
+function tick(now){
+  const el=(now-start)/1000,left=Math.max(0,secs-el);
+  bar.style.strokeDashoffset=(100*el/secs).toFixed(2);
+  sub.textContent=`החלפה בעוד ${Math.ceil(left)} שניות`;
+  if($('beep').checked&&!beeped&&left<=3&&secs>4){beeped=true;tone(520,.1);setTimeout(()=>tone(520,.1),1000);setTimeout(()=>tone(520,.1),2000)}
+  if(el>=secs)spin();
+  raf=requestAnimationFrame(tick);
+}
+
+async function keepAwake(on){
+  try{if(on&&'wakeLock' in navigator)wake=await navigator.wakeLock.request('screen');else if(wake){wake.release();wake=null}}catch(e){}
+}
+
+function toggle(){
+  if(!ctx){try{ctx=new (window.AudioContext||window.webkitAudioContext)()}catch(e){}}
+  if(ctx&&ctx.state==='suspended')ctx.resume();
+  running=!running;
+  if(running){
+    go.textContent='⏸ עצור';go.classList.add('run');
+    spin();raf=requestAnimationFrame(tick);keepAwake(true);
+  }else{
+    go.textContent='▶ המשך';go.classList.remove('run');
+    cancelAnimationFrame(raf);sub.textContent='מושהה';keepAwake(false);
+    try{speechSynthesis.cancel()}catch(e){}
+  }
+}
+
+go.addEventListener('click',toggle);
+$('next').addEventListener('click',()=>{if(!ctx){try{ctx=new (window.AudioContext||window.webkitAudioContext)()}catch(e){}}spin();if(!running){bar.style.strokeDashoffset=0;sub.textContent='מושהה – לחץ "התחל" להחלפה אוטומטית'}});
+rng.addEventListener('input',()=>setSecs(rng.value));
+num.addEventListener('change',()=>setSecs(num.value));
+document.getElementById('presets').addEventListener('click',e=>{const b=e.target.closest('button');if(b)setSecs(b.dataset.s)});
+document.addEventListener('keydown',e=>{if(e.code==='Space'&&e.target.tagName!=='INPUT'&&e.target.tagName!=='BUTTON'){e.preventDefault();toggle()}});
+document.addEventListener('visibilitychange',()=>{if(running&&document.visibilityState==='visible')keepAwake(true)});
+$('test').addEventListener('click',()=>{const c=$('voice').checked;$('voice').checked=true;speak('יד ימין, אדום');$('voice').checked=c});
+if(APP){findVoice();setTimeout(findVoice,1500);setTimeout(findVoice,4000)}
+else if('speechSynthesis' in window){try{findVoice();speechSynthesis.addEventListener('voiceschanged',findVoice)}catch(e){}}else findVoice();
+}
+</script>
+</body>
+</html>

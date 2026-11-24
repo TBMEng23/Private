@@ -1,8 +1,5 @@
-.gradle/
 build/
+.gradle/
 app/build/
-local.properties
-*.iml
-.idea/
-app/tbm-release.jks
 *.jks
+local.properties
