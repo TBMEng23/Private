@@ -39,6 +39,15 @@ object Repo {
         scope.launch { load(p, force) }
     }
 
+    /** בטעינה חסכונית רק הקבוצות הגלויות נטענות: אחרי שינוי הסתרה/מבוגרים/ארצות (גם מסנכרון) – טעינה מחדש מהקבצים השמורים */
+    private var leanJob: kotlinx.coroutines.Job? = null
+    fun reloadIfLean() {
+        if (!Prefs.leanLoad) return
+        val p = Prefs.activePlaylist() ?: return
+        leanJob?.cancel()
+        leanJob = scope.launch { kotlinx.coroutines.delay(1500); load(p, false) }
+    }
+
     /** סריקה מחדש של לוח השידורים (מהקובץ השמור) – אחרי שינוי קטגוריות גלויות */
     fun refreshEpg() {
         val p = Prefs.activePlaylist() ?: return
@@ -46,7 +55,16 @@ object Repo {
         scope.launch { Epg.load(p, c, false) }
     }
 
+    @Volatile private var lastLoadAt = 0L
+    /** האפליקציה נשארת פתוחה ברקע ימים (בעיקר בסטרימר) – בחזרה אליה, אם התוכן ישן מזמן הרענון שהוגדר, נטען מחדש */
+    fun refreshIfStale() {
+        val p = Prefs.activePlaylist() ?: return
+        if (lastLoadAt == 0L || state.value is LoadState.Loading) return
+        if (System.currentTimeMillis() - lastLoadAt >= Prefs.refreshHours * 3_600_000L) loadAsync(p, false)
+    }
+
     suspend fun load(p: Playlist, force: Boolean = false) = withContext(Dispatchers.IO) {
+        lastLoadAt = System.currentTimeMillis()
         state.value = LoadState.Loading(L("טוען את \"{0}\"…", p.name))
         try {
             val c0 = if (p.isXtream) Xtream(p).load(force) else loadM3u(p, force)

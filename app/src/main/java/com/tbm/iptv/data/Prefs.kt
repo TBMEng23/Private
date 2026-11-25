@@ -109,6 +109,13 @@ object Prefs {
             for (k in keys) {
                 if (k == "_tbm_backup" || k == "_mt" || isLocalKey(k)) continue
                 val r = rmt.optLong(k, 0L); val l = mt.getLong(k, 0L)
+                // היסטוריית צפייה: מיזוג לפי פריט (הזמן האחרון של כל סרט/פרק) – לא "המכשיר האחרון דורס את כל הרשימה"
+                if (k.startsWith("resume_") && o.has(k) && sp.contains(k) && r != l) {
+                    val merged = mergeResume(str(k, "{}"), o.optString(k, "{}"))
+                    e.putString(k, merged); me.putLong(k, maxOf(r, l))
+                    if (merged != o.optString(k, "{}")) localNewer = true
+                    continue
+                }
                 when {
                     r > l -> { if (o.has(k)) putAny(e, k, o.get(k)) else e.remove(k); me.putLong(k, r) }
                     l > r -> localNewer = true
@@ -120,6 +127,21 @@ object Prefs {
         e.commit(); me.commit()
         version.intValue = version.intValue + 1
         return localNewer
+    }
+
+    private fun mergeResume(a: String, b: String): String {
+        val x = runCatching { JSONObject(a) }.getOrDefault(JSONObject())
+        val y = runCatching { JSONObject(b) }.getOrDefault(JSONObject())
+        y.keys().forEach { key ->
+            val ny = y.optJSONObject(key) ?: return@forEach
+            val nx = x.optJSONObject(key)
+            if (nx == null || ny.optLong("ts") > nx.optLong("ts")) x.put(key, ny)
+        }
+        if (x.length() > 300) {
+            val keys = x.keys().asSequence().toList().sortedBy { x.optJSONObject(it)?.optLong("ts") ?: 0L }
+            keys.take(x.length() - 300).forEach { x.remove(it) }
+        }
+        return x.toString()
     }
 
     /** מחיקת כל הנתונים המסונכרנים במכשיר (יציאה מחשבון) */
@@ -217,7 +239,7 @@ object Prefs {
     /** תוכן למבוגרים בפרופיל מבוגר: hide | lock | show */
     var adultMode: String
         get() = str("adult_mode", "lock")
-        set(v) = setStr("adult_mode", v)
+        set(v) { setStr("adult_mode", v); Repo.reloadIfLean() }
 
     fun lockedGroups(): Set<String> = set("locked_groups")
     fun setGroupLocked(kind: Kind, g: String, on: Boolean) = toggle("locked_groups", "${kind.name}|$g", on)
@@ -262,13 +284,14 @@ object Prefs {
         val s = hidden().toMutableSet()
         groups.forEach { g -> val k = "${kind.name}|$g"; if (hide) s.add(k) else s.remove(k) }
         putSet("hidden", s)
+        if (!hide) Repo.reloadIfLean()   // בטעינה חסכונית קבוצה מוסתרת לא נטענה – טוענים מחדש כדי שתופיע
     }
 
     fun hiddenItems(): Set<String> = set("hidden_items")
     fun setItemHidden(key: String, on: Boolean) = toggle("hidden_items", key, on)
 
     fun allowedCountries(kind: Kind): Set<String> = set("countries_${kind.name}")
-    fun setAllowedCountries(kind: Kind, s: Set<String>) = putSet("countries_${kind.name}", s)
+    fun setAllowedCountries(kind: Kind, s: Set<String>) { putSet("countries_${kind.name}", s); Repo.reloadIfLean() }
 
     fun renames(): Map<String, String> {
         val o = obj("renames")

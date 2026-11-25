@@ -113,6 +113,7 @@ class MainActivity : FragmentActivity() {
         super.onResume()
         // בדיקת עדכון גם בחזרה מהרקע (בסטרימר האפליקציה כמעט אף פעם לא נפתחת מאפס). מוגבל לפעם בשעה
         runCatching { com.tbm.iptv.data.Updater.autoCheck(this) }
+        runCatching { com.tbm.iptv.data.Repo.refreshIfStale() }
     }
 
     override fun onStop() {

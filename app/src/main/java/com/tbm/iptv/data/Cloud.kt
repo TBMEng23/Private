@@ -98,6 +98,9 @@ object Cloud {
 
     private fun applyRemote(data: String, updated: Long, replace: Boolean = false) {
         val before = Prefs.activePlaylist()
+        val leanSig = { Prefs.hidden().hashCode() * 31 + Prefs.adultMode.hashCode() +
+            Kind.entries.sumOf { Prefs.allowedCountries(it).hashCode() } }
+        val sigBefore = leanSig()
         applying = true
         lastApplied = data.hashCode()
         val localNewer = try { Prefs.importCloud(data, replace) } finally { applying = false }
@@ -106,6 +109,7 @@ object Cloud {
         if (localNewer) scheduleUpload()
         val after = Prefs.activePlaylist()
         if (after != null && after != before) Repo.loadAsync(after)
+        else if (leanSig() != sigBefore) Repo.reloadIfLean()
         status = L("עודכן מהענן ✓")
     }
 
