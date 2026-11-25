@@ -331,6 +331,7 @@ object I18nEn {
         "🔒 נעל בקוד" to "🔒 Lock with PIN",
         "🔓 בטל נעילה" to "🔓 Unlock",
         "🔔 תזכורת" to "🔔 Reminder",
+    "חפש" to "Search",
     "🆕 קטגוריות חדשות ({0}) – מוסתרות עד שתחליט" to "🆕 New categories ({0}) – hidden until you decide",
     "הצג את כולן" to "Show all",
     "השאר את כולן מוסתרות" to "Keep all hidden",
