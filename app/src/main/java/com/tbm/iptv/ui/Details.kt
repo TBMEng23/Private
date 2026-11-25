@@ -1,5 +1,9 @@
 package com.tbm.iptv.ui
 
+import androidx.compose.foundation.layout.widthIn
+
+import androidx.compose.ui.focus.onFocusChanged
+
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.background
@@ -156,17 +160,28 @@ private fun PlatformLine(e: com.tbm.iptv.data.Entry, info: MediaInfo?, tv: Boole
 
 @Composable
 private fun PlayRow(label: String, fav: Boolean, onPlay: () -> Unit, onFav: () -> Unit) {
+    val tv = com.tbm.iptv.data.Device.isTv
+    var playF by remember { mutableStateOf(false) }
+    var favF by remember { mutableStateOf(false) }
     Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-        Button(
-            onClick = onPlay, modifier = Modifier.weight(1f).height(48.dp), shape = RoundedCornerShape(6.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = Color.Black),
+        // בסטרימר: כפתור קצר (לא לכל הרוחב) ובפוקוס הופך לאדום עם מסגרת – שיהיה ברור שאתה עליו
+        androidx.compose.material3.Button(
+            onClick = onPlay,
+            modifier = (if (tv) Modifier.widthIn(min = 220.dp, max = 340.dp) else Modifier.weight(1f)).height(48.dp)
+                .onFocusChanged { playF = it.isFocused }
+                .border(if (playF) 3.dp else 0.dp, if (playF) Color.White else Color.Transparent, RoundedCornerShape(6.dp)),
+            shape = RoundedCornerShape(6.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = if (playF) NetRed else Color.White,
+                contentColor = if (playF) Color.White else Color.Black),
         ) {
             Icon(Icons.Filled.PlayArrow, null)
             Spacer(Modifier.width(6.dp))
             Text(label, fontWeight = FontWeight.Bold, fontSize = 16.sp, maxLines = 1)
         }
         Spacer(Modifier.width(12.dp))
-        Box(Modifier.size(48.dp).border(1.dp, Color(0xFF55565E), CircleShape).clip(CircleShape).clickable { onFav() },
+        Box(Modifier.size(48.dp).onFocusChanged { favF = it.isFocused }
+            .border(if (favF) 3.dp else 1.dp, if (favF) Color.White else Color(0xFF55565E), CircleShape).clip(CircleShape)
+            .background(if (favF) Color(0x33FFFFFF) else Color.Transparent).clickable { onFav() },
             contentAlignment = Alignment.Center) {
             Icon(if (fav) Icons.Filled.Star else Icons.Filled.StarBorder, L("מועדף"), tint = if (fav) Gold else Color.White)
         }
