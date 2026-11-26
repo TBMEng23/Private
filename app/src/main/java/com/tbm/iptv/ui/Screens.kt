@@ -180,6 +180,8 @@ fun ManageGroupsScreen(startKind: Kind, onBack: () -> Unit, onKids: (String) -> 
             }
             if (scanOpen) {
                 SwitchRow(L("לוח שידורים רק לערוצים גלויים"), Prefs.epgVisibleOnly) { Prefs.epgVisibleOnly = it }
+                SwitchRow(L("השלמת לוח שידורים מלוח ציבורי ישראלי (לערוצים שחסר להם מידע)"), Prefs.bool("epg_extra_il", true)) {
+                    Prefs.setBool("epg_extra_il", it); Repo.refreshEpg() }
                 SwitchRow(L("טעינה חסכונית – לא לטעון קטגוריות מוסתרות"), Prefs.leanLoad) { Prefs.leanLoad = it }
                 Text(L("בטעינה חסכונית קטגוריות מוסתרות או ממדינות שלא נבחרו לא נטענות לזיכרון בכלל – מהיר יותר ופחות קריסות במכשירים חלשים. הן עדיין מופיעות כאן כדי שתוכל להחזיר אותן. שים לב: גם פרופילי ילדים לא יראו אותן. השינוי נכנס לתוקף ביציאה מהמסך."),
                     fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(4.dp))

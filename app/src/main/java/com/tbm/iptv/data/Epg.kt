@@ -19,6 +19,11 @@ import java.util.zip.GZIPInputStream
 object Epg {
     @Volatile private var programs: Map<String, List<EpgEntry>> = emptyMap()
     @Volatile private var nameIndex: Map<String, String> = emptyMap()
+    /** שם "מנורמל חזק" (בלי IL:/HD/VIP/RAW/BOX/סוגריים, עברית→אנגלית) → מזהה ערוץ במדריך */
+    @Volatile private var strongIndex: Map<String, String> = emptyMap()
+
+    /** לוח שידורים ציבורי לישראל (epgshare01) – משלים ערוצים שאין להם מידע אצל הספק */
+    const val EXTRA_IL = "https://epgshare01.online/epgshare01/epg_ripper_IL1.xml.gz"
 
     val version = mutableIntStateOf(0)
     var status by mutableStateOf("")
@@ -28,12 +33,28 @@ object Epg {
     fun norm(s: String): String = TitleParser.parse(s).title.lowercase()
         .replace(Regex("[^\\p{L}0-9]"), "")
 
+    private val noiseRx = Regex("(?i)\\b(il|isr|israel|hd|fhd|uhd|sd|4k|8k|hevc|h265|vip|raw|box|backup|plus|live|tv|ch|\\d{3,4}p)\\b")
+    private val heb = listOf("מכאן" to "makan", "כאן" to "kan", "קשת" to "keshet", "רשת" to "reshet", "ערוץ" to "channel",
+        "ספורט" to "sport", "חינוכית" to "hinuchit", "ילדים" to "kids", "הידברות" to "hidabroot", "קבלה" to "kabbalah",
+        "מוזיקה" to "music", "הופ" to "hop", "ניקלודיאון" to "nickelodeon", "דיסני" to "disney", "יס" to "yes", "הוט" to "hot")
+    /** "IL: KAN 11 BOX HD (WORLD…)" → "kan11"; "כאן 11" → "kan11"; "Channel 14 HD" → "channel14" */
+    fun strongNorm(s0: String): String {
+        var s = s0.lowercase().replace(Regex("\\(.*?\\)|\\[.*?]"), " ").substringBefore("(")
+        s = s.replace(Regex("^[a-z]{2,3}\\s*[:|\\-]\\s*"), " ")   // קידומת מדינה "IL:" / "IL|"
+        heb.forEach { (h, e) -> s = s.replace(h, " $e ") }
+        s = noiseRx.replace(s, " ").replace("#", " ")
+        return s.filter { it.isLetterOrDigit() }
+    }
+
     private fun keyFor(epgId: String?, name: String?): String? {
         if (!epgId.isNullOrBlank()) {
             val k = epgId.lowercase()
             if (programs.containsKey(k)) return k
         }
-        if (!name.isNullOrBlank()) return nameIndex[norm(name)]
+        if (!name.isNullOrBlank()) {
+            nameIndex[norm(name)]?.let { return it }
+            strongNorm(name).takeIf { it.length >= 2 }?.let { strongIndex[it] }?.let { return it }
+        }
         return null
     }
 
@@ -79,6 +100,7 @@ object Epg {
                     parse(f, c, d)
                 }
             }
+            runCatching { addExtra(p, c, force) }
             status = if (programs.isEmpty()) L("המדריך ריק") else ""
         } catch (e: OutOfMemoryError) {
             programs = emptyMap(); nameIndex = emptyMap()
@@ -139,13 +161,30 @@ object Epg {
         version.intValue = version.intValue + 1
     }
 
-    private fun parse(f: File, c: Content, offsetMs: Long = 0L) {
+    /** השלמה מלוח ציבורי: רק לערוצים שנשארו בלי תוכניות. הזמנים בקובץ כוללים אזור זמן – בלי הזזה */
+    private fun addExtra(p: Playlist, c: Content, force: Boolean) {
+        if (!Prefs.bool("epg_extra_il", true)) return
+        val missing = c.live.filter { keyFor(it.epgId, it.name).let { k -> k == null || programs[k].isNullOrEmpty() } }
+        if (missing.isEmpty()) return
+        val f = Repo.cacheFile("epg_extra_il.xml.gz")
+        val fresh = f.exists() && System.currentTimeMillis() - f.lastModified() < 12 * 3_600_000L
+        if (force || !fresh) { try { Http.download(EXTRA_IL, f) } catch (e: Exception) { if (!f.exists()) return } }
+        val base = Triple(programs, nameIndex, strongIndex)
+        parse(f, c.copy(live = missing), 0L, prefix = "x|", strongOnly = true)
+        val extra = Triple(programs, nameIndex, strongIndex)
+        programs = base.first + extra.first
+        nameIndex = base.second
+        strongIndex = HashMap(base.third).apply { extra.third.forEach { (k, v) -> putIfAbsent(k, v) } }
+    }
+
+    private fun parse(f: File, c: Content, offsetMs: Long = 0L, prefix: String = "", strongOnly: Boolean = false) {
         val now = System.currentTimeMillis()
         val hour = 3_600_000L
         val day = 86_400_000L
         // לכל ערוץ: מאיזה זמן לשמור (ארכיון רק לערוצים עם catch-up)
         val fromById = HashMap<String, Long>()
         val wantNames = HashMap<String, Long>()
+        val wantStrong = HashMap<String, Long>()
         val vis = if (Prefs.epgVisibleOnly) Catalog.parentGroupFilter(Kind.LIVE) else null
         val hiddenItems = if (vis != null) Prefs.hiddenItems() else emptySet()
         c.live.forEach { ch ->
@@ -154,13 +193,16 @@ object Epg {
             val from = if (days > 0) now - days * day else now - 3 * hour
             ch.epgId?.lowercase()?.let { id -> if ((fromById[id] ?: Long.MAX_VALUE) > from) fromById[id] = from }
             val n = norm(ch.name)
-            if (n.isNotEmpty() && (wantNames[n] ?: Long.MAX_VALUE) > from) wantNames[n] = from
+            if (!strongOnly && n.isNotEmpty() && (wantNames[n] ?: Long.MAX_VALUE) > from) wantNames[n] = from
+            val sn = strongNorm(ch.name)
+            if (sn.length >= 2 && (wantStrong[sn] ?: Long.MAX_VALUE) > from) wantStrong[sn] = from
         }
         val to = now + 2 * day
         val descFrom = now - 3 * hour
         val descTo = now + day
 
         val chNames = HashMap<String, String>() // normName -> channel id
+        val chStrong = HashMap<String, String>()
         val progs = HashMap<String, ArrayList<EpgEntry>>()
         val titles = HashMap<String, String>()  // מחרוזות כותרת משותפות
         var count = 0
@@ -178,16 +220,22 @@ object Epg {
             while (ev != XmlPullParser.END_DOCUMENT && count < MAX_ENTRIES) {
                 if (ev == XmlPullParser.START_TAG) {
                     when (xp.name) {
-                        "channel" -> curChannel = xp.getAttributeValue(null, "id")?.lowercase()
+                        "channel" -> curChannel = xp.getAttributeValue(null, "id")?.lowercase()?.let { prefix + it }
                         "display-name" -> if (curChannel != null && !inProg) {
-                            val n = norm(xp.nextText())
-                            val fr = wantNames[n]
+                            val txt = xp.nextText()
+                            val n = norm(txt)
+                            val fr = if (strongOnly) null else wantNames[n]
                             if (fr != null && chNames.putIfAbsent(n, curChannel!!) == null) {
                                 if ((fromById[curChannel!!] ?: Long.MAX_VALUE) > fr) fromById[curChannel!!] = fr
                             }
+                            val sn = strongNorm(txt)
+                            val fs = wantStrong[sn]
+                            if (fs != null && chStrong.putIfAbsent(sn, curChannel!!) == null) {
+                                if ((fromById[curChannel!!] ?: Long.MAX_VALUE) > fs) fromById[curChannel!!] = fs
+                            }
                         }
                         "programme" -> {
-                            pCh = xp.getAttributeValue(null, "channel")?.lowercase()
+                            pCh = xp.getAttributeValue(null, "channel")?.lowercase()?.let { prefix + it }
                             pStart = parseTime(xp.getAttributeValue(null, "start")) + offsetMs
                             pEnd = parseTime(xp.getAttributeValue(null, "stop")) + offsetMs
                             val fr = pCh?.let { fromById[it] }
@@ -218,6 +266,7 @@ object Epg {
         progs.values.forEach { it.sortBy { e -> e.start }; it.trimToSize() }
         programs = progs
         nameIndex = chNames
+        strongIndex = chStrong
     }
 
     /** "20231015120000 +0300" */

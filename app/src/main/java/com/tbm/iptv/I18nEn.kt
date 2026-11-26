@@ -331,6 +331,7 @@ object I18nEn {
         "🔒 נעל בקוד" to "🔒 Lock with PIN",
         "🔓 בטל נעילה" to "🔓 Unlock",
         "🔔 תזכורת" to "🔔 Reminder",
+    "השלמת לוח שידורים מלוח ציבורי ישראלי (לערוצים שחסר להם מידע)" to "Fill the guide from a public Israeli EPG (for channels missing info)",
     "לא ניתן להתחיל מההתחלה בערוץ הזה" to "Can't start over on this channel",
     "הספק לא מאפשר צפייה מההתחלה בערוץ הזה" to "The provider doesn't allow start-over on this channel",
     "⏮ \"{0}\" מההתחלה – \"חזרה לשידור חי\" מחזיר לשידור" to "⏮ \"{0}\" from the start – \"Back to live\" returns to live",
