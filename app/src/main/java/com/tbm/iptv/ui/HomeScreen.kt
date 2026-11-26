@@ -1153,7 +1153,7 @@ private fun RecordingsSection(ver: Int) {
 
 // ============================================================ שדה חיפוש: מקלדת עברית בטלוויזיה + חיפוש קולי
 @Composable
-fun SearchInput(q: String, placeholder: String = L("חפש ערוץ, סרט או סדרה…"), onChange: (String) -> Unit) {
+fun SearchInput(q: String, placeholder: String = L("חפש ערוץ, סרט, סדרה או שחקן…"), onChange: (String) -> Unit) {
     val ctx = LocalContext.current
     val tv = com.tbm.iptv.data.Device.isTv
     // בטלוויזיה – מקלדת פנימית (עברית/אנגלית) במקום מקלדת המערכת שאין בה עברית
@@ -1163,11 +1163,12 @@ fun SearchInput(q: String, placeholder: String = L("חפש ערוץ, סרט או
         val txt = r.data?.getStringArrayListExtra(android.speech.RecognizerIntent.EXTRA_RESULTS)?.firstOrNull()
         if (!txt.isNullOrBlank()) onChange(txt)
     }
-    fun startVoice() {
+    fun startVoice(lang: String = if (com.tbm.iptv.I18n.isEn) "en-US" else "he-IL") {
         val i = android.content.Intent(android.speech.RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
             .putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE_MODEL, android.speech.RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-            .putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE, if (com.tbm.iptv.I18n.isEn) "en-US" else "he-IL")
-            .putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, if (com.tbm.iptv.I18n.isEn) "en-US" else "he-IL")
+            .putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE, lang)
+            .putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE_PREFERENCE, lang)
+            .putExtra("android.speech.extra.ONLY_RETURN_LANGUAGE_PREFERENCE", lang)
             .putExtra(android.speech.RecognizerIntent.EXTRA_PROMPT, L("מה לחפש?"))
         runCatching { voice.launch(i) }.onFailure {
             android.widget.Toast.makeText(ctx, L("חיפוש קולי לא זמין במכשיר הזה"), android.widget.Toast.LENGTH_SHORT).show()
@@ -1178,7 +1179,13 @@ fun SearchInput(q: String, placeholder: String = L("חפש ערוץ, סרט או
             OutlinedTextField(q, onChange, singleLine = true, readOnly = useOsk, modifier = Modifier.weight(1f),
                 placeholder = { Text(placeholder) },
                 trailingIcon = { if (q.isNotEmpty()) IconButton(onClick = { onChange("") }) { Icon(Icons.Filled.Close, L("נקה")) } })
-            IconButton(onClick = { startVoice() }) { Icon(Icons.Filled.Mic, L("חיפוש קולי"), tint = MaterialTheme.colorScheme.primary) }
+            // שני מיקרופונים: עברית ואנגלית (שמות סרטים לועזיים נשמעים טוב יותר באנגלית)
+            IconButton(onClick = { startVoice("he-IL") }) { Box(contentAlignment = Alignment.BottomEnd) {
+                Icon(Icons.Filled.Mic, L("חיפוש קולי בעברית"), tint = MaterialTheme.colorScheme.primary)
+                Text("עב", fontSize = 8.sp, fontWeight = FontWeight.Bold) } }
+            IconButton(onClick = { startVoice("en-US") }) { Box(contentAlignment = Alignment.BottomEnd) {
+                Icon(Icons.Filled.Mic, L("חיפוש קולי באנגלית"), tint = MaterialTheme.colorScheme.primary)
+                Text("EN", fontSize = 8.sp, fontWeight = FontWeight.Bold) } }
             if (tv) IconButton(onClick = { useOsk = !useOsk }) { Icon(Icons.Filled.Keyboard, L("מקלדת")) }
         }
         if (useOsk) HebKeyboard(q, onChange)
@@ -1230,6 +1237,15 @@ private fun SearchSection(content: Content, ver: Int, nav: (Screen) -> Unit) {
         }
     }
     val live = res.first; val vod = res.second; val ser = res.third
+    // לפי שחקן (TMDB) – ברקע, אחרי שהתוצאות הרגילות מוצגות
+    val actor by androidx.compose.runtime.produceState<com.tbm.iptv.data.Actors.Result?>(null, dq, content) {
+        value = null
+        if (dq.trim().length >= 3) value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            runCatching {
+                com.tbm.iptv.data.Actors.search(dq, Catalog.get(Kind.MOVIE, content.movies).items, Catalog.get(Kind.SERIES, content.series).items)
+            }.getOrNull()?.takeIf { it.items.isNotEmpty() }
+        }
+    }
     Column(Modifier.fillMaxSize().padding(10.dp)) {
         SearchInput(q) { q = it }
         LazyColumn(Modifier.fillMaxSize()) {
@@ -1245,7 +1261,13 @@ private fun SearchSection(content: Content, ver: Int, nav: (Screen) -> Unit) {
                 item { SectionTitle(L("סדרות ({0})", ser.size)) }
                 items(ser) { s -> EntryRow(s, false) { nav(Screen.Series(s)) } }
             }
-            if (dq.length >= 2 && dq == q && live.isEmpty() && vod.isEmpty() && ser.isEmpty()) {
+            actor?.let { r ->
+                item { SectionTitle(L("🎭 עם {0} ({1})", r.name, r.items.size)) }
+                items(r.items, key = { "act:" + it.key }) { e ->
+                    EntryRow(e, false) { if (e is SeriesItem) nav(Screen.Series(e)) else if (e is Channel) Launcher.play(ctx, listOf(e.toPlay()), 0) }
+                }
+            }
+            if (dq.length >= 2 && dq == q && live.isEmpty() && vod.isEmpty() && ser.isEmpty() && actor == null) {
                 item { Text(L("לא נמצאו תוצאות"), Modifier.padding(16.dp)) }
             }
         }
