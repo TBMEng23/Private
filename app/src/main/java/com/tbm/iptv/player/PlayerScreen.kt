@@ -1,5 +1,7 @@
 package com.tbm.iptv.player
 
+import androidx.compose.ui.focus.focusRequester
+
 import androidx.compose.foundation.shape.CircleShape
 
 import androidx.compose.foundation.layout.offset
@@ -365,6 +367,9 @@ private fun Controls(a: PlayerActivity) {
             kotlinx.coroutines.delay(400)
         }
     }
+    // בשלט: כשהפקדים נפתחים הסמן עומד על הפעל/השהה (לחיצה נוספת על האמצע = השהיה)
+    val playFr = androidx.compose.runtime.remember { androidx.compose.ui.focus.FocusRequester() }
+    LaunchedEffect(Unit) { kotlinx.coroutines.delay(80); runCatching { playFr.requestFocus() } }
     Box(Modifier.fillMaxSize().background(Color(0x55000000))) {
         TopBar(a, Modifier.align(Alignment.TopCenter))
 
@@ -377,7 +382,8 @@ private fun Controls(a: PlayerActivity) {
                 BigBtn(Icons.Filled.Replay10, L("10 שניות אחורה"), 48) { a.touched(); a.seekBy(-10_000) }
                 Spacer(Modifier.width(36.dp))
             }
-            BigBtn(if (playing) Icons.Filled.Pause else Icons.Filled.PlayArrow, L("ניגון/השהיה"), 72, filled = true) {
+            BigBtn(if (playing) Icons.Filled.Pause else Icons.Filled.PlayArrow, L("ניגון/השהיה"), 72, filled = true,
+                modifier = Modifier.focusRequester(playFr)) {
                 a.touched(); a.togglePlay()
             }
             if (ui.isLive || ui.inCatchup) {
@@ -502,10 +508,11 @@ private fun Controls(a: PlayerActivity) {
 }
 
 @Composable
-private fun BigBtn(icon: androidx.compose.ui.graphics.vector.ImageVector, desc: String, size: Int, filled: Boolean = false, onClick: () -> Unit) {
+private fun BigBtn(icon: androidx.compose.ui.graphics.vector.ImageVector, desc: String, size: Int, filled: Boolean = false,
+                   modifier: Modifier = Modifier, onClick: () -> Unit) {
     IconButton(
         onClick = onClick,
-        modifier = Modifier.size(size.dp).then(
+        modifier = modifier.size(size.dp).then(
             if (filled) Modifier.background(Color(0x33FFFFFF), androidx.compose.foundation.shape.CircleShape) else Modifier
         ),
     ) { Icon(icon, desc, tint = Color.White, modifier = Modifier.size((size * 0.7f).dp)) }
