@@ -1410,9 +1410,10 @@ private fun RowsView(
     kind: Kind, items: List<Entry>, groups: List<String>, locked: Set<String>, favs: Set<String>, nav: (Screen) -> Unit,
     modifier: Modifier, onSeeAll: (String?) -> Unit, onLong: (Entry) -> Unit,
 ) {
-    val byGroup = remember(items) { items.groupBy { it.group } }
+    // כל החישובים על הקטלוג המלא (עשרות אלפי פריטים) – ברקע; במכשיר חלש זה תקע את המסך
+    val byGroup by androidx.compose.runtime.produceState<Map<String, List<Entry>>>(emptyMap(), items) { val l = items; value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) { l.groupBy { it.group } } }
     val shownGroups = remember(groups, byGroup, locked) { groups.filter { it !in locked && byGroup[it] != null } }
-    val favItems = remember(items, favs) { items.filter { it.key in favs } }
+    val favItems by androidx.compose.runtime.produceState<List<Entry>>(emptyList(), items, favs) { val l = items; val f = favs; value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) { l.filter { it.key in f } } }
     // תוכן "מומלץ": רק בשפות שהמשתמש מבין (בלי ערבית וכו')
     // מחושב ברקע (regex על אלפי פריטים) – אחרת המסך קופא במכשירים חלשים
     val pref by androidx.compose.runtime.produceState<List<Entry>>(emptyList(), items) {
@@ -1433,7 +1434,8 @@ private fun RowsView(
             }
         }
     }
-    val newest = remember(pref) { pref.filter { it.addedAt() > 0 }.sortedByDescending { it.addedAt() }.asSequence().filter { kind != Kind.MOVIE || it.isFreshTitle() }.take(40).toList() }
+    val newest by androidx.compose.runtime.produceState<List<Entry>>(emptyList(), pref) { val l = pref
+        value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) { l.filter { it.addedAt() > 0 }.sortedByDescending { it.addedAt() }.asSequence().filter { kind != Kind.MOVIE || it.isFreshTitle() }.take(40).toList() } }
     // שורה לכל פלטפורמה (Netflix, Prime, Disney+…) לפי מה שהספק מסמן
     val platformRows by androidx.compose.runtime.produceState<List<Pair<String, List<Entry>>>>(emptyList(), pref) {
         val pref = pref
@@ -1444,18 +1446,22 @@ private fun RowsView(
             }
         }
     }
-    val topRated = remember(pref) { pref.filter { it.rating() >= 7.5f }.sortedByDescending { it.rating() }.take(40) }
-    val resume = remember(items, Prefs.version.intValue) {
-        val rm = Prefs.resumeMap()
-        if (rm.isEmpty()) emptyList()
-        else items.mapNotNull { e -> rm[e.key]?.let { r -> if (r.first < r.second * 0.95 && !Catalog.isAdultItem(e)) e else null } }.take(30)
-    }
+    val topRated by androidx.compose.runtime.produceState<List<Entry>>(emptyList(), pref) { val l = pref
+        value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) { l.filter { it.rating() >= 7.5f }.sortedByDescending { it.rating() }.take(40) } }
+    // רק כשמפת ההמשך-צפייה משתנה (לא בכל שינוי הגדרה), וברקע
+    val rm0 = Prefs.resumeMap().also { Prefs.version.intValue }
+    val resume by androidx.compose.runtime.produceState<List<Entry>>(emptyList(), items, rm0) { val l = items; val rm = rm0
+        value = if (rm.isEmpty()) emptyList() else kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+            l.mapNotNull { e -> rm[e.key]?.let { r -> if (r.first < r.second * 0.95 && !Catalog.isAdultItem(e)) e else null } }.take(30) } }
     // המדף (סדרות): עונות/פרקים חדשים וסדרות חדשות
     val ctx2 = LocalContext.current
     val shelfV = com.tbm.iptv.data.Shelf.ready.intValue
-    val itemsByKey = remember(items) { if (kind == Kind.SERIES) items.associateBy { it.key } else emptyMap() }
-    val shelfUpd2 = remember(itemsByKey, shelfV) { com.tbm.iptv.data.Shelf.updated.mapNotNull { itemsByKey[it.first] }.filter { isPreferred(it) } }
-    val shelfNew2 = remember(itemsByKey, shelfV) { com.tbm.iptv.data.Shelf.newSeries.mapNotNull { itemsByKey[it] }.filter { isPreferred(it) && it.isFreshTitle() } }
+    val shelf2 by androidx.compose.runtime.produceState<Pair<List<Entry>, List<Entry>>>(emptyList<Entry>() to emptyList(), items, shelfV) { val l = items
+        value = if (kind != Kind.SERIES) emptyList<Entry>() to emptyList() else kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+            val byKey = l.associateBy { it.key }
+            com.tbm.iptv.data.Shelf.updated.mapNotNull { byKey[it.first] }.filter { isPreferred(it) } to
+                com.tbm.iptv.data.Shelf.newSeries.mapNotNull { byKey[it] }.filter { isPreferred(it) && it.isFreshTitle() } } }
+    val shelfUpd2 = shelf2.first; val shelfNew2 = shelf2.second
     val heroes = remember(pref, top) {
         if (kind == Kind.LIVE) emptyList()
         else (top.ifEmpty { newest.ifEmpty { topRated } }).filter { it.logo != null }.take(8)
