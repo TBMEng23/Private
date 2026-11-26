@@ -1339,9 +1339,14 @@ private fun SearchSection(content: Content, ver: Int, nav: (Screen) -> Unit) {
             }.getOrNull()?.takeIf { it.items.isNotEmpty() }
         }
     }
-    Column(Modifier.fillMaxSize().padding(10.dp)) {
-        SearchInput(q) { q = it }
-        LazyColumn(Modifier.fillMaxSize()) {
+    // בטלוויזיה: מקלדת בצד והתוצאות לידה (שיראו תוך כדי הקלדה); בטלפון – אחת מעל השנייה
+    val tvL = com.tbm.iptv.data.Device.isTv
+    @Composable fun Layout(input: @Composable () -> Unit, results: @Composable (Modifier) -> Unit) {
+        if (tvL) Row(Modifier.fillMaxSize().padding(10.dp)) { Box(Modifier.width(400.dp)) { input() }; results(Modifier.weight(1f).fillMaxHeight()) }
+        else Column(Modifier.fillMaxSize().padding(10.dp)) { input(); results(Modifier.fillMaxSize()) }
+    }
+    Layout({ SearchInput(q) { q = it } }) { rm ->
+        LazyColumn(rm) {
             if (live.isNotEmpty()) {
                 item { SectionTitle(L("ערוצים ({0})", live.size)) }
                 itemsIndexed(live) { i, c -> EntryRow(c, false) { Launcher.play(ctx, live.map { it.toPlay() }, i) } }
@@ -1374,6 +1379,7 @@ internal fun rankedSearch(items: List<Entry>, q: String, limit: Int): List<Entry
     val nq = q.lowercase().filter { it.isLetterOrDigit() }
     val wq = q.trim().lowercase()
     if (nq.isEmpty()) return emptyList()
+    val wordRx = Regex("\\b" + Regex.escape(wq))   // פעם אחת – לא לכל פריט
     val scored = ArrayList<Pair<Int, Entry>>()
     for (e in items) {
         val n = e.name.lowercase()
@@ -1381,7 +1387,7 @@ internal fun rankedSearch(items: List<Entry>, q: String, limit: Int): List<Entry
         val score = when {
             title.startsWith(wq) -> 0
             title.filter { it.isLetterOrDigit() }.startsWith(nq) -> 1
-            Regex("\\b" + Regex.escape(wq)).containsMatchIn(title) -> 2
+            wordRx.containsMatchIn(title) -> 2
             n.contains(wq) -> 3
             n.filter { it.isLetterOrDigit() }.contains(nq) -> 4
             else -> -1
