@@ -148,7 +148,7 @@ fun GuideSection(content: Content) {
                     }
                     LazyColumn(Modifier.fillMaxSize()) {
                         itemsIndexed(chans) { _, c ->
-                            GuideRow(c, winStart, span, chW, timelineW, epgVer) { e -> dialog = c to e }
+                            GuideRow(c, winStart, span, chW, timelineW, epgVer, chans) { e -> dialog = c to e }
                         }
                     }
                 }
@@ -161,7 +161,7 @@ fun GuideSection(content: Content) {
 @Composable
 private fun GuideRow(
     c: Channel, winStart: Long, span: Long, chW: androidx.compose.ui.unit.Dp, timelineW: androidx.compose.ui.unit.Dp,
-    epgVer: Int, onClick: (EpgEntry) -> Unit,
+    epgVer: Int, all: List<Channel>, onClick: (EpgEntry) -> Unit,
 ) {
     val ctx = LocalContext.current
     val progs = remember(c.key, epgVer, winStart) {
@@ -170,7 +170,8 @@ private fun GuideRow(
     val now = System.currentTimeMillis()
     Row(Modifier.fillMaxWidth().height(56.dp).padding(vertical = 1.dp)) {
         FocusItem(Modifier.width(chW).fillMaxHeight(), onClick = {
-            Launcher.play(ctx, listOf(c.toPlay()), 0)
+            // כל ערוצי הלוח כתור – אפשר לדפדף למעלה/למטה בין הערוצים בנגן
+            Launcher.play(ctx, all.map { it.toPlay() }, all.indexOfFirst { it.key == c.key }.coerceAtLeast(0))
         }) {
             Row(Modifier.fillMaxSize().padding(4.dp), verticalAlignment = Alignment.CenterVertically) {
                 AsyncImage(c.logo, null, Modifier.size(36.dp, 28.dp), contentScale = ContentScale.Fit)
