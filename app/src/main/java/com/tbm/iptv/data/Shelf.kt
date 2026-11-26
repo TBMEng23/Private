@@ -58,9 +58,16 @@ object Shelf {
                 m.keys.retainAll(byKey.keys)
                 val fresh = m.filter { it.value.firstSeen > 0 && now - it.value.firstSeen < WINDOW }
                     .entries.sortedByDescending { it.value.firstSeen }.map { it.key }.take(60)
-                val upd = m.filter { (_, r) -> r.updated > 0 && now - r.updated < WINDOW && (r.firstSeen == 0L || r.updated > r.firstSeen + 60_000) }
+                val upd0 = m.filter { (_, r) -> r.updated > 0 && now - r.updated < WINDOW && (r.firstSeen == 0L || r.updated > r.firstSeen + 60_000) }
                     .entries.sortedByDescending { it.value.updated }.map { it.key }.take(60)
-                newSeries = fresh
+                // בנוסף למה שזוהה בין טעינות: מה שהספק עדכן לאחרונה (Xtream מעדכן last_modified כשנוסף פרק/עונה)
+                val year = java.util.Calendar.getInstance().get(java.util.Calendar.YEAR)
+                val recent = byKey.values.filter { now - it.added in 0..(14L * 86_400_000L) }.sortedByDescending { it.added }
+                // סדרה שיצאה השנה/שנה שעברה ועודכנה עכשיו = כנראה סדרה חדשה; ישנה יותר = עונה/פרקים חדשים
+                val recentNew = recent.filter { (TitleParser.parse(it.name).year ?: 0) >= year - 1 }.map { it.key }
+                val freshAll = (fresh + recentNew).distinct().take(60)
+                val upd = (upd0 + recent.map { it.key }.filter { it !in freshAll }).distinct().take(60)
+                newSeries = freshAll
                 updated = upd.map { it to "פרקים חדשים" }
                 write(f, m)
                 ready.intValue++
@@ -70,7 +77,7 @@ object Shelf {
                     val r = m[k] ?: continue
                     val s = byKey[k] ?: continue
                     var label = "פרקים חדשים"
-                    if (labels.size < 25) runCatching {
+                    if (labels.size < 25 && k in upd0) runCatching {   // בקשות לשרת רק לשינויים שזוהו בפועל
                         val seasons = Repo.details(p, s).second.maxOfOrNull { it.season } ?: 0
                         if (r.seasons in 1 until seasons) label = "עונה $seasons חדשה"
                         if (seasons > 0) r.seasons = seasons
