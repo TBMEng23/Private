@@ -579,7 +579,8 @@ private fun BrowseSection(kind: Kind, all: List<Entry>, ver: Int, nav: (Screen) 
         var searchDlg by remember { mutableStateOf(false) }
         if (wide) {
             // רשימת הקטגוריות בצד – אפשר להסתיר (נשמר לכל לשונית) ואז התוכן מקבל את כל הרוחב
-            var catsHidden by remember(kind) { mutableStateOf(Prefs.bool("cats_hidden_${kind.name}", false)) }
+            // בסרטים ובסדרות קטגוריות הספק מוסתרות כברירת מחדל (התוכן בשורות + ז'אנרים); בערוצים – מוצגות
+            var catsHidden by remember(kind) { mutableStateOf(Prefs.bool("cats_hidden_${kind.name}", kind != Kind.LIVE)) }
             fun setCatsHidden(v: Boolean) { catsHidden = v; Prefs.setBool("cats_hidden_${kind.name}", v) }
             // ז'אנרים (אקשן, קומדיה…) – בחירה מציגה את כל מה שמתאים, החדשים קודם
             var genreSel by remember(kind) { mutableStateOf<Int?>(null) }

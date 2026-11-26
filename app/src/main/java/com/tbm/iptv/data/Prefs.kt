@@ -341,6 +341,8 @@ object Prefs {
         if (saved.isNotEmpty()) return saved.take(5)
         val p = profiles().firstOrNull { it.id == pid } ?: return emptyList()
         if (!p.kids) return emptyList()
+        // פרופיל הילדים המשותף ("ילדים") – הברכה לפלג ושחף
+        if (p.name.trim() == "ילדים") return listOf("פלג", "שחף")
         return p.name.split(Regex("""\s+ו(?=\S)|,|&|\s+and\s+""")).map { it.trim() }.filter { it.isNotEmpty() && it != "ילדים" }.take(5)
     }
     fun setKidsNames(pid: String, names: List<String>) =
