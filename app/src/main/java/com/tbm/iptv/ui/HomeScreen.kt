@@ -1289,9 +1289,9 @@ private fun SearchSection(content: Content, ver: Int, nav: (Screen) -> Unit) {
         value = if (dq.length < 2) Triple(emptyList(), emptyList(), emptyList())
         else kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
             Triple(
-                Catalog.get(Kind.LIVE, content.live).items.asSequence().filterIsInstance<Channel>().filter { it.name.contains(dq, true) }.take(60).toList(),
-                Catalog.get(Kind.MOVIE, content.movies).items.asSequence().filterIsInstance<Channel>().filter { it.name.contains(dq, true) }.take(60).toList(),
-                Catalog.get(Kind.SERIES, content.series).items.asSequence().filterIsInstance<SeriesItem>().filter { it.name.contains(dq, true) }.take(60).toList(),
+                rankedSearch(Catalog.get(Kind.LIVE, content.live).items, dq, 60).filterIsInstance<Channel>(),
+                rankedSearch(Catalog.get(Kind.MOVIE, content.movies).items, dq, 60).filterIsInstance<Channel>(),
+                rankedSearch(Catalog.get(Kind.SERIES, content.series).items, dq, 60).filterIsInstance<SeriesItem>(),
             )
         }
     }
