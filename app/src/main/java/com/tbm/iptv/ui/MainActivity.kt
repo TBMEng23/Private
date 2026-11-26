@@ -81,7 +81,22 @@ sealed interface Screen {
     data class KidsContent(val profileId: String) : Screen
 }
 
+/** כפתור המיקרופון בשלט – כשהאפליקציה פתוחה הוא פותח את החיפוש הקולי שלנו (במקום Google Assistant) */
+object VoiceBus {
+    val req = androidx.compose.runtime.mutableIntStateOf(0)
+    @Volatile var pending = false
+}
+
 class MainActivity : FragmentActivity() {
+    override fun onKeyDown(keyCode: Int, event: android.view.KeyEvent?): Boolean {
+        if (keyCode == android.view.KeyEvent.KEYCODE_SEARCH || keyCode == android.view.KeyEvent.KEYCODE_VOICE_ASSIST) {
+            if (event?.repeatCount == 0) { VoiceBus.pending = true; VoiceBus.req.intValue++ }
+            return true
+        }
+        return super.onKeyDown(keyCode, event)
+    }
+    override fun onSearchRequested(): Boolean { VoiceBus.pending = true; VoiceBus.req.intValue++; return true }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)

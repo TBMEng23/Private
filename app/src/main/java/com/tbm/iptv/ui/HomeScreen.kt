@@ -155,6 +155,9 @@ private const val RECENT_GROUP = "\u0000recent"
 fun HomeScreen(nav: (Screen) -> Unit) {
     val state by Repo.state.collectAsState()
     var section by rememberSaveable { mutableStateOf(Section.HOME) }
+    // כפתור המיקרופון בשלט → מסך החיפוש עם הקשבה מיידית
+    val voiceReq = VoiceBus.req.intValue
+    LaunchedEffect(voiceReq) { if (voiceReq > 0 && VoiceBus.pending) section = Section.SEARCH }
     val ver = Prefs.version.intValue
     val kids = remember(ver) { Prefs.isKids }
 
@@ -1221,7 +1224,8 @@ fun SearchInput(q: String, placeholder: String = L("חפש ערוץ, סרט, ס�
         val txt = r.data?.getStringArrayListExtra(android.speech.RecognizerIntent.EXTRA_RESULTS)?.firstOrNull()
         if (!txt.isNullOrBlank()) onChange(txt)
     }
-    fun startVoice(lang: String = if (com.tbm.iptv.I18n.isEn) "en-US" else "he-IL") {
+    fun startVoice(lang: String = Prefs.str("local_voice_lang", "en-US")) {
+        Prefs.setStrQuiet("local_voice_lang", lang)
         val i = android.content.Intent(android.speech.RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
             .putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE_MODEL, android.speech.RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
             .putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE, lang)
@@ -1232,6 +1236,9 @@ fun SearchInput(q: String, placeholder: String = L("חפש ערוץ, סרט, ס�
             android.widget.Toast.makeText(ctx, L("חיפוש קולי לא זמין במכשיר הזה"), android.widget.Toast.LENGTH_SHORT).show()
         }
     }
+    // הגענו מכפתור המיקרופון בשלט – מתחילים להקשיב מיד (בשפה האחרונה שנבחרה במיקרופון)
+    val vr = VoiceBus.req.intValue
+    LaunchedEffect(vr) { if (VoiceBus.pending) { VoiceBus.pending = false; kotlinx.coroutines.delay(250); startVoice() } }
     Column {
         Row(verticalAlignment = Alignment.CenterVertically) {
             OutlinedTextField(q, onChange, singleLine = true, readOnly = useOsk, modifier = Modifier.weight(1f),
