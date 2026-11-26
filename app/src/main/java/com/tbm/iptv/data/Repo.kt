@@ -65,9 +65,25 @@ object Repo {
 
     suspend fun load(p: Playlist, force: Boolean = false) = withContext(Dispatchers.IO) {
         lastLoadAt = System.currentTimeMillis()
-        state.value = LoadState.Loading(L("טוען את \"{0}\"…", p.name))
+        // 1) פתיחה מהירה: תמונת המצב השמורה מוצגת מיד; אם היא עדכנית – לא טוענים מחדש בכלל
+        if (!force && state.value !is LoadState.Ready) {
+            val snap = Snapshot.load(p.id)
+            if (snap != null) {
+                state.value = LoadState.Ready(snap)
+                Shelf.update(p, snap)
+                scope.launch { Epg.load(p, snap, false) }
+                if (Snapshot.age(p.id) < Prefs.refreshHours * 3_600_000L) {
+                    addPlexQuietly(snap)
+                    return@withContext
+                }
+            }
+        }
+        // 2) טעינה מהספק. אם כבר מוצג תוכן – ברקע, בלי מסך "טוען" (התוכן הישן נשאר עד שהחדש מוכן)
+        val quiet = state.value is LoadState.Ready
+        if (!quiet) state.value = LoadState.Loading(L("טוען את \"{0}\"…", p.name))
         try {
             val c0 = if (p.isXtream) Xtream(p).load(force) else loadM3u(p, force)
+            Snapshot.save(p.id, c0)
             // ספריות Plex נוספות לסרטים ולסדרות
             val plex = if (Plex.connected && Plex.enabled) runCatching { Plex.load() }.getOrNull() else null
             val c = if (plex == null) c0 else c0.copy(movies = c0.movies + plex.first, series = c0.series + plex.second)
@@ -80,9 +96,20 @@ object Repo {
             scope.launch { Epg.load(p, c, force) }
         } catch (e: OutOfMemoryError) {
             System.gc()
-            state.value = LoadState.Error(L("הרשימה גדולה מדי לזיכרון המכשיר"))
+            if (!quiet) state.value = LoadState.Error(L("הרשימה גדולה מדי לזיכרון המכשיר"))
         } catch (e: Throwable) {
-            state.value = LoadState.Error(e.message ?: e.javaClass.simpleName)
+            // רענון ברקע שנכשל (אין רשת וכו') – משאירים את התוכן שכבר מוצג
+            if (!quiet) state.value = LoadState.Error(e.message ?: e.javaClass.simpleName)
+        }
+    }
+
+    private fun addPlexQuietly(c0: Content) {
+        if (!(Plex.connected && Plex.enabled)) return
+        scope.launch {
+            val plex = runCatching { Plex.load() }.getOrNull() ?: return@launch
+            val cur = content ?: return@launch
+            if (cur !== c0) return@launch
+            state.value = LoadState.Ready(c0.copy(movies = c0.movies + plex.first, series = c0.series + plex.second))
         }
     }
 
