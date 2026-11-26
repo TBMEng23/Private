@@ -369,7 +369,7 @@ private fun Controls(a: PlayerActivity) {
     }
     // בשלט: כשהפקדים נפתחים הסמן עומד על הפעל/השהה (לחיצה נוספת על האמצע = השהיה)
     val playFr = androidx.compose.runtime.remember { androidx.compose.ui.focus.FocusRequester() }
-    LaunchedEffect(Unit) { kotlinx.coroutines.delay(80); runCatching { playFr.requestFocus() } }
+    LaunchedEffect(Unit) { if (com.tbm.iptv.data.Device.isTv) { kotlinx.coroutines.delay(80); runCatching { playFr.requestFocus() } } }
     Box(Modifier.fillMaxSize().background(Color(0x55000000))) {
         TopBar(a, Modifier.align(Alignment.TopCenter))
 
