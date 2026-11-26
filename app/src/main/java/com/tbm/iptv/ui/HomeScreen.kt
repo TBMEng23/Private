@@ -534,8 +534,10 @@ private fun BrowseSection(kind: Kind, all: List<Entry>, ver: Int, nav: (Screen) 
         }
     }
     val shownItems by androidx.compose.runtime.produceState(baseItems, baseItems, debQ) {
-        value = if (debQ.isBlank()) baseItems
-            else kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) { baseItems.filter { it.name.contains(debQ, true) }.take(500) }
+        // קריאת ה-state לערך מקומי לפני המעבר לרקע (קריאת state מחוט אחר באמצע קומפוזיציה מפילה את Compose)
+        val q0 = debQ; val b0 = baseItems
+        value = if (q0.isBlank()) b0
+            else kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) { b0.filter { it.name.contains(q0, true) }.take(500) }
     }
 
     val selectGroup: (String?) -> Unit = { g ->
@@ -1227,6 +1229,7 @@ private fun SearchSection(content: Content, ver: Int, nav: (Screen) -> Unit) {
     LaunchedEffect(q) { kotlinx.coroutines.delay(300); dq = q }
     val res by androidx.compose.runtime.produceState(Triple(emptyList<Channel>(), emptyList<Channel>(), emptyList<SeriesItem>()),
         dq, content, ver, Catalog.ready.intValue) {
+        val dq = dq
         value = if (dq.length < 2) Triple(emptyList(), emptyList(), emptyList())
         else kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
             Triple(
@@ -1239,6 +1242,7 @@ private fun SearchSection(content: Content, ver: Int, nav: (Screen) -> Unit) {
     val live = res.first; val vod = res.second; val ser = res.third
     // לפי שחקן (TMDB) – ברקע, אחרי שהתוצאות הרגילות מוצגות
     val actor by androidx.compose.runtime.produceState<com.tbm.iptv.data.Actors.Result?>(null, dq, content) {
+        val dq = dq
         value = null
         if (dq.trim().length >= 3) value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
             runCatching {
@@ -1339,6 +1343,7 @@ private fun RowsView(
     var top by remember(items) { mutableStateOf<List<Entry>>(emptyList()) }
     var genreRows by remember(items) { mutableStateOf<List<Pair<String, List<Entry>>>>(emptyList()) }
     LaunchedEffect(pref, kind) {
+        val pref = pref
         if (kind == Kind.LIVE || pref.isEmpty()) return@LaunchedEffect
         withContext(Dispatchers.IO) {
             top = runCatching { if (kind == Kind.MOVIE) Trending.movies(pref) else Trending.series(pref) }.getOrDefault(emptyList())
@@ -1352,6 +1357,7 @@ private fun RowsView(
     val newest = remember(pref) { pref.filter { it.addedAt() > 0 }.sortedByDescending { it.addedAt() }.asSequence().filter { kind != Kind.MOVIE || it.isFreshTitle() }.take(40).toList() }
     // שורה לכל פלטפורמה (Netflix, Prime, Disney+…) לפי מה שהספק מסמן
     val platformRows by androidx.compose.runtime.produceState<List<Pair<String, List<Entry>>>>(emptyList(), pref) {
+        val pref = pref
         value = if (kind == Kind.LIVE) emptyList() else kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
             val g = pref.groupBy { com.tbm.iptv.data.Platforms.detect(it) }
             com.tbm.iptv.data.Platforms.all.mapNotNull { p ->
