@@ -236,6 +236,11 @@ object Updater {
 
     private fun apkFile(ctx: Context) = File(File(ctx.cacheDir, "updates"), "TBMPlayer-update.apk")
 
+    /** התקנה נכשלה – הסיבה מוצגת בחלון העדכון (גם במצב אוטומטי) ונשמרת לדוח */
+    fun failed(ctx: Context, reason: String) {
+        status = reason; needsTap = true; dismissed = false
+    }
+
     /** פתיחת מסך ההתקנה הרגיל של המערכת לקובץ שהורד. מחזיר false אם אין קובץ */
     fun systemInstall(ctx: Context): Boolean {
         val f = apkFile(ctx)
@@ -277,10 +282,18 @@ class UpdateReceiver : android.content.BroadcastReceiver() {
                 confirm?.let { runCatching { ctx.startActivity(it.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) } }
             }
             android.content.pm.PackageInstaller.STATUS_SUCCESS -> Updater.status = ""
+            android.content.pm.PackageInstaller.STATUS_FAILURE_STORAGE ->
+                // אין טעם לנסות במסך המערכת – ייכשל באותה סיבה ("האפליקציה לא הותקנה")
+                Updater.failed(ctx, L("אין מספיק מקום פנוי במכשיר להתקנת העדכון – פנה מקום (הגדרות ← אחסון) ונסה שוב"))
+            android.content.pm.PackageInstaller.STATUS_FAILURE_CONFLICT,
+            android.content.pm.PackageInstaller.STATUS_FAILURE_INCOMPATIBLE -> {
+                val msg = intent.getStringExtra(android.content.pm.PackageInstaller.EXTRA_STATUS_MESSAGE) ?: ""
+                Updater.failed(ctx, L("העדכון לא תואם לגרסה המותקנת (חתימה שונה) – יש להסיר את האפליקציה ולהתקין מחדש. {0}", msg))
+            }
             else -> {
                 // HyperOS ואחרים חוסמים התקנה דרך session – עוברים למסך ההתקנה הרגיל של המערכת
                 val msg = intent.getStringExtra(android.content.pm.PackageInstaller.EXTRA_STATUS_MESSAGE) ?: ""
-                if (!Updater.systemInstall(ctx)) Updater.status = L("העדכון נכשל: {0}", msg)
+                if (!Updater.systemInstall(ctx)) Updater.failed(ctx, L("העדכון נכשל: {0}", msg))
             }
         }
     }

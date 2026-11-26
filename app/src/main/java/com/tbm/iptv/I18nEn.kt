@@ -331,6 +331,8 @@ object I18nEn {
         "🔒 נעל בקוד" to "🔒 Lock with PIN",
         "🔓 בטל נעילה" to "🔓 Unlock",
         "🔔 תזכורת" to "🔔 Reminder",
+    "אין מספיק מקום פנוי במכשיר להתקנת העדכון – פנה מקום (הגדרות ← אחסון) ונסה שוב" to "Not enough free storage to install the update – free up space (Settings → Storage) and try again",
+    "העדכון לא תואם לגרסה המותקנת (חתימה שונה) – יש להסיר את האפליקציה ולהתקין מחדש. {0}" to "The update doesn't match the installed version (different signature) – uninstall the app and install again. {0}",
     "חיפוש קולי בעברית" to "Voice search (Hebrew)",
     "חיפוש קולי באנגלית" to "Voice search (English)",
     "🎭 עם {0} ({1})" to "🎭 With {0} ({1})",
