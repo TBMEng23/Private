@@ -628,13 +628,13 @@ private fun BrowseSection(kind: Kind, all: List<Entry>, ver: Int, nav: (Screen) 
                             modifier = Modifier.weight(1f))
                         headerButtons()
                     }
-                    if (query.isNotBlank() && (tvDevice || catsHidden)) {
+                    if (!searchDlg && query.isNotBlank() && (tvDevice || catsHidden)) {
                         // חיפוש פעיל – מוצג כשורה קטנה; לחיצה מנקה
                         com.tbm.iptv.ui.TvTextButton(onClick = { query = "" }, modifier = Modifier.padding(horizontal = 8.dp)) {
                             Text("🔍 $query  ✕", maxLines = 1, overflow = TextOverflow.Ellipsis)
                         }
                     }
-                    if (kind != Kind.LIVE && !Prefs.isKids) androidx.compose.foundation.lazy.LazyRow(
+                    if (!searchDlg && kind != Kind.LIVE && !Prefs.isKids) androidx.compose.foundation.lazy.LazyRow(
                         contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         item {
                             com.tbm.iptv.ui.TvFilterChip(selected = genreSel == null, onClick = { genreSel = null }, label = { Text(L("הכל")) })
@@ -649,26 +649,49 @@ private fun BrowseSection(kind: Kind, all: List<Entry>, ver: Int, nav: (Screen) 
                     if (searchDlg) {
                         // חיפוש מלא במקום: מקלדת (עברית/אנגלית) + מיקרופון, תוצאות מתעדכנות תוך כדי הקלדה, והצעות לפי שחקן
                         androidx.activity.compose.BackHandler { searchDlg = false; query = "" }
-                        val actorRes by androidx.compose.runtime.produceState<com.tbm.iptv.data.Actors.Result?>(null, debQ, kind) {
-                            val q0 = debQ; val f0 = filtered
+                        val sugg by androidx.compose.runtime.produceState<List<com.tbm.iptv.data.Actors.Person>>(emptyList(), debQ, kind) {
+                            val q0 = debQ
+                            value = if (kind == Kind.LIVE || q0.trim().length < 3) emptyList()
+                                else withContext(Dispatchers.IO) { runCatching { com.tbm.iptv.data.Actors.suggest(q0) }.getOrDefault(emptyList()) }
+                        }
+                        var actorPick by remember(kind) { mutableStateOf<com.tbm.iptv.data.Actors.Person?>(null) }
+                        LaunchedEffect(debQ) { actorPick = null }
+                        val actorRes by androidx.compose.runtime.produceState<com.tbm.iptv.data.Actors.Result?>(null, actorPick, kind) {
+                            val p0 = actorPick; val f0 = filtered
                             value = null
-                            if (kind != Kind.LIVE && q0.trim().length >= 3) value = withContext(Dispatchers.IO) {
-                                runCatching {
-                                    com.tbm.iptv.data.Actors.search(q0, if (kind == Kind.MOVIE) f0 else emptyList(), if (kind == Kind.SERIES) f0 else emptyList())
-                                }.getOrNull()?.takeIf { it.items.isNotEmpty() }
+                            if (p0 != null) value = withContext(Dispatchers.IO) {
+                                runCatching { com.tbm.iptv.data.Actors.titlesFor(p0, if (kind == Kind.MOVIE) f0 else emptyList(), if (kind == Kind.SERIES) f0 else emptyList()) }.getOrNull()
                             }
                         }
-                        Row(Modifier.fillMaxWidth().padding(horizontal = 6.dp), verticalAlignment = Alignment.Top) {
-                            IconButton(onClick = { searchDlg = false; query = "" }) { Icon(Icons.Filled.Close, L("סגור חיפוש")) }
-                            Box(Modifier.weight(1f)) { SearchInput(query, L("חפש ב{0} – שם או שחקן…", kind.label)) { query = it; group = null } }
+                        Row(Modifier.weight(1f).fillMaxWidth()) {
+                            Column(Modifier.width(400.dp).padding(horizontal = 6.dp)) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    IconButton(onClick = { searchDlg = false; query = "" }) { Icon(Icons.Filled.Close, L("סגור חיפוש")) }
+                                    Text(L("חיפוש ב{0}", kind.label), fontWeight = FontWeight.Bold)
+                                }
+                                SearchInput(query, L("שם או שחקן…")) { query = it; group = null }
+                            }
+                            Column(Modifier.weight(1f).fillMaxHeight()) {
+                                if (sugg.isNotEmpty()) androidx.compose.foundation.lazy.LazyRow(
+                                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    items(sugg) { pr ->
+                                        com.tbm.iptv.ui.TvFilterChip(selected = actorPick?.id == pr.id, onClick = { actorPick = if (actorPick?.id == pr.id) null else pr },
+                                            label = { Column { Text("🎭 " + pr.name, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                                                if (pr.knownFor.isNotBlank()) Text(pr.knownFor, fontSize = 10.sp, maxLines = 1, overflow = TextOverflow.Ellipsis) } })
+                                    }
+                                }
+                                val ar = actorRes
+                                when {
+                                    actorPick != null && ar == null -> Box(Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+                                    ar != null -> if (ar.items.isEmpty()) Text(L("אין אצל הספק סרטים או סדרות עם {0}", ar.name), Modifier.padding(16.dp))
+                                        else ContentArea(kind, ar.items, favs, all, true, nav, Modifier.weight(1f)) { menu = MenuTarget(kind, it, all) }
+                                    query.isBlank() -> Text(L("התחל להקליד או לחץ על המיקרופון – התוצאות יופיעו תוך כדי"),
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(16.dp))
+                                    debQ == query && shownItems.isEmpty() && sugg.isEmpty() -> Text(L("לא נמצאו תוצאות"), Modifier.padding(16.dp))
+                                    else -> ContentArea(kind, shownItems, favs, all, true, nav, Modifier.weight(1f)) { menu = MenuTarget(kind, it, all) }
+                                }
+                            }
                         }
-                        actorRes?.let { r ->
-                            EntryRowStrip(L("🎭 עם {0} ({1})", r.name, r.items.size), r.items, kind, LocalContext.current, nav) { menu = MenuTarget(kind, it, all) }
-                        }
-                        if (query.isBlank()) Text(L("התחל להקליד או לחץ על המיקרופון – התוצאות יופיעו תוך כדי"), color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(16.dp))
-                        else if (debQ == query && shownItems.isEmpty() && actorRes == null) Text(L("לא נמצאו תוצאות"), Modifier.padding(16.dp))
-                        else ContentArea(kind, shownItems, favs, all, true, nav, Modifier.weight(1f)) { menu = MenuTarget(kind, it, all) }
                     } else if (gs != null) {
                         val gi = genreItems
                         if (gi == null) Box(Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
@@ -1260,24 +1283,27 @@ fun SearchInput(q: String, placeholder: String = L("חפש ערוץ, סרט, ס�
 @Composable
 private fun HebKeyboard(q: String, onChange: (String) -> Unit) {
     var heb by rememberSaveable { mutableStateOf(!com.tbm.iptv.I18n.isEn) }
-    val rows = if (heb) listOf("1234567890", "קראטוןםפ", "שדגכעיחלךף", "זסבהנמצתץ")
+    // פריסת מקלדת סטנדרטית (QWERTY / עברית תקנית על אותם מקשים), תמיד משמאל לימין, קטנה – כדי שהתוצאות ייראו
+    val rows = if (heb) listOf("1234567890", "/'קראטוןםפ", "שדגכעיחלךף", "זסבהנמצתץ")
         else listOf("1234567890", "qwertyuiop", "asdfghjkl", "zxcvbnm")
     @Composable
     fun Key(label: String, w: Float = 1f, onClick: () -> Unit) {
-        Box(Modifier.padding(2.dp).height(40.dp).width((38 * w).dp)) {
+        Box(Modifier.padding(1.5.dp).height(30.dp).width((30 * w).dp)) {
             FocusItem(Modifier.fillMaxSize(), onClick = onClick) {
-                Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(6.dp)),
-                    contentAlignment = Alignment.Center) { Text(label, fontSize = 17.sp, fontWeight = FontWeight.Bold) }
+                Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(5.dp)),
+                    contentAlignment = Alignment.Center) { Text(label, fontSize = 14.sp, fontWeight = FontWeight.Bold) }
             }
         }
     }
-    Column(Modifier.fillMaxWidth().padding(vertical = 6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-        rows.forEach { r -> Row { r.forEach { ch -> Key(ch.toString()) { onChange(q + ch) } } } }
-        Row {
-            Key(if (heb) "EN" else "עב", 1.4f) { heb = !heb }
-            Key(L("רווח"), 4f) { onChange("$q ") }
-            Key("⌫", 1.4f) { if (q.isNotEmpty()) onChange(q.dropLast(1)) }
-            Key(L("נקה"), 1.6f) { onChange("") }
+    com.tbm.iptv.ui.Ltr {
+        Column(Modifier.padding(vertical = 4.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            rows.forEach { r -> Row { r.forEach { ch -> Key(ch.toString()) { onChange(q + ch) } } } }
+            Row {
+                Key(if (heb) "EN" else "עב", 1.4f) { heb = !heb }
+                Key(L("רווח"), 4.2f) { onChange("$q ") }
+                Key("⌫", 1.4f) { if (q.isNotEmpty()) onChange(q.dropLast(1)) }
+                Key(L("נקה"), 1.6f) { onChange("") }
+            }
         }
     }
 }

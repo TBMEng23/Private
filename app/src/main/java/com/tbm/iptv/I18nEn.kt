@@ -331,6 +331,8 @@ object I18nEn {
         "🔒 נעל בקוד" to "🔒 Lock with PIN",
         "🔓 בטל נעילה" to "🔓 Unlock",
         "🔔 תזכורת" to "🔔 Reminder",
+    "שם או שחקן…" to "Title or actor…",
+    "אין אצל הספק סרטים או סדרות עם {0}" to "Your provider has no titles with {0}",
     "סגור חיפוש" to "Close search",
     "חפש ב{0} – שם או שחקן…" to "Search {0} – title or actor…",
     "התחל להקליד או לחץ על המיקרופון – התוצאות יופיעו תוך כדי" to "Start typing or tap the mic – results appear as you type",
