@@ -541,7 +541,7 @@ private fun BrowseSection(kind: Kind, all: List<Entry>, ver: Int, nav: (Screen) 
         // קריאת ה-state לערך מקומי לפני המעבר לרקע (קריאת state מחוט אחר באמצע קומפוזיציה מפילה את Compose)
         val q0 = debQ; val b0 = baseItems
         value = if (q0.isBlank()) b0
-            else kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) { b0.filter { it.name.contains(q0, true) }.take(500) }
+            else kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) { rankedSearch(b0, q0, 500) }
     }
 
     val selectGroup: (String?) -> Unit = { g ->
@@ -643,7 +643,30 @@ private fun BrowseSection(kind: Kind, all: List<Entry>, ver: Int, nav: (Screen) 
                         }
                     }
                     val gs = genreSel
-                    if (gs != null) {
+                    if (searchDlg) {
+                        // חיפוש מלא במקום: מקלדת (עברית/אנגלית) + מיקרופון, תוצאות מתעדכנות תוך כדי הקלדה, והצעות לפי שחקן
+                        androidx.activity.compose.BackHandler { searchDlg = false; query = "" }
+                        val actorRes by androidx.compose.runtime.produceState<com.tbm.iptv.data.Actors.Result?>(null, debQ, kind) {
+                            val q0 = debQ; val f0 = filtered
+                            value = null
+                            if (kind != Kind.LIVE && q0.trim().length >= 3) value = withContext(Dispatchers.IO) {
+                                runCatching {
+                                    com.tbm.iptv.data.Actors.search(q0, if (kind == Kind.MOVIE) f0 else emptyList(), if (kind == Kind.SERIES) f0 else emptyList())
+                                }.getOrNull()?.takeIf { it.items.isNotEmpty() }
+                            }
+                        }
+                        Row(Modifier.fillMaxWidth().padding(horizontal = 6.dp), verticalAlignment = Alignment.Top) {
+                            IconButton(onClick = { searchDlg = false; query = "" }) { Icon(Icons.Filled.Close, L("סגור חיפוש")) }
+                            Box(Modifier.weight(1f)) { SearchInput(query, L("חפש ב{0} – שם או שחקן…", kind.label)) { query = it; group = null } }
+                        }
+                        actorRes?.let { r ->
+                            EntryRowStrip(L("🎭 עם {0} ({1})", r.name, r.items.size), r.items, kind, LocalContext.current, nav) { menu = MenuTarget(kind, it, all) }
+                        }
+                        if (query.isBlank()) Text(L("התחל להקליד או לחץ על המיקרופון – התוצאות יופיעו תוך כדי"), color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(16.dp))
+                        else if (debQ == query && shownItems.isEmpty() && actorRes == null) Text(L("לא נמצאו תוצאות"), Modifier.padding(16.dp))
+                        else ContentArea(kind, shownItems, favs, all, true, nav, Modifier.weight(1f)) { menu = MenuTarget(kind, it, all) }
+                    } else if (gs != null) {
                         val gi = genreItems
                         if (gi == null) Box(Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
                         else if (gi.isEmpty()) Text(L("לא נמצאו כותרים בז'אנר הזה"), Modifier.padding(16.dp))
@@ -653,21 +676,6 @@ private fun BrowseSection(kind: Kind, all: List<Entry>, ver: Int, nav: (Screen) 
                             Modifier.weight(1f), selectGroup) { menu = MenuTarget(kind, it, all) }
                     else ContentArea(kind, shownItems, favs, all, true, nav, Modifier.weight(1f)) { menu = MenuTarget(kind, it, all) }
                 }
-            }
-            if (searchDlg) {
-                var tmp by remember { mutableStateOf(query) }
-                val fr = remember { androidx.compose.ui.focus.FocusRequester() }
-                androidx.compose.material3.AlertDialog(onDismissRequest = { searchDlg = false },
-                    title = { Text(L("חיפוש ב{0}", kind.label)) },
-                    text = {
-                        OutlinedTextField(tmp, { tmp = it }, singleLine = true, placeholder = { Text(L("חיפוש…")) },
-                            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(imeAction = androidx.compose.ui.text.input.ImeAction.Search),
-                            keyboardActions = androidx.compose.foundation.text.KeyboardActions(onSearch = { query = tmp; genreSel = null; searchDlg = false }),
-                            modifier = Modifier.fillMaxWidth().focusRequester(fr))
-                        LaunchedEffect(Unit) { runCatching { fr.requestFocus() } }
-                    },
-                    confirmButton = { com.tbm.iptv.ui.TvButton(onClick = { query = tmp; genreSel = null; searchDlg = false }) { Text(L("חפש")) } },
-                    dismissButton = { com.tbm.iptv.ui.TvTextButton(onClick = { searchDlg = false }) { Text(L("ביטול")) } })
             }
         } else {
             Column(Modifier.fillMaxSize()) {
@@ -1326,6 +1334,29 @@ private fun SearchSection(content: Content, ver: Int, nav: (Screen) -> Unit) {
     }
 }
 
+
+/** חיפוש "חכם": קודם כותרים שמתחילים במה שהוקלד (בלי קידומות כמו "EN - "), אחר כך מילה שמתחילה בזה, ובסוף כל התאמה.
+ *  מתעלם מסימנים ורווחים ("spiderman" = "Spider-Man"). חייב לרוץ ברקע */
+internal fun rankedSearch(items: List<Entry>, q: String, limit: Int): List<Entry> {
+    val nq = q.lowercase().filter { it.isLetterOrDigit() }
+    val wq = q.trim().lowercase()
+    if (nq.isEmpty()) return emptyList()
+    val scored = ArrayList<Pair<Int, Entry>>()
+    for (e in items) {
+        val n = e.name.lowercase()
+        val title = n.substringAfter(" - ", n).trim()   // "EN - Tracker (2024)" → "tracker (2024)"
+        val score = when {
+            title.startsWith(wq) -> 0
+            title.filter { it.isLetterOrDigit() }.startsWith(nq) -> 1
+            Regex("\\b" + Regex.escape(wq)).containsMatchIn(title) -> 2
+            n.contains(wq) -> 3
+            n.filter { it.isLetterOrDigit() }.contains(nq) -> 4
+            else -> -1
+        }
+        if (score >= 0) scored += score to e
+    }
+    return scored.sortedWith(compareBy<Pair<Int, Entry>> { it.first }.thenByDescending { it.second.addedAt() }).take(limit).map { it.second }
+}
 
 fun Entry.rating(): Float = (this as? Channel)?.rating ?: (this as? SeriesItem)?.rating ?: 0f
 private fun Entry.addedAt(): Long = (this as? Channel)?.added ?: (this as? SeriesItem)?.added ?: 0L
