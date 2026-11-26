@@ -103,7 +103,7 @@ object Trending {
     }
 
     /** פריטים מהתוכן שלך לפי ז'אנר: TMDB (אם יש מפתח) + קטגוריות הספק ששמן מתאים. חייב לרוץ ברקע */
-    fun byGenre(g: Genre, tv: Boolean, items: List<Entry>): List<Entry> {
+    fun byGenre(g: Genre, tv: Boolean, items: List<Entry>, limit: Int = 40): List<Entry> {
         val out = LinkedHashMap<String, Entry>()
         val key = Prefs.tmdbKey
         val id = if (tv) g.tmdbTv else g.tmdbMovie
@@ -113,8 +113,8 @@ object Trending {
                 .getOrDefault(emptyList()).also { synchronized(discoverCache) { discoverCache[ck] = it } }
             match(titles, items, tv).forEach { out[it.key] = it }
         }
-        if (out.size < 30) items.asSequence().filter { g.rx.containsMatchIn(it.group) }.take(60).forEach { out.putIfAbsent(it.key, it) }
-        return out.values.take(40)
+        if (out.size < 30 || limit > 40) items.asSequence().filter { g.rx.containsMatchIn(it.group) }.take(maxOf(60, limit)).forEach { out.putIfAbsent(it.key, it) }
+        return out.values.take(limit)
     }
 
     /** חייב לרוץ ברקע (רשת) */

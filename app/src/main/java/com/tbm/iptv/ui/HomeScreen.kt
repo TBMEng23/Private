@@ -1,5 +1,9 @@
 package com.tbm.iptv.ui
 
+import androidx.compose.material.icons.automirrored.filled.MenuOpen
+
+import androidx.compose.material.icons.filled.Menu
+
 import androidx.compose.foundation.interaction.collectIsDraggedAsState
 
 import com.tbm.iptv.L
@@ -574,52 +578,95 @@ private fun BrowseSection(kind: Kind, all: List<Entry>, ver: Int, nav: (Screen) 
         val tvDevice = com.tbm.iptv.data.Device.isTv
         var searchDlg by remember { mutableStateOf(false) }
         if (wide) {
+            // רשימת הקטגוריות בצד – אפשר להסתיר (נשמר לכל לשונית) ואז התוכן מקבל את כל הרוחב
+            var catsHidden by remember(kind) { mutableStateOf(Prefs.bool("cats_hidden_${kind.name}", false)) }
+            fun setCatsHidden(v: Boolean) { catsHidden = v; Prefs.setBool("cats_hidden_${kind.name}", v) }
+            // ז'אנרים (אקשן, קומדיה…) – בחירה מציגה את כל מה שמתאים, החדשים קודם
+            var genreSel by remember(kind) { mutableStateOf<Int?>(null) }
+            val genreItems by androidx.compose.runtime.produceState<List<Entry>?>(null, genreSel, filtered) {
+                val g = genreSel; val f = filtered
+                value = null
+                if (g != null) value = withContext(Dispatchers.IO) {
+                    runCatching { Trending.byGenre(Trending.genres[g], kind == Kind.SERIES, f, 400) }.getOrDefault(emptyList())
+                        .sortedByDescending { it.addedAt() }
+                }
+            }
+            val headerButtons: @Composable () -> Unit = {
+                // בסטרימר: חיפוש ככפתור בשורת הכותרת – שדה טקסט ברשימה תופס את הפוקוס ופותח מקלדת בכל מעבר
+                if (tvDevice || catsHidden) IconButton(onClick = { searchDlg = true }) { Icon(Icons.Filled.Search, L("חיפוש")) }
+                if (!Prefs.isKids) {
+                    IconButton(onClick = { Prefs.activePlaylist()?.let { Repo.loadAsync(it, true) } }) { Icon(Icons.Filled.Refresh, L("רענון")) }
+                    IconButton(onClick = { nav(Screen.Groups(kind)) }) { Icon(Icons.Filled.FilterList, L("ניהול קבוצות")) }
+                }
+                modeButton()
+            }
             Row(Modifier.fillMaxSize()) {
-                Column(Modifier.width(catW).fillMaxHeight().background(MaterialTheme.colorScheme.surface.copy(alpha = 0.55f))) {
-                    Row(Modifier.fillMaxWidth().padding(start = 12.dp, end = 4.dp, top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Text(kind.label, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-                        // בסטרימר: חיפוש ככפתור בשורת הכותרת – שדה טקסט ברשימה תופס את הפוקוס ופותח מקלדת בכל מעבר
-                        if (tvDevice) IconButton(onClick = { searchDlg = true }) { Icon(Icons.Filled.Search, L("חיפוש")) }
-                        if (!Prefs.isKids) {
-                            IconButton(onClick = { Prefs.activePlaylist()?.let { Repo.loadAsync(it, true) } }) { Icon(Icons.Filled.Refresh, L("רענון")) }
-                            IconButton(onClick = { nav(Screen.Groups(kind)) }) { Icon(Icons.Filled.FilterList, L("ניהול קבוצות")) }
-                        }
-                        modeButton()
+                if (!catsHidden) Column(Modifier.width(catW).fillMaxHeight().background(MaterialTheme.colorScheme.surface.copy(alpha = 0.55f))) {
+                    Row(Modifier.fillMaxWidth().padding(start = 4.dp, end = 4.dp, top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                        IconButton(onClick = { setCatsHidden(true) }) { Icon(Icons.AutoMirrored.Filled.MenuOpen, L("הסתר קטגוריות")) }
+                        Text(kind.label, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, maxLines = 1,
+                            overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
                     }
+                    Row(Modifier.fillMaxWidth().padding(horizontal = 4.dp), horizontalArrangement = Arrangement.End) { headerButtons() }
                     if (!tvDevice) OutlinedTextField(query, { query = it }, singleLine = true,
                         modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp), placeholder = { Text(L("חיפוש…")) })
-                    else if (query.isNotBlank()) {
+                    LazyColumn(contentPadding = PaddingValues(6.dp)) {
+                        items(specials) { (g, label, n) -> CategoryRow(label, n, group == g && genreSel == null, false) { genreSel = null; selectGroup(g) } }
+                        items(view.groups) { g ->
+                            CategoryRow(g, counts[g] ?: 0, group == g && genreSel == null, g in view.lockedGroups && !Parental.unlocked) { genreSel = null; selectGroup(g) }
+                        }
+                    }
+                }
+                Column(Modifier.weight(1f).fillMaxHeight()) {
+                    if (catsHidden) Row(Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+                        IconButton(onClick = { setCatsHidden(false) }) { Icon(Icons.Filled.Menu, L("הצג קטגוריות")) }
+                        Text(kind.label, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, maxLines = 1,
+                            modifier = Modifier.weight(1f))
+                        headerButtons()
+                    }
+                    if (query.isNotBlank() && (tvDevice || catsHidden)) {
                         // חיפוש פעיל – מוצג כשורה קטנה; לחיצה מנקה
                         com.tbm.iptv.ui.TvTextButton(onClick = { query = "" }, modifier = Modifier.padding(horizontal = 8.dp)) {
                             Text("🔍 $query  ✕", maxLines = 1, overflow = TextOverflow.Ellipsis)
                         }
                     }
-                    if (searchDlg) {
-                        var tmp by remember { mutableStateOf(query) }
-                        val fr = remember { androidx.compose.ui.focus.FocusRequester() }
-                        androidx.compose.material3.AlertDialog(onDismissRequest = { searchDlg = false },
-                            title = { Text(L("חיפוש ב{0}", kind.label)) },
-                            text = {
-                                OutlinedTextField(tmp, { tmp = it }, singleLine = true, placeholder = { Text(L("חיפוש…")) },
-                                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(imeAction = androidx.compose.ui.text.input.ImeAction.Search),
-                                    keyboardActions = androidx.compose.foundation.text.KeyboardActions(onSearch = { query = tmp; searchDlg = false }),
-                                    modifier = Modifier.fillMaxWidth().focusRequester(fr))
-                                LaunchedEffect(Unit) { runCatching { fr.requestFocus() } }
-                            },
-                            confirmButton = { com.tbm.iptv.ui.TvButton(onClick = { query = tmp; searchDlg = false }) { Text(L("חפש")) } },
-                            dismissButton = { com.tbm.iptv.ui.TvTextButton(onClick = { searchDlg = false }) { Text(L("ביטול")) } })
-                    }
-                    LazyColumn(contentPadding = PaddingValues(6.dp)) {
-                        items(specials) { (g, label, n) -> CategoryRow(label, n, group == g, false) { selectGroup(g) } }
-                        items(view.groups) { g ->
-                            CategoryRow(g, counts[g] ?: 0, group == g, g in view.lockedGroups && !Parental.unlocked) { selectGroup(g) }
+                    if (kind != Kind.LIVE && !Prefs.isKids) androidx.compose.foundation.lazy.LazyRow(
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        item {
+                            com.tbm.iptv.ui.TvFilterChip(selected = genreSel == null, onClick = { genreSel = null }, label = { Text(L("הכל")) })
+                        }
+                        items(Trending.genres.size) { i ->
+                            val g = Trending.genres[i]
+                            if ((kind == Kind.SERIES && g.tmdbTv != null) || (kind == Kind.MOVIE && g.tmdbMovie != null) || g.tmdbMovie == null && g.tmdbTv == null)
+                                com.tbm.iptv.ui.TvFilterChip(selected = genreSel == i, onClick = { genreSel = i }, label = { Text(L(g.he)) })
                         }
                     }
+                    val gs = genreSel
+                    if (gs != null) {
+                        val gi = genreItems
+                        if (gi == null) Box(Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+                        else if (gi.isEmpty()) Text(L("לא נמצאו כותרים בז'אנר הזה"), Modifier.padding(16.dp))
+                        else ContentArea(kind, gi, favs, all, true, nav, Modifier.weight(1f)) { menu = MenuTarget(kind, it, all) }
+                    } else if (mode == "rows" && group == null && query.isBlank())
+                        RowsView(kind, filtered, view.groups, if (Parental.unlocked) emptySet() else view.lockedGroups, favs, nav,
+                            Modifier.weight(1f), selectGroup) { menu = MenuTarget(kind, it, all) }
+                    else ContentArea(kind, shownItems, favs, all, true, nav, Modifier.weight(1f)) { menu = MenuTarget(kind, it, all) }
                 }
-                if (mode == "rows" && group == null && query.isBlank())
-                    RowsView(kind, filtered, view.groups, if (Parental.unlocked) emptySet() else view.lockedGroups, favs, nav,
-                        Modifier.weight(1f), selectGroup) { menu = MenuTarget(kind, it, all) }
-                else ContentArea(kind, shownItems, favs, all, true, nav, Modifier.weight(1f)) { menu = MenuTarget(kind, it, all) }
+            }
+            if (searchDlg) {
+                var tmp by remember { mutableStateOf(query) }
+                val fr = remember { androidx.compose.ui.focus.FocusRequester() }
+                androidx.compose.material3.AlertDialog(onDismissRequest = { searchDlg = false },
+                    title = { Text(L("חיפוש ב{0}", kind.label)) },
+                    text = {
+                        OutlinedTextField(tmp, { tmp = it }, singleLine = true, placeholder = { Text(L("חיפוש…")) },
+                            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(imeAction = androidx.compose.ui.text.input.ImeAction.Search),
+                            keyboardActions = androidx.compose.foundation.text.KeyboardActions(onSearch = { query = tmp; genreSel = null; searchDlg = false }),
+                            modifier = Modifier.fillMaxWidth().focusRequester(fr))
+                        LaunchedEffect(Unit) { runCatching { fr.requestFocus() } }
+                    },
+                    confirmButton = { com.tbm.iptv.ui.TvButton(onClick = { query = tmp; genreSel = null; searchDlg = false }) { Text(L("חפש")) } },
+                    dismissButton = { com.tbm.iptv.ui.TvTextButton(onClick = { searchDlg = false }) { Text(L("ביטול")) } })
             }
         } else {
             Column(Modifier.fillMaxSize()) {
