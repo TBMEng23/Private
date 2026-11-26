@@ -124,15 +124,15 @@ fun applySubStyle(pv: PlayerView) {
     sv.setApplyEmbeddedFontSizes(false)
     sv.setFractionalTextSize(SubtitleView.DEFAULT_TEXT_SIZE_FRACTION * Prefs.subSize)
     sv.setBottomPaddingFraction(Prefs.subPos)
-    val box = Prefs.subBox
+    val bg = Prefs.subBg
+    val fg = when (Prefs.subColor) { 1 -> 0xFFFFE34D.toInt(); 2 -> 0xFF7FE7FF.toInt(); else -> android.graphics.Color.WHITE }
+    val back = when (bg) { 2 -> android.graphics.Color.BLACK; 1 -> 0x99000000.toInt(); else -> android.graphics.Color.TRANSPARENT }
     sv.setStyle(
         CaptionStyleCompat(
-            android.graphics.Color.WHITE,
-            if (box) android.graphics.Color.BLACK else android.graphics.Color.TRANSPARENT,
-            if (box) android.graphics.Color.BLACK else android.graphics.Color.TRANSPARENT,
-            if (box) CaptionStyleCompat.EDGE_TYPE_NONE else CaptionStyleCompat.EDGE_TYPE_OUTLINE,
+            fg, back, if (bg == 2) android.graphics.Color.BLACK else android.graphics.Color.TRANSPARENT,
+            if (bg == 0) CaptionStyleCompat.EDGE_TYPE_OUTLINE else CaptionStyleCompat.EDGE_TYPE_NONE,
             android.graphics.Color.BLACK,
-            null,
+            if (Prefs.subBold) android.graphics.Typeface.DEFAULT_BOLD else null,
         )
     )
 }
@@ -978,12 +978,7 @@ private fun SubtitleDialog(a: PlayerActivity) {
                         }
                     }
                 }
-                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 4.dp)) {
-                    com.tbm.iptv.ui.TvSwitch(checked = Prefs.subBox, onCheckedChange = { Prefs.subBox = it })
-                    Text(L("רקע שחור (מכסה כתוביות צרובות בתמונה)"), fontSize = 12.sp, modifier = Modifier.weight(1f).padding(horizontal = 6.dp))
-                    TextButton(onClick = { Prefs.subPos = Prefs.subPos + 0.03f }) { Text("▲") }
-                    TextButton(onClick = { Prefs.subPos = Prefs.subPos - 0.03f }) { Text("▼") }
-                }
+                com.tbm.iptv.ui.SubStyleControls(compact = true)
                 LazyColumn(Modifier.weight(1f, fill = false), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     items(ui.subResults) { r ->
                         FocusItem(Modifier.fillMaxWidth(), onClick = { a.applySubtitle(r); ui.showSubs = false }) {

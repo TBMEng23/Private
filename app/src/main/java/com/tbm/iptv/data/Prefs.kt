@@ -436,6 +436,18 @@ object Prefs {
         get() = bool("sub_box", false)
         set(v) = setBool("sub_box", v)
 
+    /** רקע כתובית: 0 = שקוף (קו מתאר בלבד), 1 = חצי שקוף, 2 = שחור מלא */
+    var subBg: Int
+        get() = int("sub_bg", if (subBox) 2 else 0)
+        set(v) { setInt("sub_bg", v.coerceIn(0, 2)); subBox = v == 2 }
+    /** צבע כתובית: 0 לבן, 1 צהוב, 2 תכלת */
+    var subColor: Int
+        get() = int("sub_color", 0)
+        set(v) = setInt("sub_color", ((v % 3) + 3) % 3)
+    var subBold: Boolean
+        get() = bool("sub_bold", false)
+        set(v) = setBool("sub_bold", v)
+
     /** גובה הכתובית מתחתית המסך (0–0.5) */
     var subPos: Float
         get() = float("sub_pos", 0.08f)

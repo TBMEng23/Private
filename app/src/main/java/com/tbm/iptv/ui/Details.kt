@@ -1,5 +1,7 @@
 package com.tbm.iptv.ui
 
+import androidx.compose.ui.focus.focusRequester
+
 import androidx.compose.foundation.layout.widthIn
 
 import androidx.compose.ui.focus.onFocusChanged
@@ -162,13 +164,16 @@ private fun PlatformLine(e: com.tbm.iptv.data.Entry, info: MediaInfo?, tv: Boole
 private fun PlayRow(label: String, fav: Boolean, onPlay: () -> Unit, onFav: () -> Unit) {
     val tv = com.tbm.iptv.data.Device.isTv
     var playF by remember { mutableStateOf(false) }
+    // בסטרימר: הלחיצה הראשונה בכניסה לסרט/סדרה כבר על "נגן/המשך" (לחזרה יש כפתור בשלט)
+    val playFr = remember { androidx.compose.ui.focus.FocusRequester() }
+    LaunchedEffect(Unit) { if (tv) { kotlinx.coroutines.delay(150); runCatching { playFr.requestFocus() } } }
     var favF by remember { mutableStateOf(false) }
     Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
         // בסטרימר: כפתור קצר (לא לכל הרוחב) ובפוקוס הופך לאדום עם מסגרת – שיהיה ברור שאתה עליו
         androidx.compose.material3.Button(
             onClick = onPlay,
             modifier = (if (tv) Modifier.widthIn(min = 220.dp, max = 340.dp) else Modifier.weight(1f)).height(48.dp)
-                .onFocusChanged { playF = it.isFocused }
+                .focusRequester(playFr).onFocusChanged { playF = it.isFocused }
                 .border(if (playF) 3.dp else 0.dp, if (playF) Color.White else Color.Transparent, RoundedCornerShape(6.dp)),
             shape = RoundedCornerShape(6.dp),
             colors = ButtonDefaults.buttonColors(containerColor = if (playF) NetRed else Color.White,
