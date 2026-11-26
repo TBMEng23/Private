@@ -83,12 +83,12 @@ object Repo {
         if (!quiet) state.value = LoadState.Loading(L("טוען את \"{0}\"…", p.name))
         try {
             val c0 = if (p.isXtream) Xtream(p).load(force) else loadM3u(p, force)
-            Snapshot.save(p.id, c0)
             // ספריות Plex נוספות לסרטים ולסדרות
             val plex = if (Plex.connected && Plex.enabled) runCatching { Plex.load() }.getOrNull() else null
             val c = if (plex == null) c0 else c0.copy(movies = c0.movies + plex.first, series = c0.series + plex.second)
             seriesCache.clear()
             runCatching { Prefs.trackNewGroups(p.id, c) }   // קטגוריה חדשה מהספק – מוסתרת עד שתאשר
+            Snapshot.save(p.id, c0)   // אחרי עדכון ההסתרות – כדי שהחתימה תתאים בפתיחה הבאה
             state.value = LoadState.Ready(c)
             Shelf.update(p, c)
             if (force || Prefs.str("updated_${p.id}").isBlank())
