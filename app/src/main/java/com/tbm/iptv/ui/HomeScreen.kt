@@ -521,15 +521,21 @@ private fun BrowseSection(kind: Kind, all: List<Entry>, ver: Int, nav: (Screen) 
     var menu by remember { mutableStateOf<MenuTarget?>(null) }
     var pickGroup by remember { mutableStateOf(false) }
 
-    val shownItems = remember(filtered, group, query, favs, recentKeys) {
-        val base = when (group) {
+    // חיפוש: ממתינים שתסיים להקליד (300ms) ומסננים ברקע – בלי לתקוע את המסך בין אות לאות
+    var debQ by remember(kind) { mutableStateOf(query) }
+    LaunchedEffect(query) { if (query.isBlank()) debQ = "" else { kotlinx.coroutines.delay(300); debQ = query } }
+    val baseItems = remember(filtered, group, favs, recentKeys) {
+        when (group) {
             null -> filtered
             FAV_GROUP -> filtered.filter { it.key in favs }
             RECENT_GROUP -> { val m = filtered.associateBy { it.key }; recentKeys.mapNotNull { m[it] } }
             NEW_GROUP -> filtered.sortedByDescending { (it as? Channel)?.added ?: (it as? SeriesItem)?.added ?: 0L }.asSequence().filter { kind != Kind.MOVIE || it.isFreshTitle() }.take(200).toList()
             else -> filtered.filter { it.group == group }
         }
-        if (query.isBlank()) base else base.filter { it.name.contains(query, true) }
+    }
+    val shownItems by androidx.compose.runtime.produceState(baseItems, baseItems, debQ) {
+        value = if (debQ.isBlank()) baseItems
+            else kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) { baseItems.filter { it.name.contains(debQ, true) }.take(500) }
     }
 
     val selectGroup: (String?) -> Unit = { g ->
@@ -1209,12 +1215,21 @@ private fun HebKeyboard(q: String, onChange: (String) -> Unit) {
 private fun SearchSection(content: Content, ver: Int, nav: (Screen) -> Unit) {
     val ctx = LocalContext.current
     var q by rememberSaveable { mutableStateOf("") }
-    val liveAll = remember(content, ver, Catalog.ready.intValue) { Catalog.get(Kind.LIVE, content.live).items.filterIsInstance<Channel>() }
-    val vodAll = remember(content, ver, Catalog.ready.intValue) { Catalog.get(Kind.MOVIE, content.movies).items.filterIsInstance<Channel>() }
-    val serAll = remember(content, ver, Catalog.ready.intValue) { Catalog.get(Kind.SERIES, content.series).items.filterIsInstance<SeriesItem>() }
-    val live = remember(q, liveAll) { if (q.length < 2) emptyList() else liveAll.filter { it.name.contains(q, true) }.take(60) }
-    val vod = remember(q, vodAll) { if (q.length < 2) emptyList() else vodAll.filter { it.name.contains(q, true) }.take(60) }
-    val ser = remember(q, serAll) { if (q.length < 2) emptyList() else serAll.filter { it.name.contains(q, true) }.take(60) }
+    // הכל ברקע, וחיפוש רק אחרי הפסקה קצרה בהקלדה – אחרת כל אות סורקת עשרות אלפי שמות על המסך הראשי ונתקעת
+    var dq by remember { mutableStateOf(q) }
+    LaunchedEffect(q) { kotlinx.coroutines.delay(300); dq = q }
+    val res by androidx.compose.runtime.produceState(Triple(emptyList<Channel>(), emptyList<Channel>(), emptyList<SeriesItem>()),
+        dq, content, ver, Catalog.ready.intValue) {
+        value = if (dq.length < 2) Triple(emptyList(), emptyList(), emptyList())
+        else kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+            Triple(
+                Catalog.get(Kind.LIVE, content.live).items.asSequence().filterIsInstance<Channel>().filter { it.name.contains(dq, true) }.take(60).toList(),
+                Catalog.get(Kind.MOVIE, content.movies).items.asSequence().filterIsInstance<Channel>().filter { it.name.contains(dq, true) }.take(60).toList(),
+                Catalog.get(Kind.SERIES, content.series).items.asSequence().filterIsInstance<SeriesItem>().filter { it.name.contains(dq, true) }.take(60).toList(),
+            )
+        }
+    }
+    val live = res.first; val vod = res.second; val ser = res.third
     Column(Modifier.fillMaxSize().padding(10.dp)) {
         SearchInput(q) { q = it }
         LazyColumn(Modifier.fillMaxSize()) {
@@ -1230,7 +1245,7 @@ private fun SearchSection(content: Content, ver: Int, nav: (Screen) -> Unit) {
                 item { SectionTitle(L("סדרות ({0})", ser.size)) }
                 items(ser) { s -> EntryRow(s, false) { nav(Screen.Series(s)) } }
             }
-            if (q.length >= 2 && live.isEmpty() && vod.isEmpty() && ser.isEmpty()) {
+            if (dq.length >= 2 && dq == q && live.isEmpty() && vod.isEmpty() && ser.isEmpty()) {
                 item { Text(L("לא נמצאו תוצאות"), Modifier.padding(16.dp)) }
             }
         }
