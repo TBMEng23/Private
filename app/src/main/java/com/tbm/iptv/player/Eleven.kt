@@ -42,8 +42,15 @@ object Eleven {
         }
     }
 
+    /** רשימת הקולות האחרונה שנטענה (לחלוקת קולות לדמויות בלי לפנות לרשת) */
+    fun cached(): List<V> = Prefs.str("local_el_voices").split('\n').mapNotNull { l ->
+        val p = l.split('|'); if (p.size < 3) null else V(p[0], p.getOrElse(3) { "" }, p[1], p[2], "")
+    }
+    fun cache(vs: List<V>) = Prefs.setStrQuiet("local_el_voices", vs.joinToString("\n") { "${it.id}|${it.gender}|${it.age}|${it.name.replace('|', ' ')}" })
+
     /** בחירה אוטומטית ראשונית לפי התוויות (מין/גיל) */
     fun autoAssign(vs: List<V>) {
+        cache(vs)
         fun pick(gender: String, ages: List<String>) = vs.firstOrNull { it.gender == gender && it.age in ages } ?: vs.firstOrNull { it.gender == gender }
         val man = pick("male", listOf("middle_aged", "middle aged", "young")); val woman = pick("female", listOf("young", "middle_aged", "middle aged"))
         val oldM = pick("male", listOf("old")); val oldW = pick("female", listOf("old"))

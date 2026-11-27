@@ -212,6 +212,7 @@ class PlayerActivity : FragmentActivity() {
         voice?.setLanguage(subFile?.lang ?: "he")
         ui.voiceOn = true
         toast(L("קריינות AI פעילה"))
+        startCast()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -312,7 +313,7 @@ class PlayerActivity : FragmentActivity() {
         if (i != Repo.queueIndex) lastIndex = Repo.queueIndex
         attach(i)
         val item = q[i]
-        subFile = null; subQuery = null; subJob?.cancel()
+        subFile = null; subQuery = null; subJob?.cancel(); castJob?.cancel(); Characters.clear()
         ui.subLabel = null; ui.subOffset = 0; ui.subResults = emptyList(); ui.subErrors = emptyList()
         ui.error = null; retry = 0; lastGoodPos = 0L; ui.errorActions = false
 
@@ -999,6 +1000,29 @@ class PlayerActivity : FragmentActivity() {
             .build()
         player.prepare()
         player.playWhenReady = playing
+        startCast()
+    }
+
+    private var castJob: kotlinx.coroutines.Job? = null
+    /** הבנת עלילה ודמויות (Gemini) – פעם אחת לכל כתובית, ברקע; בינתיים הקריינות עובדת במצב הרגיל */
+    private fun startCast() {
+        val item = current ?: return
+        val sf = subFile ?: return
+        if (!ui.voiceOn || !Characters.enabled || item.kind == Kind.LIVE) return
+        val id = item.key + "|" + sf.text.length + "|" + sf.text.hashCode()
+        castJob?.cancel()
+        castJob = lifecycleScope.launch {
+            val q = runCatching { subQuery ?: SubtitleManager.buildQuery(item) }.getOrNull()
+            val title = q?.title?.ifBlank { null } ?: (item.seriesName ?: item.title)
+            val ep = if (item.season != null && item.episode != null) "S%02dE%02d".format(item.season, item.episode) else null
+            val r = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                if (Eleven.enabled && Eleven.cached().isEmpty()) runCatching { Eleven.cache(Eleven.voices()) }
+                runCatching {
+                    Characters.analyze(id, title, q?.year, item.kind == Kind.SERIES, ep, sf) { m -> runOnUiThread { toast(m) } }
+                }
+            }
+            r.exceptionOrNull()?.let { if (it !is kotlinx.coroutines.CancellationException) toast(L("ניתוח הדמויות נכשל – ממשיך במצב רגיל ({0})", (it.message ?: "").take(80))) }
+        }
     }
 
     // ------------------------------------------------------------------ עזר

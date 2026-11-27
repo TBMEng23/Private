@@ -85,6 +85,9 @@ class VoiceOver(
     private var voices: List<Voice> = emptyList()
     /** מגדר אחרון שזוהה לכל צד בדיאלוג (לרציפות כשאין רמז בטקסט) */
     private val lastGender = intArrayOf(0, 0)
+    /** הדובר הנוכחי לכל צד – משנים רק כשיש סימן ברור (מונע החלפות קול מיותרות) */
+    private val cur = arrayOf(Speaker.NARRATOR, Speaker.NARRATOR)
+    private var lastCueAt = 0L
 
     override fun onInit(status: Int) {
         if (status != TextToSpeech.SUCCESS) { main.post { onMissingVoice("TTS") }; return }
@@ -135,10 +138,15 @@ class VoiceOver(
             lines.forEach { l -> if (l.startsWith("-") || l.startsWith("–") || segs.isEmpty()) segs += l.trimStart('-', '–', ' ') else segs[segs.lastIndex] += " $l" }
         } else segs += flat.trimStart('-', '–', ' ')
         tts.stop()
-        if (Eleven.enabled) { speakEleven(segs); return }
+        val now = System.currentTimeMillis()
+        val cont = segs.size == 1 && now - lastCueAt < 2_500
+        lastCueAt = now
+        val who = if (VoiceCfg.style == "auto") Characters.speakersFor(flat) else null
+        if (Eleven.enabled) { speakEleven(segs, who, cont); return }
         segs.forEachIndexed { i, text ->
             if (text.isBlank()) return@forEachIndexed
-            val sp = speakerFor(text, i.coerceAtMost(1))
+            val ci = who?.let { it.getOrNull(i) ?: it[0] } ?: -1
+            val sp = if (ci >= 0) charSpeaker(ci) else decide(text, i.coerceAtMost(1), null, cont)
             voiceFor(sp)?.let { runCatching { tts.voice = it } }
             tts.setPitch(sp.pitch)
             tts.setSpeechRate(Prefs.voiceRate * sp.rate)
@@ -146,27 +154,71 @@ class VoiceOver(
         }
     }
 
-    /** סיווג לפי גובה הקול שנשמע עכשיו בסרט (אם יש מספיק דיבור): גבר / אישה / ילד */
+    /** סיווג לפי גובה הקול שנשמע עכשיו בסרט – רק כשהוא ברור (באזור האפור מחזיר null ושומרים על הדובר הקודם) */
     private fun pitchSpeaker(sinceMs: Long): Speaker? {
-        val hz = AudioTap.pitchSince(sinceMs) ?: return null
-        return when { hz < 165f -> Speaker.MAN; hz < 255f -> Speaker.WOMAN; else -> Speaker.CHILD }
+        val hz = AudioTap.pitchSince(sinceMs, 6) ?: return null
+        return when { hz < 150f -> Speaker.MAN; hz in 190f..270f -> Speaker.WOMAN; hz > 305f -> Speaker.CHILD; else -> null }
+    }
+
+    /** דמות שזוהתה בניתוח העלילה → סוג קול */
+    private fun charSpeaker(ci: Int): Speaker {
+        val ch = Characters.current?.chars?.getOrNull(ci) ?: return Speaker.NARRATOR
+        return when { ch.age == "child" -> Speaker.CHILD; ch.gender > 0 -> Speaker.WOMAN; ch.gender < 0 -> Speaker.MAN; else -> Speaker.NARRATOR }
+    }
+
+    /** קול ElevenLabs קבוע לדמות: הדמות הראשית מכל מין מקבלת את הקול שנבחר בהגדרות, האחרות – קולות אחרים מאותו מין */
+    private fun charVoice(ci: Int): String {
+        val cast = Characters.current ?: return ""
+        cast.voice[ci]?.let { return it }
+        val ch = cast.chars.getOrNull(ci) ?: return ""
+        fun grp(c: Characters.Ch) = when { c.age == "child" -> "child"; c.gender > 0 -> "f"; c.gender < 0 -> "m"; else -> "u" }
+        val g = grp(ch)
+        val role = when (g) { "child" -> "child"; "f" -> "woman"; "m" -> "man"; else -> "narrator" }
+        val roleV = Eleven.voiceFor(role)
+        val pool = Eleven.cached().filter { v -> when (g) { "f", "child" -> v.gender == "female"; "m" -> v.gender == "male"; else -> false } }
+            .map { it.id }.filter { it != roleV && it != Eleven.voiceFor("narrator") }
+        val ordered = (listOf(roleV) + pool).filter { it.isNotBlank() }.distinct()
+        val rank = cast.chars.withIndex().filter { grp(it.value) == g }.sortedByDescending { it.value.lines }.indexOfFirst { it.index == ci }
+        val v = if (ordered.isEmpty()) "" else ordered[rank.coerceAtLeast(0) % ordered.size]
+        cast.voice[ci] = v
+        return v
+    }
+
+    /** ייצוב: דקדוק ברור → מגדר; צד שני בדיאלוג → הפוך מהראשון; קול מקורי ברור ושונה → מחליף; אחרת – אותו דובר */
+    private fun decide(text: String, slot: Int, heard: Speaker?, cont: Boolean): Speaker {
+        when (VoiceCfg.style) {
+            "narrator" -> return Speaker.NARRATOR; "man" -> return Speaker.MAN
+            "woman" -> return Speaker.WOMAN; "child" -> return Speaker.CHILD
+        }
+        val g = HebGender.detect(text)
+        val sp = when {
+            g > 0 -> if (cur[slot] == Speaker.CHILD) Speaker.CHILD else Speaker.WOMAN
+            g < 0 -> Speaker.MAN
+            slot == 1 -> when (cur[0]) { Speaker.MAN -> Speaker.WOMAN; Speaker.WOMAN, Speaker.CHILD -> Speaker.MAN; else -> if (cur[1] == Speaker.NARRATOR) Speaker.WOMAN else cur[1] }
+            heard != null && heard != cur[slot] -> heard
+            cont -> cur[slot]
+            heard != null -> heard
+            else -> cur[slot]
+        }
+        cur[slot] = sp
+        return sp
     }
 
     /** ElevenLabs: מחכים רגע לשמוע את הקול המקורי (גובה → גבר/אישה/ילד), מייצרים ומנגנים */
-    private fun speakEleven(segs: List<String>) {
+    private fun speakEleven(segs: List<String>, who: IntArray?, cont: Boolean) {
         elJob?.cancel(); stopMp()
         val cueAt = System.currentTimeMillis()
         elJob = scope.launch {
             val auto = VoiceCfg.style == "auto"
-            if (auto) kotlinx.coroutines.delay(380)
-            val heard = if (auto) pitchSpeaker(cueAt - 150) else null
+            // כשהדמויות ידועות מהניתוח – לא צריך להקשיב לקול המקורי
+            if (auto && who == null) kotlinx.coroutines.delay(450)
+            val heard = if (auto && who == null) pitchSpeaker(cueAt - 150) else null
             for ((i, text) in segs.withIndex()) {
                 if (text.isBlank()) continue
-                val byText = speakerFor(text, i.coerceAtMost(1))
-                // שורה ראשונה: הקול שנשמע עכשיו גובר; דקדוק עברי מכריע כשאין קול ברור
-                val sp = if (i == 0 && heard != null && HebGender.detect(text) == 0) heard else byText
+                val ci = who?.let { it.getOrNull(i) ?: it[0] } ?: -1
+                val sp = if (ci >= 0) charSpeaker(ci) else decide(text, i.coerceAtMost(1), if (i == 0) heard else null, cont)
                 val role = when (sp) { Speaker.MAN -> "man"; Speaker.WOMAN -> "woman"; Speaker.CHILD -> "child"; else -> "narrator" }
-                val vid = Eleven.voiceFor(role).ifBlank { Eleven.voiceFor("narrator") }
+                val vid = (if (ci >= 0) charVoice(ci) else "").ifBlank { Eleven.voiceFor(role) }.ifBlank { Eleven.voiceFor("narrator") }
                 if (vid.isBlank()) { fallbackDevice(text, sp); continue }
                 val f = try {
                     kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { Eleven.synth(text, vid, lang) }
@@ -235,6 +287,7 @@ class VoiceOver(
 
     fun stop() {
         last = ""
+        cur[0] = Speaker.NARRATOR; cur[1] = Speaker.NARRATOR
         elJob?.cancel(); stopMp()
         if (ready) tts.stop()
         speaking = 0

@@ -418,7 +418,7 @@ private fun MainSettings(nav: (Screen) -> Unit) {
             val k = Prefs.newGroups().firstOrNull()?.substringBefore('|')?.let { n -> Kind.entries.firstOrNull { it.name == n } } ?: Kind.LIVE
             nav(Screen.Groups(k))
         }
-        NavRow(L("תוכן ופופולרי היום"), Icons.Filled.Tune, sub = L("מפתח TMDB · קולות ElevenLabs")) { nav(Screen.Settings("content")) }
+        NavRow(L("תוכן ופופולרי היום"), Icons.Filled.Tune, sub = L("מפתח TMDB · קולות ElevenLabs · Gemini")) { nav(Screen.Settings("content")) }
         val trOn = Prefs.bool("translate_meta", true)
         NavRow(L("תרגום תקצירים, ז'אנרים ושמות"), Icons.Filled.Translate, arrow = false,
             sub = if (trOn) L("פעיל – לשפת הממשק (TMDB / Google)") else L("כבוי")) { Prefs.setBool("translate_meta", !trOn) }
@@ -571,6 +571,21 @@ private fun ContentPage() {
             TextButton(onClick = {
                 runCatching { ectx.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, Uri.parse("https://elevenlabs.io/app/developers/api-keys"))) }
             }) { Text(L("פתח את אתר ElevenLabs")) }
+        }
+    }
+    Spacer(Modifier.height(10.dp))
+    Card {
+        Column(Modifier.padding(12.dp)) {
+            Text(L("🎭 הבנת עלילה ודמויות – Google Gemini"), fontWeight = FontWeight.Bold)
+            Hint(L("לפני הסרט ה-AI קורא את כל הכתוביות, התקציר ורשימת השחקנים, מזהה מי מדבר בכל שורה – וכל דמות מקבלת קול קבוע לכל הסרט. בלי מפתח הקריינות עובדת במצב הרגיל."))
+            Field(L("מפתח Gemini API"), com.tbm.iptv.player.Characters.key, secret = true) { com.tbm.iptv.player.Characters.key = it; Prefs.setStrQuiet("local_gm_models", "") }
+            Prefs.version.intValue
+            SwitchRow(L("להשתמש בניתוח דמויות בקריינות"), com.tbm.iptv.player.Characters.on) { com.tbm.iptv.player.Characters.on = it }
+            Hint(L("מפתח חינמי: aistudio.google.com ← Get API key ← Create API key ← מעתיקים ומדביקים כאן. הניתוח לוקח עד דקה בפתיחת הסרט ונשמר לפעם הבאה. צריך גם מפתח TMDB לתקציר ולרשימת הדמויות."))
+            val gctx = LocalContext.current
+            TextButton(onClick = {
+                runCatching { gctx.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, Uri.parse("https://aistudio.google.com/apikey"))) }
+            }) { Text(L("פתח את Google AI Studio")) }
         }
     }
     Spacer(Modifier.height(10.dp))
