@@ -112,7 +112,7 @@ fun AccountScreen(onBack: () -> Unit) {
                     OutlinedButton(onClick = { pairTv = true }, modifier = Modifier.fillMaxWidth()) { Text(L("📺 חבר טלוויזיה / סטרימר בקוד")) }
                     if (com.tbm.iptv.data.Devices.isAdmin) {
                         Spacer(Modifier.height(8.dp))
-                        OutlinedButton(onClick = { showDevices = true }, modifier = Modifier.fillMaxWidth()) { Text(L("🛡️ מכשירים מחוברים (מנהל)")) }
+                        OutlinedButton(onClick = { showDevices = true }, modifier = Modifier.fillMaxWidth()) { Text(L("🛡️ מסך מנהל")) }
                     }
                     Spacer(Modifier.height(8.dp))
                     var confirmOut by remember { mutableStateOf(false) }
@@ -279,10 +279,14 @@ private fun DevicesAdminScreen(onBack: () -> Unit) {
     androidx.activity.compose.BackHandler { onBack() }
     val fmt = remember { SimpleDateFormat("dd/MM/yy HH:mm", Locale.US) }
     Column(Modifier.fillMaxSize()) {
-        ScreenHeader(L("מכשירים מחוברים"), onBack)
+        ScreenHeader(L("מסך מנהל"), onBack)
         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally) {
             Column(Modifier.widthIn(max = 640.dp).fillMaxWidth()) {
+                ElevenSettings()
+                HorizontalDivider(Modifier.padding(vertical = 14.dp))
+                Text(L("מכשירים מחוברים"), fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                Spacer(Modifier.height(6.dp))
                 val l = list
                 when {
                     err != null -> Text(err!!, color = MaterialTheme.colorScheme.error)

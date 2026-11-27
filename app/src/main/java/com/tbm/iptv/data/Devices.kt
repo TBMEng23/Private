@@ -104,9 +104,13 @@ object Devices {
     }
 
     /** בודק אם המשתמש המחובר מורשה לקרוא את רשימת המכשירים (נקבע בכללי Firebase לפי האימייל) */
+    private const val ADMIN_HASH = "e44df147097a979df8a9083caebcd1b9493d668d7451ba6a235730cf7185e1bd"
+    private fun sha(t: String) = java.security.MessageDigest.getInstance("SHA-256")
+        .digest(t.trim().lowercase().toByteArray()).joinToString("") { "%02x".format(it) }
     fun checkAdmin() {
         scope.launch {
-            val ok = Cloud.signedInNow() && runCatching {
+            val mail = runCatching { FirebaseAuth.getInstance().currentUser?.email }.getOrNull() ?: ""
+            val ok = Cloud.signedInNow() && sha(mail) == ADMIN_HASH && runCatching {
                 db!!.collection("devices").limit(1).get().await(); true
             }.getOrDefault(false)
             Prefs.setStrQuiet("local_admin", if (ok) "1" else "")

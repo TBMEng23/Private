@@ -1695,13 +1695,12 @@ private fun VoiceSettings() {
         }
     }
     Hint(L("קולות ☁ (רשת) נשמעים טבעיים יותר אבל צריכים אינטרנט. כשיש רק קול אחד, ההבדל בין גבר/אישה/ילד נעשה בגובה הקול."))
-    ElevenSettings()
 }
 
 /** ElevenLabs: מפתח, מנוע, וקול לכל תפקיד (גבר / אישה / ילד / זקן / זקנה / מספר) */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun ElevenSettings() {
+fun ElevenSettings() {
     val el = com.tbm.iptv.player.Eleven
     val scope = rememberCoroutineScope()
     var key by remember { mutableStateOf(el.key) }
