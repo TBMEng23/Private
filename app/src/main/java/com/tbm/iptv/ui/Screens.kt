@@ -418,7 +418,7 @@ private fun MainSettings(nav: (Screen) -> Unit) {
             val k = Prefs.newGroups().firstOrNull()?.substringBefore('|')?.let { n -> Kind.entries.firstOrNull { it.name == n } } ?: Kind.LIVE
             nav(Screen.Groups(k))
         }
-        NavRow(L("תוכן ופופולרי היום"), Icons.Filled.Tune, sub = L("מפתח TMDB")) { nav(Screen.Settings("content")) }
+        NavRow(L("תוכן ופופולרי היום"), Icons.Filled.Tune, sub = L("מפתח TMDB · קולות ElevenLabs")) { nav(Screen.Settings("content")) }
         val trOn = Prefs.bool("translate_meta", true)
         NavRow(L("תרגום תקצירים, ז'אנרים ושמות"), Icons.Filled.Translate, arrow = false,
             sub = if (trOn) L("פעיל – לשפת הממשק (TMDB / Google)") else L("כבוי")) { Prefs.setBool("translate_meta", !trOn) }
@@ -560,6 +560,17 @@ private fun ContentPage() {
                 runCatching { uctx.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, Uri.parse("https://www.themoviedb.org/settings/api"))) }
             }) { Text(L("פתח את אתר TMDB")) }
             Hint(L("מפתח חינמי: themoviedb.org ← הרשמה ← Settings ← API ← Request an API key. מתאים לך את הסרטים והסדרות הפופולריים היום מתוך מה שיש אצל הספק."))
+        }
+    }
+    Spacer(Modifier.height(10.dp))
+    Card {
+        Column(Modifier.padding(12.dp)) {
+            ElevenSettings()
+            Hint(L("איך משיגים מפתח: נרשמים ב-elevenlabs.io (יש חשבון חינמי) ← Developers ← API Keys ← Create Key – עם הרשאות Text to Speech ו-Voices (Read) – ומדביקים כאן."))
+            val ectx = LocalContext.current
+            TextButton(onClick = {
+                runCatching { ectx.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, Uri.parse("https://elevenlabs.io/app/developers/api-keys"))) }
+            }) { Text(L("פתח את אתר ElevenLabs")) }
         }
     }
     Spacer(Modifier.height(10.dp))
@@ -1695,7 +1706,7 @@ private fun VoiceSettings() {
         }
     }
     Hint(L("קולות ☁ (רשת) נשמעים טבעיים יותר אבל צריכים אינטרנט. כשיש רק קול אחד, ההבדל בין גבר/אישה/ילד נעשה בגובה הקול."))
-    ElevenSettings()
+    Hint(L("לקולות טבעיים יותר: הגדרות ← תוכן ← ElevenLabs."))
 }
 
 /** ElevenLabs: מפתח, מנוע, וקול לכל תפקיד (גבר / אישה / ילד / זקן / זקנה / מספר) */
@@ -1714,7 +1725,6 @@ fun ElevenSettings() {
             .onFailure { msg = L("שגיאה: {0}", it.message ?: "") }
     }
     LaunchedEffect(Unit) { if (el.key.isNotBlank()) load() }
-    HorizontalDivider(Modifier.padding(vertical = 10.dp))
     Text(L("🎙 קולות AI – ElevenLabs"), fontWeight = FontWeight.Bold)
     Hint(L("קולות טבעיים בעברית (מודל Eleven v4 Turbo). כל שורה נשלחת ל-ElevenLabs ונספרת בתווים מהמנוי שלך; שורות שחוזרות נשמרות ולא עולות שוב."))
     OutlinedTextField(key, { key = it }, singleLine = true, label = { Text(L("מפתח API של ElevenLabs")) },
