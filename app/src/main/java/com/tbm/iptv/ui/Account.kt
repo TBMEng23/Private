@@ -55,6 +55,7 @@ import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.tbm.iptv.L
 import com.tbm.iptv.data.Cloud
 import kotlinx.coroutines.launch
+import androidx.compose.runtime.LaunchedEffect
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -78,6 +79,9 @@ fun AccountScreen(onBack: () -> Unit) {
     var msg by remember { mutableStateOf<String?>(null) }
     var pairTv by remember { mutableStateOf(false) }
     var tvCode by remember { mutableStateOf<String?>(null) }
+    var showDevices by remember { mutableStateOf(false) }
+    LaunchedEffect(Cloud.signedIn) { if (Cloud.signedIn) com.tbm.iptv.data.Devices.checkAdmin() }
+    if (showDevices) { DevicesAdminScreen { showDevices = false }; return }
     fun run(block: suspend () -> Unit) {
         busy = true; msg = null
         scope.launch {
@@ -106,6 +110,10 @@ fun AccountScreen(onBack: () -> Unit) {
                         modifier = Modifier.fillMaxWidth()) { Text(L("🔄 סנכרן עכשיו")) }
                     Spacer(Modifier.height(8.dp))
                     OutlinedButton(onClick = { pairTv = true }, modifier = Modifier.fillMaxWidth()) { Text(L("📺 חבר טלוויזיה / סטרימר בקוד")) }
+                    if (com.tbm.iptv.data.Devices.isAdmin) {
+                        Spacer(Modifier.height(8.dp))
+                        OutlinedButton(onClick = { showDevices = true }, modifier = Modifier.fillMaxWidth()) { Text(L("🛡️ מכשירים מחוברים (מנהל)")) }
+                    }
                     Spacer(Modifier.height(8.dp))
                     var confirmOut by remember { mutableStateOf(false) }
                     TextButton(onClick = { confirmOut = true }, modifier = Modifier.fillMaxWidth()) {
@@ -252,4 +260,98 @@ private fun PhonePairDialog(onDone: () -> Unit) {
         },
         dismissButton = { TextButton(onClick = onDone) { Text(L("ביטול")) } },
     )
+}
+
+/** מסך מנהל: כל המכשירים שהתקינו את האפליקציה, עם חסימה */
+@Composable
+private fun DevicesAdminScreen(onBack: () -> Unit) {
+    val ctx = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var list by remember { mutableStateOf<List<com.tbm.iptv.data.Devices.Dev>?>(null) }
+    var err by remember { mutableStateOf<String?>(null) }
+    var reload by remember { mutableStateOf(0) }
+    var edit by remember { mutableStateOf<com.tbm.iptv.data.Devices.Dev?>(null) }
+    val me = remember { com.tbm.iptv.data.Devices.id(ctx) }
+    LaunchedEffect(reload) {
+        err = null
+        try { list = com.tbm.iptv.data.Devices.list() } catch (e: Exception) { err = e.message ?: "error" }
+    }
+    androidx.activity.compose.BackHandler { onBack() }
+    val fmt = remember { SimpleDateFormat("dd/MM/yy HH:mm", Locale.US) }
+    Column(Modifier.fillMaxSize()) {
+        ScreenHeader(L("מכשירים מחוברים"), onBack)
+        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally) {
+            Column(Modifier.widthIn(max = 640.dp).fillMaxWidth()) {
+                val l = list
+                when {
+                    err != null -> Text(err!!, color = MaterialTheme.colorScheme.error)
+                    l == null -> Row(Modifier.fillMaxWidth().padding(20.dp), horizontalArrangement = Arrangement.Center) { CircularProgressIndicator() }
+                    else -> {
+                        val week = System.currentTimeMillis() - 7L * 24 * 3600_000L
+                        Text(L("{0} מכשירים · {1} פעילים בשבוע האחרון · {2} חסומים",
+                            l.size, l.count { it.last > week }, l.count { it.blocked }),
+                            fontWeight = FontWeight.Bold, fontSize = 17.sp)
+                        Spacer(Modifier.height(4.dp))
+                        TextButton(onClick = { list = null; reload++ }) { Text(L("🔄 רענן")) }
+                        l.forEach { d ->
+                            val newDev = d.first > week
+                            Surface(shape = RoundedCornerShape(12.dp),
+                                color = if (d.blocked) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.surfaceVariant,
+                                modifier = Modifier.fillMaxWidth().padding(vertical = 5.dp)) {
+                                Column(Modifier.padding(12.dp)) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Text((if (d.tv) "📺 " else "📱 ") + d.note.ifBlank { d.name }, fontWeight = FontWeight.Bold,
+                                            fontSize = 16.sp, modifier = Modifier.weight(1f))
+                                        if (d.id == me) Text(L("המכשיר הזה"), fontSize = 12.sp, color = MaterialTheme.colorScheme.primary)
+                                        else if (newDev) Text(L("🆕 חדש"), fontSize = 12.sp, color = MaterialTheme.colorScheme.primary)
+                                    }
+                                    if (d.note.isNotBlank()) Text(d.name, fontSize = 12.sp)
+                                    Text(listOf(d.model, "Android ${d.android}", "v${d.app}").filter { it.isNotBlank() }.joinToString(" · "),
+                                        fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    if (d.email.isNotBlank()) Text(d.email, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    Text(L("נראה לאחרונה: {0}", if (d.last > 0) fmt.format(Date(d.last)) else "—") +
+                                        (if (d.first > 0) "  ·  " + L("הותקן: {0}", fmt.format(Date(d.first))) else ""),
+                                        fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    if (d.blocked) Text(L("⛔ חסום"), color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold)
+                                    TextButton(onClick = { edit = d }) { Text(L("ניהול")) }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    edit?.let { d ->
+        var note by remember(d.id) { mutableStateOf(d.note) }
+        fun act(block: suspend () -> Unit) {
+            scope.launch {
+                try { block(); edit = null; list = null; reload++ } catch (e: Exception) {
+                    Toast.makeText(ctx, e.message ?: "error", Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+        AlertDialog(
+            onDismissRequest = { edit = null },
+            title = { Text(d.name) },
+            text = {
+                Column {
+                    Text(L("מזהה: {0}", d.id), fontSize = 12.sp)
+                    Spacer(Modifier.height(8.dp))
+                    OutlinedTextField(note, { note = it }, label = { Text(L("כינוי (למשל: הסלון של אבא)")) }, singleLine = true)
+                    Spacer(Modifier.height(8.dp))
+                    TextButton(onClick = { act { com.tbm.iptv.data.Devices.setNote(d.id, note.trim()) } }) { Text(L("שמור כינוי")) }
+                    if (d.id != me) TextButton(onClick = { act { com.tbm.iptv.data.Devices.setBlocked(d.id, !d.blocked) } }) {
+                        Text(if (d.blocked) L("✅ בטל חסימה") else L("⛔ חסום מכשיר"),
+                            color = if (d.blocked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error)
+                    }
+                    if (d.id != me) TextButton(onClick = { act { com.tbm.iptv.data.Devices.delete(d.id) } }) {
+                        Text(L("🗑️ מחק מהרשימה"))
+                    }
+                }
+            },
+            confirmButton = { TextButton(onClick = { edit = null }) { Text(L("סגור")) } },
+        )
+    }
 }

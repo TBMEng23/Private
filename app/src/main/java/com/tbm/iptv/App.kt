@@ -12,6 +12,7 @@ class App : Application() {
         Prefs.init(this)
         I18n.init()
         runCatching { com.tbm.iptv.data.Cloud.init() }
+        runCatching { com.tbm.iptv.data.Devices.register(this) }
         warmStateHolders()
     }
 

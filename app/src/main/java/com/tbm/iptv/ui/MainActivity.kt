@@ -128,6 +128,7 @@ class MainActivity : FragmentActivity() {
         super.onResume()
         // בדיקת עדכון גם בחזרה מהרקע (בסטרימר האפליקציה כמעט אף פעם לא נפתחת מאפס). מוגבל לפעם בשעה
         runCatching { com.tbm.iptv.data.Updater.autoCheck(this) }
+        runCatching { com.tbm.iptv.data.Devices.register(this) }
         runCatching { com.tbm.iptv.data.Repo.refreshIfStale() }
     }
 
@@ -220,6 +221,7 @@ private fun UpdateDialog() {
 
 @Composable
 fun AppRoot() {
+    if (com.tbm.iptv.data.Devices.blocked && !com.tbm.iptv.data.Devices.isAdmin) { BlockedScreen(); return }
     val stack = remember {
         mutableStateListOf<Screen>(
             when {
@@ -407,3 +409,22 @@ private fun CrashReport() {
 @Composable
 private fun Modifier.androidx_verticalScroll(): Modifier =
     this.heightIn(max = 260.dp).verticalScroll(rememberScrollState())
+
+/** מכשיר שהמנהל חסם */
+@Composable
+private fun BlockedScreen() {
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+    androidx.compose.foundation.layout.Box(androidx.compose.ui.Modifier.fillMaxSize().background(androidx.compose.ui.graphics.Color.Black),
+        contentAlignment = androidx.compose.ui.Alignment.Center) {
+        androidx.compose.foundation.layout.Column(horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally,
+            modifier = androidx.compose.ui.Modifier.padding(32.dp)) {
+            androidx.compose.material3.Text("⛔", fontSize = 56.sp)
+            androidx.compose.material3.Text(L("האפליקציה לא מורשית במכשיר הזה"), color = androidx.compose.ui.graphics.Color.White,
+                fontSize = 22.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+            androidx.compose.material3.Text(L("מזהה מכשיר: {0}", com.tbm.iptv.data.Devices.id(ctx)),
+                color = androidx.compose.ui.graphics.Color.Gray, fontSize = 13.sp,
+                modifier = androidx.compose.ui.Modifier.padding(top = 10.dp))
+        }
+    }
+}
