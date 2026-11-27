@@ -331,6 +331,8 @@ object I18nEn {
         "🔒 נעל בקוד" to "🔒 Lock with PIN",
         "🔓 בטל נעילה" to "🔓 Unlock",
         "🔔 תזכורת" to "🔔 Reminder",
+        "▶ הפרק הבא" to "▶ Next episode",
+        "דלג על הסיכום" to "Skip recap",
         "מסך מנהל" to "Admin",
         "🛡️ מסך מנהל" to "🛡️ Admin",
         "האפליקציה לא מורשית במכשיר הזה" to "This app is not authorized on this device",

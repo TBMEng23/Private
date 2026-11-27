@@ -543,22 +543,72 @@ private fun NetflixExtras(a: PlayerActivity, modifier: Modifier) {
     if (item.kind != com.tbm.iptv.data.Kind.SERIES || item.isLocal) return
     var pos by androidx.compose.runtime.remember { androidx.compose.runtime.mutableLongStateOf(0L) }
     var dur by androidx.compose.runtime.remember { androidx.compose.runtime.mutableLongStateOf(0L) }
+    var info by androidx.compose.runtime.remember(item.key) { androidx.compose.runtime.mutableStateOf<com.tbm.iptv.data.IntroSkip.Info?>(null) }
+    var recapSkipped by androidx.compose.runtime.remember(item.key) { androidx.compose.runtime.mutableStateOf(false) }
+    // הזמן שבו הכפתור עצמו קפץ – כדי לא "ללמוד" מהקפיצה של הכפתור
+    var ownJumpAt by androidx.compose.runtime.remember(item.key) { androidx.compose.runtime.mutableLongStateOf(0L) }
+    val series = item.seriesName; val season = item.season; val episode = item.episode
     LaunchedEffect(item.key) {
-        while (true) { pos = a.player.currentPosition; dur = a.player.duration; kotlinx.coroutines.delay(500) }
+        info = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            runCatching { com.tbm.iptv.data.IntroSkip.load(series, season, episode) }.getOrNull()
+        }
+    }
+    LaunchedEffect(item.key) {
+        // למידה: מזהה דילוג ידני בתחילת הפרק (כמה לחיצות חץ / גרירה ברצף) ושומר אותו לסדרה
+        var last = -1L; var steady = 0
+        var jStart = -1L; var jEnd = -1L; var jAt = 0L; var pending: Pair<Long, Long>? = null; var pendingSteady = 0
+        while (true) {
+            pos = a.player.currentPosition; dur = a.player.duration
+            val now = System.currentTimeMillis()
+            val playing = a.player.isPlaying
+            if (last >= 0) {
+                val d = pos - last
+                val jump = d > 4_000 || d < -4_000
+                if (jump && now - ownJumpAt > 3_000) {
+                    if (jStart >= 0 && now - jAt < 3_000) jEnd = pos
+                    else if (steady >= 4 && d > 0 && last in 1_000..600_000) { jStart = last; jEnd = pos } else { jStart = -1 }
+                    jAt = now; pending = null; steady = 0
+                } else if (!jump) {
+                    if (playing) steady++
+                    if (jStart >= 0 && now - jAt >= 3_000) {
+                        val len = jEnd - jStart
+                        pending = if (len in 20_000..200_000 && jEnd <= 900_000) jStart to jEnd else null
+                        jStart = -1; pendingSteady = 0
+                    }
+                    val pd = pending
+                    if (pd != null && playing && ++pendingSteady >= 30 && series != null) {
+                        com.tbm.iptv.data.IntroSkip.learn(series, season, pd.first, pd.second)
+                        val sg = com.tbm.iptv.data.IntroSkip.Seg(pd.first, pd.second)
+                        if (info?.intro == null) info = info?.copy(intro = sg) ?: com.tbm.iptv.data.IntroSkip.Info(sg, null, null, false)
+                        pending = null
+                    }
+                } else jStart = -1
+            }
+            last = pos
+            kotlinx.coroutines.delay(500)
+        }
     }
     Column(modifier.padding(end = 24.dp, bottom = 120.dp), horizontalAlignment = Alignment.End) {
-        if (!ui.introSkipped && pos in 15_000..240_000) {
-            com.tbm.iptv.ui.TvOutlinedButton(
-                onClick = { a.seekBy(85_000); ui.introSkipped = true },
-                colors = androidx.compose.material3.ButtonDefaults.outlinedButtonColors(containerColor = Color(0xCC000000)),
-            ) { Text(L("דלג על הפתיח"), color = Color.White) }
+        val bg = androidx.compose.material3.ButtonDefaults.outlinedButtonColors(containerColor = Color(0xCC000000))
+        val recap = info?.recap
+        if (recap != null && !recapSkipped && pos in (recap.start - 1_000)..(recap.end - 2_000)) {
+            com.tbm.iptv.ui.TvOutlinedButton(onClick = { ownJumpAt = System.currentTimeMillis(); a.player.seekTo(recap.end); recapSkipped = true }, colors = bg) {
+                Text(L("דלג על הסיכום"), color = Color.White)
+            }
+        }
+        val intro = info?.intro
+        if (intro != null && !ui.introSkipped && pos in (intro.start - 1_000).coerceAtLeast(0)..(intro.end - 2_000)) {
+            com.tbm.iptv.ui.TvOutlinedButton(onClick = { ownJumpAt = System.currentTimeMillis(); a.player.seekTo(intro.end); ui.introSkipped = true }, colors = bg) {
+                Text(L("דלג על הפתיח"), color = Color.White)
+            }
         }
         val left = dur - pos
-        if (ui.hasNext && dur > 120_000 && left in 1..30_000) {
+        val outroAt = info?.outro?.takeIf { it in 60_000 until dur }
+        if (ui.hasNext && dur > 120_000 && (left in 1..30_000 || (outroAt != null && pos >= outroAt && left > 0))) {
             com.tbm.iptv.ui.TvButton(
                 onClick = { a.next() },
                 colors = androidx.compose.material3.ButtonDefaults.buttonColors(containerColor = Color.White),
-            ) { Text(L("הפרק הבא בעוד {0}", left / 1000), color = Color.Black, fontWeight = FontWeight.Bold) }
+            ) { Text(if (left > 30_000) L("▶ הפרק הבא") else L("הפרק הבא בעוד {0}", left / 1000), color = Color.Black, fontWeight = FontWeight.Bold) }
         }
     }
 }
