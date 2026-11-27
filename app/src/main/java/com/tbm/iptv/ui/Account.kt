@@ -283,8 +283,6 @@ private fun DevicesAdminScreen(onBack: () -> Unit) {
         Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally) {
             Column(Modifier.widthIn(max = 640.dp).fillMaxWidth()) {
-                ElevenSettings()
-                HorizontalDivider(Modifier.padding(vertical = 14.dp))
                 Text(L("מכשירים מחוברים"), fontWeight = FontWeight.Bold, fontSize = 18.sp)
                 Spacer(Modifier.height(6.dp))
                 val l = list
