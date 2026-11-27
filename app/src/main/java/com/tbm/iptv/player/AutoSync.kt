@@ -128,8 +128,9 @@ object AutoSync {
         for (sc in scales) {
             // בקצב אחר – ההזזה הטבעית סביב אמצע החלון
             val center = (mid - mid * sc).toLong()
-            var off = center - 30_000
-            while (off <= center + 30_000) {
+            // טווח: סביב "מיושר כאן" וגם סביב "מיושר מההתחלה" (הזזה 0)
+            var off = minOf(center, 0L) - 30_000
+            while (off <= maxOf(center, 0L) + 30_000) {
                 val s = score(sc, off)
                 if (sc == 1.0) all += s
                 if (s > bestScore) { bestScore = s; best = Result(off, sc, 0.0) }
