@@ -1,5 +1,7 @@
 package com.tbm.iptv.player
 
+import kotlin.math.abs
+
 import com.tbm.iptv.L
 
 import android.app.PictureInPictureParams
@@ -71,6 +73,8 @@ class PlayerUi {
 
     var showSubs by mutableStateOf(false)
     var subSearching by mutableStateOf(false)
+    /** סנכרון אוטומטי לפי הקול: null = לא פעיל, אחרת טקסט מצב */
+    var syncStatus by mutableStateOf<String?>(null)
     var subResults by mutableStateOf<List<SubResult>>(emptyList())
     var subErrors by mutableStateOf<List<String>>(emptyList())
     var subLabel by mutableStateOf<String?>(null)
@@ -886,13 +890,15 @@ class PlayerActivity : FragmentActivity() {
                 val q = subQuery ?: SubtitleManager.buildQuery(item).also { subQuery = it }
                 val sf = SubtitleManager.download(r, q)
                 subFile = sf
-                ui.subOffset = 0
+                ui.subOffset = 0; subScale = 1.0
                 val label = "${r.provider} · ${langLabel(r.lang)}"
                 ui.subLabel = label
                 SubtitleManager.saveCache(item.key, sf, label)
                 voice?.setLanguage(sf.lang)
                 reloadWithSubtitle()
                 toast(L("נטענה כתובית: {0}", label))
+                // סנכרון אוטומטי ברקע לכל כתובית חיצונית שנטענת
+                if (Prefs.bool("sub_autosync", true)) lifecycleScope.launch { delay(4000); startAutoSync(false) }
                 return@launch
             } catch (e: Exception) {
                 if (e is kotlinx.coroutines.CancellationException) throw e
@@ -907,6 +913,48 @@ class PlayerActivity : FragmentActivity() {
     fun applyEnglishInstead() {
         ui.mtOffer = null
         ui.subResults.firstOrNull { it.lang == "en" }?.let { applySubtitle(it) } ?: toast(L("אין כתובית באנגלית"))
+    }
+
+    // ------------------------------------------------------------------ סנכרון אוטומטי לפי הקול
+    private var subScale = 1.0
+    private var syncJob: kotlinx.coroutines.Job? = null
+
+    /** מקשיבים ~דקה וחצי לפס הקול ומיישרים את הכתוביות. manual = נלחץ ע"י המשתמש (מציג הודעות גם בכישלון) */
+    fun startAutoSync(manual: Boolean) {
+        val sf = subFile ?: run { if (manual) toast(L("לא נטענה כתובית")); return }
+        if (ui.isLive) return
+        val cues = AutoSync.cues(SubtitleManager.shiftedText(sf, ui.subOffset, subScale))
+        if (cues.size < 5) { if (manual) toast(L("לא ניתן לסנכרן את הכתובית הזו")); return }
+        syncJob?.cancel()
+        val pos = player.currentPosition
+        AudioTap.arm(pos)
+        player.seekTo(pos)        // זרם חדש מנקודה ידועה – כך יודעים בדיוק איזה רגע בסרט כל דגימה
+        ui.syncStatus = L("🎧 מקשיב לפס הקול לסנכרון הכתוביות…")
+        syncJob = lifecycleScope.launch {
+            val target = 90_000L
+            var waited = 0
+            while (AudioTap.collectedMs < target) {
+                delay(1000); waited++
+                if (AudioTap.noPcm) { ui.syncStatus = null; if (manual) toast(L("לא ניתן לדגום את הקול במכשיר הזה (השמע עובר ישירות למגבר)")); return@launch }
+                if (AudioTap.aborted) {
+                    if (AudioTap.collectedMs >= 45_000) break
+                    ui.syncStatus = null; if (manual) toast(L("הסנכרון הופסק בגלל קפיצה בסרט – נסה שוב")); return@launch
+                }
+                if (waited > 240) break
+            }
+            AudioTap.stop()
+            val (base, db) = AudioTap.snapshot()
+            val res = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) { AutoSync.solve(base, db, cues) }
+            ui.syncStatus = null
+            if (res == null) { if (manual) toast(L("לא הצלחתי לזהות התאמה בטוחה – אפשר לכוון ידנית ב-±0.5")); return@launch }
+            if (abs(res.offsetMs) < 250 && res.scale == 1.0) { if (manual) toast(L("הכתוביות כבר מסונכרנות ✓")); return@launch }
+            // ההזזה החדשה מוחלת על הזמנים הנוכחיים: t' = (t·s0 + o0)·s + o
+            subScale *= res.scale
+            ui.subOffset = (ui.subOffset * res.scale).toLong() + res.offsetMs
+            reloadWithSubtitle()
+            toast(L("🎯 הכתוביות סונכרנו לפי הקול ({0} שנ'){1}", "%+.1f".format(ui.subOffset / 1000.0),
+                if (subScale != 1.0) L(" + תיקון קצב") else ""))
+        }
     }
 
     fun shiftSubtitle(deltaMs: Long) {
@@ -937,7 +985,7 @@ class PlayerActivity : FragmentActivity() {
     private fun reloadWithSubtitle() {
         val item = current ?: return
         val sf = subFile ?: return
-        val file = SubtitleManager.writeFile(sf, ui.subOffset, cacheDir)
+        val file = SubtitleManager.writeFile(sf, ui.subOffset, cacheDir, subScale)
         val pos = player.currentPosition
         val playing = player.playWhenReady
         player.setMediaItem(

@@ -944,6 +944,14 @@ private fun SubtitleDialog(a: PlayerActivity) {
                     Text("%+.1f".format(ui.subOffset / 1000.0), fontSize = 12.sp)
                     TextButton(onClick = { a.shiftSubtitle(500) }) { Text("+0.5") }
                 }
+                if (ui.subLabel != null && !ui.isLive) Row(verticalAlignment = Alignment.CenterVertically) {
+                    com.tbm.iptv.ui.TvButton(onClick = { a.startAutoSync(true) }, enabled = ui.syncStatus == null) {
+                        Text(if (ui.syncStatus == null) L("🎯 סנכרון אוטומטי לפי הקול") else L("🎧 מקשיב…"), fontSize = 12.sp)
+                    }
+                    Spacer(Modifier.size(8.dp))
+                    com.tbm.iptv.ui.TvSwitch(checked = Prefs.bool("sub_autosync", true), onCheckedChange = { Prefs.setBool("sub_autosync", it) })
+                    Text(L("אוטומטי לכל כתובית"), fontSize = 11.sp, modifier = Modifier.padding(start = 4.dp))
+                }
                 if (ui.isLive) {
                     Text(L("חיפוש כתוביות זמין לסרטים וסדרות"), fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }

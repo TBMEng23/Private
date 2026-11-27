@@ -40,7 +40,15 @@ object PlayerFactory {
         val http = OkHttpDataSource.Factory(streamClient).setUserAgent(Prefs.userAgent)
         // DefaultDataSource: קבצים מקומיים (הקלטות, כתוביות) + http דרך OkHttp
         val ds = DefaultDataSource.Factory(ctx, http)
-        val renderers = DefaultRenderersFactory(ctx)
+        // "אוזן" לפס הקול – לסנכרון כתוביות אוטומטי (לא משנה את הקול עצמו)
+        val renderers = object : DefaultRenderersFactory(ctx) {
+            override fun buildAudioSink(context: Context, enableFloatOutput: Boolean, enableAudioTrackPlaybackParams: Boolean) =
+                androidx.media3.exoplayer.audio.DefaultAudioSink.Builder(context)
+                    .setEnableFloatOutput(enableFloatOutput)
+                    .setEnableAudioTrackPlaybackParams(enableAudioTrackPlaybackParams)
+                    .setAudioProcessors(arrayOf(androidx.media3.exoplayer.audio.TeeAudioProcessor(AudioTap)))
+                    .build()
+        }
             // במכשיר חלש: FFmpeg רק כשאין מפענח חומרה (AC3/DTS וכו') – פענוח בתוכנה מעמיס על המעבד
             .setExtensionRendererMode(if (low) DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON else DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER)
             .setEnableDecoderFallback(true)

@@ -258,9 +258,13 @@ object SubtitleManager {
 
     private val tsRx = Regex("""(\d{1,2}):(\d{2}):(\d{2})([,.])(\d{3})""")
 
-    private fun shift(text: String, ms: Long): String = tsRx.replace(text) { m ->
+    /** הטקסט אחרי הזזה/קצב – לחישוב זמני הכתוביות כפי שהם מוצגים */
+    fun shiftedText(sf: SubtitleFile, offsetMs: Long, scale: Double): String =
+        if (offsetMs == 0L && scale == 1.0) sf.text else shift(sf.text, offsetMs, scale)
+
+    private fun shift(text: String, ms: Long, scale: Double = 1.0): String = tsRx.replace(text) { m ->
         val g = m.groupValues
-        val t = ((g[1].toLong() * 3600 + g[2].toLong() * 60 + g[3].toLong()) * 1000 + g[5].toLong() + ms)
+        val t = (((g[1].toLong() * 3600 + g[2].toLong() * 60 + g[3].toLong()) * 1000 + g[5].toLong()) * scale).toLong().plus(ms)
             .coerceAtLeast(0)
         "%02d:%02d:%02d%s%03d".format(t / 3_600_000, (t / 60_000) % 60, (t / 1000) % 60, g[4], t % 1000)
     }
@@ -316,9 +320,9 @@ object SubtitleManager {
     }
 
     /** כותב את הכתובית לקובץ זמני (עם היסט זמן אם נדרש) */
-    fun writeFile(sf: SubtitleFile, offsetMs: Long, dir: File): File {
+    fun writeFile(sf: SubtitleFile, offsetMs: Long, dir: File, scale: Double = 1.0): File {
         dir.listFiles()?.filter { it.name.startsWith("sub_") }?.forEach { it.delete() }
-        val text = if (offsetMs != 0L && sf.ext != "ass" && sf.ext != "ssa") shift(sf.text, offsetMs) else sf.text
+        val text = if ((offsetMs != 0L || scale != 1.0) && sf.ext != "ass" && sf.ext != "ssa") shift(sf.text, offsetMs, scale) else sf.text
         return File(dir, "sub_${System.nanoTime()}.${sf.ext}").apply { writeText(text, Charsets.UTF_8) }
     }
 }
