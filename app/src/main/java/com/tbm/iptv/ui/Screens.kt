@@ -645,10 +645,10 @@ private fun PlayerPage() {
             @Composable fun StepRow(label: String, value: Int, max: Int, set: (Int) -> Unit) {
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
                     Text(label, modifier = Modifier.weight(1f))
-                    TvTextButton(onClick = { set(steps.lastOrNull { it < value } ?: value) }) { Text("−", fontSize = 18.sp, fontWeight = FontWeight.Bold) }
+                    com.tbm.iptv.ui.TvTextButton(onClick = { set(steps.lastOrNull { it < value } ?: value) }) { Text("−", fontSize = 18.sp, fontWeight = FontWeight.Bold) }
                     Text(L("{0} שנ'", value), fontWeight = FontWeight.Bold, modifier = Modifier.width(64.dp),
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center)
-                    TvTextButton(onClick = { set(steps.firstOrNull { it > value && it <= max } ?: value) }) { Text("+", fontSize = 18.sp, fontWeight = FontWeight.Bold) }
+                    com.tbm.iptv.ui.TvTextButton(onClick = { set(steps.firstOrNull { it > value && it <= max } ?: value) }) { Text("+", fontSize = 18.sp, fontWeight = FontWeight.Bold) }
                 }
             }
             StepRow(L("קפיצה אחורה"), Prefs.seekBackSec, 120) { Prefs.seekBackSec = it }
