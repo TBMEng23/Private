@@ -38,6 +38,7 @@ object AudioTap : TeeAudioProcessor.AudioBufferSink {
 
     override fun flush(sampleRateHz: Int, channelCount: Int, encoding: Int) = synchronized(this) {
         sr = sampleRateHz; ch = channelCount; enc = encoding
+        pitchN = 0; decim = 0; decimAcc = 0.0
         if (armedBase >= 0) {
             baseMs = armedBase; armedBase = -1L
             frames = 0; binAcc = 0.0; binCount = 0; bins.clear()
@@ -53,7 +54,56 @@ object AudioTap : TeeAudioProcessor.AudioBufferSink {
         }
     }
 
+    // ---------- זיהוי גובה קול (לקריינות לפי הדובר): ~8kHz, חלונות של 40ms ----------
+    @Volatile var pitchOn = false
+    private val pitchBuf = FloatArray(320); private var pitchN = 0; private var decim = 0; private var decimAcc = 0.0
+    private val pitchLog = ArrayDeque<Pair<Long, Float>>()   // (זמן שעון, הרץ) – רק חלונות עם דיבור
+    /** חציון גובה הקול בחלון הזמן (שעון), או null אם אין מספיק דיבור */
+    fun pitchSince(fromMs: Long, minFrames: Int = 4): Float? = synchronized(pitchLog) {
+        val l = pitchLog.filter { it.first >= fromMs }.map { it.second }.sorted()
+        if (l.size < minFrames) null else l[l.size / 2]
+    }
+    private fun pitchFrame(rateHz: Int) {
+        // אוטוקורלציה מנורמלת, 60–420 הרץ
+        val n = pitchN; var e = 0.0
+        for (i in 0 until n) e += pitchBuf[i] * pitchBuf[i]
+        if (e / n < 2e-5) return
+        val minLag = rateHz / 420; val maxLag = minOf(n - 1, rateHz / 60)
+        var best = 0.0; var bestLag = 0
+        for (lag in minLag..maxLag) {
+            var c = 0.0; var e1 = 0.0; var e2 = 0.0
+            var i = 0
+            while (i + lag < n) { val a = pitchBuf[i]; val b = pitchBuf[i + lag]; c += a * b; e1 += a * a; e2 += b * b; i++ }
+            val r = c / Math.sqrt(e1 * e2 + 1e-12)
+            if (r > best) { best = r; bestLag = lag }
+        }
+        if (best < 0.55 || bestLag == 0) return
+        val hz = rateHz.toFloat() / bestLag
+        synchronized(pitchLog) {
+            pitchLog.addLast(System.currentTimeMillis() to hz)
+            while (pitchLog.size > 400) pitchLog.removeFirst()
+        }
+    }
+    private fun feedPitch(buffer: ByteBuffer) {
+        if (ch <= 0 || sr <= 0) return
+        val b = buffer.duplicate().order(ByteOrder.nativeOrder())
+        val float = enc == C.ENCODING_PCM_FLOAT
+        if (!float && enc != C.ENCODING_PCM_16BIT) return
+        val frameBytes = ch * (if (float) 4 else 2)
+        val factor = maxOf(1, sr / 8000); val rate = sr / factor
+        while (b.remaining() >= frameBytes) {
+            var m = 0.0
+            for (c in 0 until ch) m += if (float) b.float.toDouble() else b.short / 32768.0
+            decimAcc += m / ch; decim++
+            if (decim >= factor) {
+                pitchBuf[pitchN++] = (decimAcc / decim).toFloat(); decim = 0; decimAcc = 0.0
+                if (pitchN >= pitchBuf.size) { pitchFrame(rate); pitchN = 0 }
+            }
+        }
+    }
+
     override fun handleBuffer(buffer: ByteBuffer) {
+        if (pitchOn) runCatching { feedPitch(buffer) }
         if (!collecting) return
         synchronized(this) {
             if (!collecting || ch <= 0 || sr <= 0) return

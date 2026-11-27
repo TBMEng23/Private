@@ -1,5 +1,11 @@
 package com.tbm.iptv.ui
 
+import androidx.compose.runtime.rememberCoroutineScope
+
+import kotlinx.coroutines.Dispatchers
+
+import kotlinx.coroutines.withContext
+
 import com.tbm.iptv.L
 
 import android.net.Uri
@@ -1689,4 +1695,68 @@ private fun VoiceSettings() {
         }
     }
     Hint(L("קולות ☁ (רשת) נשמעים טבעיים יותר אבל צריכים אינטרנט. כשיש רק קול אחד, ההבדל בין גבר/אישה/ילד נעשה בגובה הקול."))
+    ElevenSettings()
+}
+
+/** ElevenLabs: מפתח, מנוע, וקול לכל תפקיד (גבר / אישה / ילד / זקן / זקנה / מספר) */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun ElevenSettings() {
+    val el = com.tbm.iptv.player.Eleven
+    val scope = rememberCoroutineScope()
+    var key by remember { mutableStateOf(el.key) }
+    var vs by remember { mutableStateOf<List<com.tbm.iptv.player.Eleven.V>>(emptyList()) }
+    var msg by remember { mutableStateOf<String?>(null) }
+    fun load() = scope.launch {
+        msg = L("טוען קולות…")
+        val r = runCatching { withContext(Dispatchers.IO) { el.voices() } }
+        r.onSuccess { vs = it; el.autoAssign(it); msg = if (it.isEmpty()) L("לא נמצאו קולות בחשבון – הוסף קולות מהספרייה באתר ElevenLabs") else null }
+            .onFailure { msg = L("שגיאה: {0}", it.message ?: "") }
+    }
+    LaunchedEffect(Unit) { if (el.key.isNotBlank()) load() }
+    HorizontalDivider(Modifier.padding(vertical = 10.dp))
+    Text(L("🎙 קולות AI – ElevenLabs"), fontWeight = FontWeight.Bold)
+    Hint(L("קולות טבעיים בעברית (מודל Eleven v4 Turbo). כל שורה נשלחת ל-ElevenLabs ונספרת בתווים מהמנוי שלך; שורות שחוזרות נשמרות ולא עולות שוב."))
+    OutlinedTextField(key, { key = it }, singleLine = true, label = { Text(L("מפתח API של ElevenLabs")) },
+        visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(), modifier = Modifier.fillMaxWidth())
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        TextButton(onClick = { el.key = key; load() }) { Text(L("שמור וטען קולות")) }
+        Spacer(Modifier.weight(1f))
+        Text(L("השתמש ב-ElevenLabs"), fontSize = 13.sp)
+        androidx.compose.material3.Switch(checked = Prefs.str("voice_engine", "device") == "eleven" && el.key.isNotBlank(),
+            onCheckedChange = { Prefs.setStr("voice_engine", if (it) "eleven" else "device") }, enabled = el.key.isNotBlank())
+    }
+    msg?.let { Hint(it) }
+    if (vs.isNotEmpty()) {
+        var testing by remember { mutableStateOf<android.media.MediaPlayer?>(null) }
+        listOf("man" to L("גבר"), "woman" to L("אישה"), "child" to L("ילד / ילדה"), "narrator" to L("מספר (ברירת מחדל)"))
+            .forEach { (role, label) ->
+                var open by remember { mutableStateOf(false) }
+                val cur = vs.firstOrNull { it.id == Prefs.str("el_v_$role", "") }
+                Row(Modifier.fillMaxWidth().padding(vertical = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        Text(label)
+                        Text(cur?.label ?: L("לא נבחר"), fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    TextButton(onClick = {
+                        val id = cur?.id ?: return@TextButton
+                        scope.launch {
+                            val f = runCatching { withContext(Dispatchers.IO) { el.synth(L("שלום, ככה אני נשמע בסרט."), id, "he") } }.getOrNull()
+                                ?: run { msg = L("הניסיון נכשל – בדוק את המפתח"); return@launch }
+                            testing?.release()
+                            testing = android.media.MediaPlayer().apply { setDataSource(f.path); setOnPreparedListener { it.start() }; prepareAsync() }
+                        }
+                    }) { Text(L("▶ נסה")) }
+                    Box {
+                        TextButton(onClick = { open = true }) { Text(L("בחר")) }
+                        androidx.compose.material3.DropdownMenu(open, { open = false }) {
+                            vs.forEach { v ->
+                                androidx.compose.material3.DropdownMenuItem(text = { Text(v.label) }, onClick = { el.setVoice(role, v.id); open = false })
+                            }
+                        }
+                    }
+                }
+            }
+        Hint(L(""לפי הדובר": בזמן הסרט הנגן מקשיב לקול המקורי של כל שורה – קול נמוך = גבר, גבוה = אישה, גבוה מאוד = ילד – ובוחר את הקול המתאים."))
+    }
 }

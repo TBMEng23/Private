@@ -1,6 +1,8 @@
 package com.tbm.iptv.player
 
 import android.content.Context
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 import android.os.Handler
 import android.os.Looper
 import android.speech.tts.TextToSpeech
@@ -70,6 +72,11 @@ class VoiceOver(
     private val onMissingVoice: (String) -> Unit,
 ) : TextToSpeech.OnInitListener {
     private val main = Handler(Looper.getMainLooper())
+    private val scope = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Main + kotlinx.coroutines.SupervisorJob())
+    private var elJob: kotlinx.coroutines.Job? = null
+    private var mp: android.media.MediaPlayer? = null
+    private var elFailToast = 0L
+    init { AudioTap.pitchOn = true }
     private val tts = TextToSpeech(ctx.applicationContext, this)
     private var ready = false
     private var lang = "he"
@@ -128,6 +135,7 @@ class VoiceOver(
             lines.forEach { l -> if (l.startsWith("-") || l.startsWith("–") || segs.isEmpty()) segs += l.trimStart('-', '–', ' ') else segs[segs.lastIndex] += " $l" }
         } else segs += flat.trimStart('-', '–', ' ')
         tts.stop()
+        if (Eleven.enabled) { speakEleven(segs); return }
         segs.forEachIndexed { i, text ->
             if (text.isBlank()) return@forEachIndexed
             val sp = speakerFor(text, i.coerceAtMost(1))
@@ -136,6 +144,75 @@ class VoiceOver(
             tts.setSpeechRate(Prefs.voiceRate * sp.rate)
             tts.speak(text, if (i == 0) TextToSpeech.QUEUE_FLUSH else TextToSpeech.QUEUE_ADD, null, "c${System.nanoTime()}")
         }
+    }
+
+    /** סיווג לפי גובה הקול שנשמע עכשיו בסרט (אם יש מספיק דיבור): גבר / אישה / ילד */
+    private fun pitchSpeaker(sinceMs: Long): Speaker? {
+        val hz = AudioTap.pitchSince(sinceMs) ?: return null
+        return when { hz < 165f -> Speaker.MAN; hz < 255f -> Speaker.WOMAN; else -> Speaker.CHILD }
+    }
+
+    /** ElevenLabs: מחכים רגע לשמוע את הקול המקורי (גובה → גבר/אישה/ילד), מייצרים ומנגנים */
+    private fun speakEleven(segs: List<String>) {
+        elJob?.cancel(); stopMp()
+        val cueAt = System.currentTimeMillis()
+        elJob = scope.launch {
+            val auto = VoiceCfg.style == "auto"
+            if (auto) kotlinx.coroutines.delay(380)
+            val heard = if (auto) pitchSpeaker(cueAt - 150) else null
+            for ((i, text) in segs.withIndex()) {
+                if (text.isBlank()) continue
+                val byText = speakerFor(text, i.coerceAtMost(1))
+                // שורה ראשונה: הקול שנשמע עכשיו גובר; דקדוק עברי מכריע כשאין קול ברור
+                val sp = if (i == 0 && heard != null && HebGender.detect(text) == 0) heard else byText
+                val role = when (sp) { Speaker.MAN -> "man"; Speaker.WOMAN -> "woman"; Speaker.CHILD -> "child"; else -> "narrator" }
+                val vid = Eleven.voiceFor(role).ifBlank { Eleven.voiceFor("narrator") }
+                if (vid.isBlank()) { fallbackDevice(text, sp); continue }
+                val f = try {
+                    kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { Eleven.synth(text, vid, lang) }
+                } catch (e: Exception) {
+                    if (e is kotlinx.coroutines.CancellationException) throw e
+                    if (System.currentTimeMillis() - elFailToast > 60_000) { elFailToast = System.currentTimeMillis(); onMissingVoice("ElevenLabs: " + (e.message ?: "")) }
+                    fallbackDevice(text, sp); continue
+                }
+                playFile(f)
+            }
+        }
+    }
+
+    private fun fallbackDevice(text: String, sp: Speaker) {
+        voiceFor(sp)?.let { runCatching { tts.voice = it } }
+        tts.setPitch(sp.pitch); tts.setSpeechRate(Prefs.voiceRate * sp.rate)
+        tts.speak(text, TextToSpeech.QUEUE_ADD, null, "c${System.nanoTime()}")
+    }
+
+    private suspend fun playFile(f: java.io.File) = kotlinx.coroutines.suspendCancellableCoroutine<Unit> { cont ->
+        val p = android.media.MediaPlayer()
+        mp = p
+        runCatching {
+            p.setDataSource(f.path)
+            p.setOnPreparedListener {
+                runCatching { it.playbackParams = it.playbackParams.setSpeed(Prefs.voiceRate.coerceIn(0.7f, 1.6f)) }
+                speaking++; onDuck(true); it.start()
+            }
+            p.setOnCompletionListener {
+                speaking = (speaking - 1).coerceAtLeast(0); if (speaking == 0) onDuck(false)
+                it.release(); if (mp === it) mp = null
+                if (cont.isActive) cont.resumeWith(Result.success(Unit))
+            }
+            p.setOnErrorListener { mp2, _, _ ->
+                speaking = 0; onDuck(false); mp2.release(); if (mp === mp2) mp = null
+                if (cont.isActive) cont.resumeWith(Result.success(Unit)); true
+            }
+            p.prepareAsync()
+        }.onFailure { if (cont.isActive) cont.resumeWith(Result.success(Unit)) }
+        cont.invokeOnCancellation { main.post { stopMp() } }
+    }
+
+    private fun stopMp() {
+        mp?.let { runCatching { it.stop() }; runCatching { it.release() } }
+        mp = null
+        if (speaking > 0) { speaking = 0; onDuck(false) }
     }
 
     private fun speakerFor(text: String, slot: Int): Speaker = when (VoiceCfg.style) {
@@ -158,12 +235,15 @@ class VoiceOver(
 
     fun stop() {
         last = ""
+        elJob?.cancel(); stopMp()
         if (ready) tts.stop()
         speaking = 0
         onDuck(false)
     }
 
     fun shutdown() {
+        AudioTap.pitchOn = false
+        elJob?.cancel(); stopMp(); scope.cancel()
         runCatching { tts.stop(); tts.shutdown() }
     }
 
