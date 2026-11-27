@@ -277,7 +277,8 @@ private fun GestureLayer(a: PlayerActivity) {
                             val right = o.x > width / 2f
                             // כמו יוטיוב: צד ימין = קדימה
                             if (ui.isLive) { if (right) a.next() else a.prev() }
-                            else { a.seekBy(if (right) 10_000 else -10_000); ui.gesture = if (right) "⏩ 10" else "⏪ 10" }
+                            else { a.seekBy(if (right) Prefs.seekFwdSec * 1000L else -Prefs.seekBackSec * 1000L)
+                                ui.gesture = if (right) "⏩ ${Prefs.seekFwdSec}" else "⏪ ${Prefs.seekBackSec}" }
                         }
                     },
                     onLongPress = { if (!ui.locked) a.boost(true) },
@@ -379,7 +380,7 @@ private fun Controls(a: PlayerActivity) {
                 if (ui.hasPrev) BigBtn(Icons.AutoMirrored.Filled.KeyboardArrowLeft, L("ערוץ קודם"), 56) { a.touched(); a.prev() }
                 Spacer(Modifier.width(40.dp))
             } else {
-                BigBtn(Icons.Filled.Replay10, L("10 שניות אחורה"), 48) { a.touched(); a.seekBy(-10_000) }
+                BigBtn(Icons.Filled.Replay10, L("{0} שניות אחורה", Prefs.seekBackSec), 48) { a.touched(); a.seekBy(-Prefs.seekBackSec * 1000L) }
                 Spacer(Modifier.width(36.dp))
             }
             BigBtn(if (playing) Icons.Filled.Pause else Icons.Filled.PlayArrow, L("ניגון/השהיה"), 72, filled = true,
@@ -391,7 +392,7 @@ private fun Controls(a: PlayerActivity) {
                 if (ui.hasNext) BigBtn(Icons.AutoMirrored.Filled.KeyboardArrowRight, L("ערוץ הבא"), 56) { a.touched(); a.next() }
             } else {
                 Spacer(Modifier.width(36.dp))
-                BigBtn(Icons.Filled.Forward10, L("10 שניות קדימה"), 48) { a.touched(); a.seekBy(10_000) }
+                BigBtn(Icons.Filled.Forward10, L("{0} שניות קדימה", Prefs.seekFwdSec), 48) { a.touched(); a.seekBy(Prefs.seekFwdSec * 1000L) }
             }
         } } }
 
@@ -1034,8 +1035,8 @@ private fun YtSeekBar(
             .onKeyEvent { ev ->
                 if (ev.type != androidx.compose.ui.input.key.KeyEventType.KeyDown) return@onKeyEvent false
                 when (ev.key) {
-                    androidx.compose.ui.input.key.Key.DirectionRight -> { onKeySeek(10_000); true }
-                    androidx.compose.ui.input.key.Key.DirectionLeft -> { onKeySeek(-10_000); true }
+                    androidx.compose.ui.input.key.Key.DirectionRight -> { onKeySeek(Prefs.seekFwdSec * 1000L); true }
+                    androidx.compose.ui.input.key.Key.DirectionLeft -> { onKeySeek(-Prefs.seekBackSec * 1000L); true }
                     else -> false
                 }
             }

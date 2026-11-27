@@ -1035,12 +1035,12 @@ class PlayerActivity : FragmentActivity() {
                 KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE, KeyEvent.KEYCODE_SPACE -> { togglePlay(); ui.controlsVisible = true; return true }
                 KeyEvent.KEYCODE_MEDIA_PLAY -> { player.play(); return true }
                 KeyEvent.KEYCODE_MEDIA_PAUSE -> { player.pause(); ui.controlsVisible = true; return true }
-                KeyEvent.KEYCODE_MEDIA_FAST_FORWARD -> { seekBy(30_000); return true }
-                KeyEvent.KEYCODE_MEDIA_REWIND -> { seekBy(-10_000); return true }
+                KeyEvent.KEYCODE_MEDIA_FAST_FORWARD -> { seekBy(Prefs.seekFwdSec * 3_000L); return true }
+                KeyEvent.KEYCODE_MEDIA_REWIND -> { seekBy(-Prefs.seekBackSec * 1000L); return true }
                 KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER ->
                     if (!ui.controlsVisible) { ui.controlsVisible = true; return true }
-                KeyEvent.KEYCODE_DPAD_LEFT -> if (!live && !ui.controlsVisible) { seekBy(-10_000); ui.gesture = "⏪ 10"; return true }
-                KeyEvent.KEYCODE_DPAD_RIGHT -> if (!live && !ui.controlsVisible) { seekBy(10_000); ui.gesture = "⏩ 10"; return true }
+                KeyEvent.KEYCODE_DPAD_LEFT -> if (!live && !ui.controlsVisible) { seekBy(-Prefs.seekBackSec * 1000L); ui.gesture = "⏪ ${Prefs.seekBackSec}"; return true }
+                KeyEvent.KEYCODE_DPAD_RIGHT -> if (!live && !ui.controlsVisible) { seekBy(Prefs.seekFwdSec * 1000L); ui.gesture = "⏩ ${Prefs.seekFwdSec}"; return true }
             }
             if (live && code >= KeyEvent.KEYCODE_0 && code <= KeyEvent.KEYCODE_9) {
                 zapDigit(code - KeyEvent.KEYCODE_0); return true
@@ -1074,8 +1074,8 @@ class PlayerActivity : FragmentActivity() {
                 1 -> prev()
                 2 -> togglePlay()
                 3 -> next()
-                4 -> seekBy(-10_000)
-                5 -> seekBy(10_000)
+                4 -> seekBy(-Prefs.seekBackSec * 1000L)
+                5 -> seekBy(Prefs.seekFwdSec * 1000L)
             }
             updatePip()
         }

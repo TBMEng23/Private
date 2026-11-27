@@ -639,6 +639,23 @@ private fun PlayerPage() {
             SwitchRow(L("System PiP – תמונה בתוך תמונה ביציאה מהאפליקציה"), Prefs.systemPip) { Prefs.systemPip = it }
             SwitchRow(L("ניגון אוטומטי של הפרק הבא"), Prefs.autoNext) { Prefs.autoNext = it }
             HorizontalDivider(Modifier.padding(vertical = 8.dp))
+            // קפיצות קדימה/אחורה – שלט (חיצים), הקשה כפולה, כפתורי הנגן
+            Prefs.version.intValue
+            val steps = listOf(5, 10, 15, 20, 30, 45, 60, 90, 120, 180, 300)
+            @Composable fun StepRow(label: String, value: Int, max: Int, set: (Int) -> Unit) {
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                    Text(label, modifier = Modifier.weight(1f))
+                    TvTextButton(onClick = { set(steps.lastOrNull { it < value } ?: value) }) { Text("−", fontSize = 18.sp, fontWeight = FontWeight.Bold) }
+                    Text(L("{0} שנ'", value), fontWeight = FontWeight.Bold, modifier = Modifier.width(64.dp),
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+                    TvTextButton(onClick = { set(steps.firstOrNull { it > value && it <= max } ?: value) }) { Text("+", fontSize = 18.sp, fontWeight = FontWeight.Bold) }
+                }
+            }
+            StepRow(L("קפיצה אחורה"), Prefs.seekBackSec, 120) { Prefs.seekBackSec = it }
+            StepRow(L("קפיצה קדימה"), Prefs.seekFwdSec, 300) { Prefs.seekFwdSec = it }
+            Text(L("חל על החיצים בשלט, הקשה כפולה וכפתורי הנגן. כפתור ⏩ בשלט קופץ פי 3."), fontSize = 12.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant)
+            HorizontalDivider(Modifier.padding(vertical = 8.dp))
             Text(L("קריינות AI מהכתוביות"), fontWeight = FontWeight.Bold)
             SwitchRow(L("להפעיל אוטומטית בסרטים וסדרות"), Prefs.voiceDefault) { Prefs.voiceDefault = it }
             VoiceSettings()

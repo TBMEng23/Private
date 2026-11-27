@@ -438,6 +438,14 @@ object Prefs {
         get() = bool("sub_box", false)
         set(v) = setBool("sub_box", v)
 
+    /** קפיצות בנגן (שניות): אחורה / קדימה – לשלט, הקשה כפולה וכפתורים */
+    var seekBackSec: Int
+        get() = int("seek_back", 10)
+        set(v) = setInt("seek_back", v.coerceIn(5, 120))
+    var seekFwdSec: Int
+        get() = int("seek_fwd", 10)
+        set(v) = setInt("seek_fwd", v.coerceIn(5, 300))
+
     /** רקע כתובית: 0 = שקוף (קו מתאר בלבד), 1 = חצי שקוף, 2 = שחור מלא */
     var subBg: Int
         get() = int("sub_bg", if (subBox) 2 else 0)
