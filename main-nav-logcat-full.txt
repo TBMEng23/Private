@@ -1,0 +1,555 @@
+--------- beginning of main
+11-28 13:41:57.849 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@3c1ccf7)
+11-28 13:41:57.850 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@3c1ccf7)
+11-28 13:41:58.849 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@401b764)
+11-28 13:41:58.850 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@401b764)
+11-28 13:41:59.850 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@5f3bdcd)
+11-28 13:41:59.850 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@5f3bdcd)
+11-28 13:42:00.000 E/memtrack( 1952): Couldn't load memtrack module
+11-28 13:42:00.000 W/android.os.Debug( 1952): failed to get memory consumption info: -1
+11-28 13:42:00.283 E/SurfaceFlinger( 1911): ro.sf.lcd_density must be defined as a build property
+11-28 13:42:00.283 D/gralloc_ranchu( 1586): gralloc_alloc: Creating ashmem region of size 823296
+11-28 13:42:00.291 D/HostConnection( 4715): createUnique: call
+11-28 13:42:00.292 D/HostConnection( 4715): HostConnection::get() New Host Connection established 0xf2020b90, tid 4715
+11-28 13:42:00.294 D/HostConnection( 4715): HostComposition ext ANDROID_EMU_CHECKSUM_HELPER_v1 ANDROID_EMU_native_sync_v2 ANDROID_EMU_dma_v1 ANDROID_EMU_sync_buffer_data ANDROID_EMU_hwc_color_transform ANDROID_EMU_hwc_display_power_mode GL_OES_EGL_image_external_essl3 GL_OES_vertex_array_object GL_KHR_texture_compression_astc_ldr ANDROID_EMU_host_side_tracing ANDROID_EMU_gles_max_version_3_0 
+11-28 13:42:00.295 E/eglCodecCommon( 4715): GoldfishAddressSpaceHostMemoryAllocator: ioctl_ping failed for device_type=5, ret=-1
+11-28 13:42:00.385 D/AndroidRuntime( 4724): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-28 13:42:00.387 W/app_process( 4724): Could not reserve sentinel fault page
+11-28 13:42:00.406 W/app_process( 4724): Unexpected CPU variant for X86 using defaults: x86
+11-28 13:42:00.407 I/app_process( 4724): The ClassLoaderContext is a special shared library.
+11-28 13:42:00.407 I/app_process( 4724): The ClassLoaderContext is a special shared library.
+11-28 13:42:00.415 D/AndroidRuntime( 4724): Calling main entry com.android.commands.uiautomator.Launcher
+--------- beginning of system
+11-28 13:42:00.418 V/SettingsProvider( 1952): Notifying for 0: content://settings/secure/accessibility_enabled
+11-28 13:42:00.850 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@f8b69c9)
+11-28 13:42:00.850 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@f8b69c9)
+11-28 13:42:01.456 W/AccessibilityNodeInfoDumper( 4724): Fetch time: 16ms
+11-28 13:42:01.456 W/WindowManager( 1952): removeWindowToken: Attempted to remove non-existing token: android.os.Binder@abc4193
+11-28 13:42:01.457 V/SettingsProvider( 1952): Notifying for 0: content://settings/secure/accessibility_enabled
+11-28 13:42:01.458 D/AndroidRuntime( 4724): Shutting down VM
+11-28 13:42:01.528 D/AndroidRuntime( 4737): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-28 13:42:01.549 W/app_process( 4737): Unexpected CPU variant for X86 using defaults: x86
+11-28 13:42:01.550 I/app_process( 4737): The ClassLoaderContext is a special shared library.
+11-28 13:42:01.558 D/AndroidRuntime( 4737): Calling main entry com.android.commands.input.Input
+11-28 13:42:01.559 I/Input   ( 4737): injectMotionEvent: MotionEvent { action=ACTION_DOWN, actionButton=0, id[0]=0, x[0]=160.0, y[0]=594.0, toolType[0]=TOOL_TYPE_UNKNOWN, buttonState=0, metaState=0, flags=0x0, edgeFlags=0x0, pointerCount=1, historySize=0, eventTime=215558, downTime=215558, deviceId=0, source=0x1002 }
+11-28 13:42:01.560 I/Input   ( 4737): injectMotionEvent: MotionEvent { action=ACTION_UP, actionButton=0, id[0]=0, x[0]=160.0, y[0]=594.0, toolType[0]=TOOL_TYPE_UNKNOWN, buttonState=0, metaState=0, flags=0x0, edgeFlags=0x0, pointerCount=1, historySize=0, eventTime=215558, downTime=215558, deviceId=0, source=0x1002 }
+11-28 13:42:01.561 D/AndroidRuntime( 4737): Shutting down VM
+11-28 13:42:01.850 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@4df63ef)
+11-28 13:42:01.850 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@4df63ef)
+11-28 13:42:02.850 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@d6a8efc)
+11-28 13:42:02.851 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@d6a8efc)
+11-28 13:42:03.850 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@d7d985)
+11-28 13:42:03.851 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@d7d985)
+11-28 13:42:04.851 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@20c53da)
+11-28 13:42:04.851 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@20c53da)
+11-28 13:42:05.619 D/AndroidRuntime( 4749): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-28 13:42:05.640 W/app_process( 4749): Unexpected CPU variant for X86 using defaults: x86
+11-28 13:42:05.641 I/app_process( 4749): The ClassLoaderContext is a special shared library.
+11-28 13:42:05.641 I/app_process( 4749): The ClassLoaderContext is a special shared library.
+11-28 13:42:05.649 D/AndroidRuntime( 4749): Calling main entry com.android.commands.uiautomator.Launcher
+11-28 13:42:05.851 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@8c18901)
+11-28 13:42:05.851 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@8c18901)
+11-28 13:42:06.676 W/AccessibilityNodeInfoDumper( 4749): Fetch time: 10ms
+11-28 13:42:05.652 V/SettingsProvider( 1952): Notifying for 0: content://settings/secure/accessibility_enabled
+11-28 13:42:06.676 W/WindowManager( 1952): removeWindowToken: Attempted to remove non-existing token: android.os.Binder@568500b
+11-28 13:42:06.677 V/SettingsProvider( 1952): Notifying for 0: content://settings/secure/accessibility_enabled
+11-28 13:42:06.678 D/AndroidRuntime( 4749): Shutting down VM
+11-28 13:42:06.751 D/AndroidRuntime( 4764): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-28 13:42:06.771 W/app_process( 4764): Unexpected CPU variant for X86 using defaults: x86
+11-28 13:42:06.772 I/app_process( 4764): The ClassLoaderContext is a special shared library.
+11-28 13:42:06.780 D/AndroidRuntime( 4764): Calling main entry com.android.commands.input.Input
+11-28 13:42:06.781 I/Input   ( 4764): injectMotionEvent: MotionEvent { action=ACTION_DOWN, actionButton=0, id[0]=0, x[0]=137.0, y[0]=144.0, toolType[0]=TOOL_TYPE_UNKNOWN, buttonState=0, metaState=0, flags=0x0, edgeFlags=0x0, pointerCount=1, historySize=0, eventTime=220780, downTime=220780, deviceId=0, source=0x1002 }
+11-28 13:42:06.790 I/Input   ( 4764): injectMotionEvent: MotionEvent { action=ACTION_UP, actionButton=0, id[0]=0, x[0]=137.0, y[0]=144.0, toolType[0]=TOOL_TYPE_UNKNOWN, buttonState=0, metaState=0, flags=0x0, edgeFlags=0x0, pointerCount=1, historySize=0, eventTime=220780, downTime=220780, deviceId=0, source=0x1002 }
+11-28 13:42:06.792 D/AndroidRuntime( 4764): Shutting down VM
+11-28 13:42:06.851 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@c49e1e7)
+11-28 13:42:06.851 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@c49e1e7)
+11-28 13:42:07.851 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@df3c194)
+11-28 13:42:07.851 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@df3c194)
+11-28 13:42:08.851 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@23cb43d)
+11-28 13:42:08.851 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@23cb43d)
+11-28 13:42:09.851 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@6f18432)
+11-28 13:42:09.851 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@6f18432)
+11-28 13:42:10.832 E/SurfaceFlinger( 1911): ro.sf.lcd_density must be defined as a build property
+11-28 13:42:10.833 D/gralloc_ranchu( 1586): gralloc_alloc: Creating ashmem region of size 823296
+11-28 13:42:10.841 D/HostConnection( 4776): createUnique: call
+11-28 13:42:10.841 D/HostConnection( 4776): HostConnection::get() New Host Connection established 0xf1aa0b90, tid 4776
+11-28 13:42:10.844 D/HostConnection( 4776): HostComposition ext ANDROID_EMU_CHECKSUM_HELPER_v1 ANDROID_EMU_native_sync_v2 ANDROID_EMU_dma_v1 ANDROID_EMU_sync_buffer_data ANDROID_EMU_hwc_color_transform ANDROID_EMU_hwc_display_power_mode GL_OES_EGL_image_external_essl3 GL_OES_vertex_array_object GL_KHR_texture_compression_astc_ldr ANDROID_EMU_host_side_tracing ANDROID_EMU_gles_max_version_3_0 
+11-28 13:42:10.844 E/eglCodecCommon( 4776): GoldfishAddressSpaceHostMemoryAllocator: ioctl_ping failed for device_type=5, ret=-1
+11-28 13:42:10.851 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@bc8b583)
+11-28 13:42:10.851 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@bc8b583)
+11-28 13:42:10.907 D/AndroidRuntime( 4780): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-28 13:42:10.927 W/app_process( 4780): Unexpected CPU variant for X86 using defaults: x86
+11-28 13:42:10.928 I/app_process( 4780): The ClassLoaderContext is a special shared library.
+11-28 13:42:10.928 I/app_process( 4780): The ClassLoaderContext is a special shared library.
+11-28 13:42:10.937 D/AndroidRuntime( 4780): Calling main entry com.android.commands.uiautomator.Launcher
+11-28 13:42:11.852 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@22fb17e)
+11-28 13:42:11.852 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@22fb17e)
+11-28 13:42:11.965 W/AccessibilityNodeInfoDumper( 4780): Fetch time: 13ms
+11-28 13:42:10.940 V/SettingsProvider( 1952): Notifying for 0: content://settings/secure/accessibility_enabled
+11-28 13:42:11.966 W/WindowManager( 1952): removeWindowToken: Attempted to remove non-existing token: android.os.Binder@2156300
+11-28 13:42:11.966 V/SettingsProvider( 1952): Notifying for 0: content://settings/secure/accessibility_enabled
+11-28 13:42:11.968 D/AndroidRuntime( 4780): Shutting down VM
+11-28 13:42:12.037 D/AndroidRuntime( 4796): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-28 13:42:12.057 W/app_process( 4796): Unexpected CPU variant for X86 using defaults: x86
+11-28 13:42:12.057 I/app_process( 4796): The ClassLoaderContext is a special shared library.
+11-28 13:42:12.058 I/app_process( 4796): The ClassLoaderContext is a special shared library.
+11-28 13:42:12.066 D/AndroidRuntime( 4796): Calling main entry com.android.commands.uiautomator.Launcher
+11-28 13:42:12.852 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@191678a)
+11-28 13:42:12.852 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@191678a)
+11-28 13:42:13.088 W/AccessibilityNodeInfoDumper( 4796): Fetch time: 10ms
+11-28 13:42:12.069 V/SettingsProvider( 1952): Notifying for 0: content://settings/secure/accessibility_enabled
+11-28 13:42:13.088 W/WindowManager( 1952): removeWindowToken: Attempted to remove non-existing token: android.os.Binder@7edaf2c
+11-28 13:42:13.089 V/SettingsProvider( 1952): Notifying for 0: content://settings/secure/accessibility_enabled
+11-28 13:42:13.091 D/AndroidRuntime( 4796): Shutting down VM
+11-28 13:42:13.158 D/AndroidRuntime( 4810): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-28 13:42:13.178 W/app_process( 4810): Unexpected CPU variant for X86 using defaults: x86
+11-28 13:42:13.179 I/app_process( 4810): The ClassLoaderContext is a special shared library.
+11-28 13:42:13.187 D/AndroidRuntime( 4810): Calling main entry com.android.commands.input.Input
+11-28 13:42:13.188 I/Input   ( 4810): injectMotionEvent: MotionEvent { action=ACTION_DOWN, actionButton=0, id[0]=0, x[0]=185.0, y[0]=210.0, toolType[0]=TOOL_TYPE_UNKNOWN, buttonState=0, metaState=0, flags=0x0, edgeFlags=0x0, pointerCount=1, historySize=0, eventTime=227187, downTime=227187, deviceId=0, source=0x1002 }
+11-28 13:42:13.189 I/Input   ( 4810): injectMotionEvent: MotionEvent { action=ACTION_UP, actionButton=0, id[0]=0, x[0]=185.0, y[0]=210.0, toolType[0]=TOOL_TYPE_UNKNOWN, buttonState=0, metaState=0, flags=0x0, edgeFlags=0x0, pointerCount=1, historySize=0, eventTime=227187, downTime=227187, deviceId=0, source=0x1002 }
+11-28 13:42:13.190 D/AndroidRuntime( 4810): Shutting down VM
+11-28 13:42:13.852 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@a1c9218)
+11-28 13:42:13.852 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@a1c9218)
+11-28 13:42:14.852 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@93db471)
+11-28 13:42:14.852 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@93db471)
+11-28 13:42:15.852 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@ca67256)
+11-28 13:42:15.852 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@ca67256)
+11-28 13:42:16.852 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@e3912d7)
+11-28 13:42:16.852 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@e3912d7)
+11-28 13:42:17.852 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@b54b7c4)
+11-28 13:42:17.853 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@b54b7c4)
+11-28 13:42:18.852 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@8a826ad)
+11-28 13:42:18.853 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@8a826ad)
+11-28 13:42:19.225 E/SurfaceFlinger( 1911): ro.sf.lcd_density must be defined as a build property
+11-28 13:42:19.226 D/gralloc_ranchu( 1586): gralloc_alloc: Creating ashmem region of size 823296
+11-28 13:42:19.232 D/HostConnection( 4822): createUnique: call
+11-28 13:42:19.233 D/HostConnection( 4822): HostConnection::get() New Host Connection established 0xf0720b90, tid 4822
+11-28 13:42:19.235 D/HostConnection( 4822): HostComposition ext ANDROID_EMU_CHECKSUM_HELPER_v1 ANDROID_EMU_native_sync_v2 ANDROID_EMU_dma_v1 ANDROID_EMU_sync_buffer_data ANDROID_EMU_hwc_color_transform ANDROID_EMU_hwc_display_power_mode GL_OES_EGL_image_external_essl3 GL_OES_vertex_array_object GL_KHR_texture_compression_astc_ldr ANDROID_EMU_host_side_tracing ANDROID_EMU_gles_max_version_3_0 
+11-28 13:42:19.235 E/eglCodecCommon( 4822): GoldfishAddressSpaceHostMemoryAllocator: ioctl_ping failed for device_type=5, ret=-1
+11-28 13:42:19.299 D/AndroidRuntime( 4826): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-28 13:42:19.319 W/app_process( 4826): Unexpected CPU variant for X86 using defaults: x86
+11-28 13:42:19.320 I/app_process( 4826): The ClassLoaderContext is a special shared library.
+11-28 13:42:19.320 I/app_process( 4826): The ClassLoaderContext is a special shared library.
+11-28 13:42:19.329 D/AndroidRuntime( 4826): Calling main entry com.android.commands.uiautomator.Launcher
+11-28 13:42:19.853 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@4c78c30)
+11-28 13:42:19.853 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@4c78c30)
+11-28 13:42:20.360 W/AccessibilityNodeInfoDumper( 4826): Fetch time: 13ms
+11-28 13:42:19.332 V/SettingsProvider( 1952): Notifying for 0: content://settings/secure/accessibility_enabled
+11-28 13:42:20.360 W/WindowManager( 1952): removeWindowToken: Attempted to remove non-existing token: android.os.Binder@22f5de2
+11-28 13:42:20.360 V/SettingsProvider( 1952): Notifying for 0: content://settings/secure/accessibility_enabled
+11-28 13:42:20.363 D/AndroidRuntime( 4826): Shutting down VM
+11-28 13:42:20.430 D/AndroidRuntime( 4840): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-28 13:42:20.450 W/app_process( 4840): Unexpected CPU variant for X86 using defaults: x86
+11-28 13:42:20.451 I/app_process( 4840): The ClassLoaderContext is a special shared library.
+11-28 13:42:20.459 D/AndroidRuntime( 4840): Calling main entry com.android.commands.input.Input
+11-28 13:42:20.460 I/Input   ( 4840): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_BACK, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=234459, downTime=234459, deviceId=-1, source=0x101 }
+11-28 13:42:20.462 I/Input   ( 4840): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_BACK, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=234459, downTime=234459, deviceId=-1, source=0x101 }
+11-28 13:42:20.462 D/AutofillManagerService( 1952): onBackKeyPressed()
+11-28 13:42:20.463 D/AndroidRuntime( 4840): Shutting down VM
+11-28 13:42:20.463 W/TelecomManager( 1952): Telecom Service not found.
+11-28 13:42:20.465 D/TVNotifService( 2477): skipped remove notification StatusBarNotification(pkg=android user=UserHandle{-1} id=8 tag=null key=-1|android|8|null|1000: Notification(channel=VIRTUAL_KEYBOARD pri=0 contentView=null vibrate=null sound=null defaults=0x0 flags=0x2 color=0xff607d8b category=sys vis=PRIVATE)) userId: 0
+11-28 13:42:20.476 D/EGL_emulation( 2147): eglMakeCurrent: 0xdfe853c0: ver 3 0 (tinfo 0xce1f4dd0)
+11-28 13:42:20.853 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@bb799f4)
+11-28 13:42:20.853 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@bb799f4)
+11-28 13:42:21.853 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@4cd151d)
+11-28 13:42:21.853 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@4cd151d)
+11-28 13:42:22.853 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@92f0392)
+11-28 13:42:22.853 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@92f0392)
+11-28 13:42:23.853 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@1073163)
+11-28 13:42:23.853 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@1073163)
+11-28 13:42:24.524 D/AndroidRuntime( 4851): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-28 13:42:24.544 W/app_process( 4851): Unexpected CPU variant for X86 using defaults: x86
+11-28 13:42:24.545 I/app_process( 4851): The ClassLoaderContext is a special shared library.
+11-28 13:42:24.553 D/AndroidRuntime( 4851): Calling main entry com.android.commands.input.Input
+11-28 13:42:24.553 I/Input   ( 4851): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_BACK, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=238553, downTime=238553, deviceId=-1, source=0x101 }
+11-28 13:42:24.554 I/Input   ( 4851): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_BACK, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=238553, downTime=238553, deviceId=-1, source=0x101 }
+11-28 13:42:24.556 D/AndroidRuntime( 4851): Shutting down VM
+11-28 13:42:24.558 D/gralloc_ranchu( 1586): gralloc_alloc: Creating ashmem region of size 823296
+11-28 13:42:24.554 D/AutofillManagerService( 1952): onBackKeyPressed()
+11-28 13:42:24.561 W/LocalDisplayAdapter( 1952): Unable to find color mode 0, ignoring request.
+11-28 13:42:24.561 I/ActivityManager( 1952): Config changes=20000d80 {1.0 ?mcc?mnc [en_US] ldltr sw246dp w320dp h246dp 160dpi smll land television finger -keyb/v/h tball/v winConfig={ mBounds=Rect(0, 0 - 320, 640) mAppBounds=Rect(0, 0 - 320, 246) mWindowingMode=fullscreen mActivityType=undefined} s.8}
+11-28 13:42:24.562 I/ActivityManager( 1952): Override config changes=20000d80 {1.0 ?mcc?mnc [en_US] ldltr sw246dp w320dp h246dp 160dpi smll land television finger -keyb/v/h tball/v winConfig={ mBounds=Rect(0, 0 - 320, 640) mAppBounds=Rect(0, 0 - 320, 246) mWindowingMode=fullscreen mActivityType=undefined} s.8} for displayId=0
+11-28 13:42:24.563 W/LocalDisplayAdapter( 1952): Unable to find color mode 0, ignoring request.
+11-28 13:42:24.570 I/InputReader( 1952): Reconfiguring input devices.  changes=0x00000004
+11-28 13:42:24.570 I/InputReader( 1952): Device reconfigured: id=0, name='qwerty2', size 320x640, orientation 0, mode 1, display id 0
+11-28 13:42:24.571 I/InputReader( 1952): Reconfiguring input devices.  changes=0x00000004
+11-28 13:42:24.581 E/DataLoader( 2701): Exception in onStartLoading() on registering content observer for content uri: content://com.google.android.katniss.search.searchapi.VoiceInteractionProvider/sharedvalue
+11-28 13:42:24.581 E/DataLoader( 2701): java.lang.SecurityException: Failed to find provider com.google.android.katniss.search.searchapi.VoiceInteractionProvider for user 0; expected to find a valid ContentProvider for this authority
+11-28 13:42:24.581 E/DataLoader( 2701): 	at android.os.Parcel.createException(Parcel.java:1950)
+11-28 13:42:24.581 E/DataLoader( 2701): 	at android.os.Parcel.readException(Parcel.java:1918)
+11-28 13:42:24.581 E/DataLoader( 2701): 	at android.os.Parcel.readException(Parcel.java:1868)
+11-28 13:42:24.581 E/DataLoader( 2701): 	at android.content.IContentService$Stub$Proxy.registerContentObserver(IContentService.java:779)
+11-28 13:42:24.581 E/DataLoader( 2701): 	at android.content.ContentResolver.registerContentObserver(ContentResolver.java:1972)
+11-28 13:42:24.581 E/DataLoader( 2701): 	at android.content.ContentResolver.registerContentObserver(ContentResolver.java:1961)
+11-28 13:42:24.581 E/DataLoader( 2701): 	at com.google.android.tvlauncher.data.DataLoader.onStartLoading(DataLoader.java:75)
+11-28 13:42:24.581 E/DataLoader( 2701): 	at android.content.Loader.startLoading(Loader.java:303)
+11-28 13:42:24.581 E/DataLoader( 2701): 	at android.app.LoaderManagerImpl$LoaderInfo.start(LoaderManager.java:291)
+11-28 13:42:24.581 E/DataLoader( 2701): 	at android.app.LoaderManagerImpl.doStart(LoaderManager.java:791)
+11-28 13:42:24.581 E/DataLoader( 2701): 	at android.app.Fragment.onStart(Fragment.java:1645)
+11-28 13:42:24.581 E/DataLoader( 2701): 	at com.google.android.tvlauncher.home.HomeFragment.onStart(HomeFragment.java:306)
+11-28 13:42:24.581 E/DataLoader( 2701): 	at android.app.Fragment.performStart(Fragment.java:2548)
+11-28 13:42:24.581 E/DataLoader( 2701): 	at android.app.FragmentManagerImpl.moveToState(FragmentManager.java:1334)
+11-28 13:42:24.581 E/DataLoader( 2701): 	at android.app.FragmentManagerImpl.moveFragmentToExpectedState(FragmentManager.java:1576)
+11-28 13:42:24.581 E/DataLoader( 2701): 	at android.app.FragmentManagerImpl.moveToState(FragmentManager.java:1637)
+11-28 13:42:24.581 E/DataLoader( 2701): 	at android.app.FragmentManagerImpl.dispatchMoveToState(FragmentManager.java:3046)
+11-28 13:42:24.581 E/DataLoader( 2701): 	at android.app.FragmentManagerImpl.dispatchStart(FragmentManager.java:3003)
+11-28 13:42:24.581 E/DataLoader( 2701): 	at android.app.FragmentController.dispatchStart(FragmentController.java:193)
+11-28 13:42:24.581 E/DataLoader( 2701): 	at android.app.Activity.performStart(Activity.java:7165)
+11-28 13:42:24.581 E/DataLoader( 2701): 	at android.app.ActivityThread.handleStartActivity(ActivityThread.java:2937)
+11-28 13:42:24.581 E/DataLoader( 2701): 	at android.app.servertransaction.TransactionExecutor.performLifecycleSequence(TransactionExecutor.java:180)
+11-28 13:42:24.581 E/DataLoader( 2701): 	at android.app.servertransaction.TransactionExecutor.cycleToPath(TransactionExecutor.java:165)
+11-28 13:42:24.581 E/DataLoader( 2701): 	at android.app.servertransaction.TransactionExecutor.executeLifecycleState(TransactionExecutor.java:142)
+11-28 13:42:24.581 E/DataLoader( 2701): 	at android.app.servertransaction.TransactionExecutor.execute(TransactionExecutor.java:70)
+11-28 13:42:24.581 E/DataLoader( 2701): 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:1808)
+11-28 13:42:24.581 E/DataLoader( 2701): 	at android.os.Handler.dispatchMessage(Handler.java:106)
+11-28 13:42:24.581 E/DataLoader( 2701): 	at android.os.Looper.loop(Looper.java:193)
+11-28 13:42:24.581 E/DataLoader( 2701): 	at android.app.ActivityThread.main(ActivityThread.java:6669)
+11-28 13:42:24.581 E/DataLoader( 2701): 	at java.lang.reflect.Method.invoke(Native Method)
+11-28 13:42:24.581 E/DataLoader( 2701): 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:493)
+11-28 13:42:24.581 E/DataLoader( 2701): 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:858)
+11-28 13:42:24.581 E/DataLoader( 2701): Caused by: android.os.RemoteException: Remote stack trace:
+11-28 13:42:24.581 E/DataLoader( 2701): 	at com.android.server.content.ContentService.registerContentObserver(ContentService.java:340)
+11-28 13:42:24.581 E/DataLoader( 2701): 	at android.content.IContentService$Stub.onTransact(IContentService.java:76)
+11-28 13:42:24.581 E/DataLoader( 2701): 	at com.android.server.content.ContentService.onTransact(ContentService.java:262)
+11-28 13:42:24.581 E/DataLoader( 2701): 	at android.os.Binder.execTransact(Binder.java:731)
+11-28 13:42:24.581 E/DataLoader( 2701): 
+11-28 13:42:24.581 E/DataLoader( 2701): Exception in onStartLoading() on registering content observer for content uri: content://tvlauncher.mic/farfield_mic_status
+11-28 13:42:24.581 E/DataLoader( 2701): java.lang.SecurityException: Failed to find provider tvlauncher.mic for user 0; expected to find a valid ContentProvider for this authority
+11-28 13:42:24.581 E/DataLoader( 2701): 	at android.os.Parcel.createException(Parcel.java:1950)
+11-28 13:42:24.581 E/DataLoader( 2701): 	at android.os.Parcel.readException(Parcel.java:1918)
+11-28 13:42:24.581 E/DataLoader( 2701): 	at android.os.Parcel.readException(Parcel.java:1868)
+11-28 13:42:24.581 E/DataLoader( 2701): 	at android.content.IContentService$Stub$Proxy.registerContentObserver(IContentService.java:779)
+11-28 13:42:24.581 E/DataLoader( 2701): 	at android.content.ContentResolver.registerContentObserver(ContentResolver.java:1972)
+11-28 13:42:24.581 E/DataLoader( 2701): 	at android.content.ContentResolver.registerContentObserver(ContentResolver.java:1961)
+11-28 13:42:24.581 E/DataLoader( 2701): 	at com.google.android.tvlauncher.data.DataLoader.onStartLoading(DataLoader.java:75)
+11-28 13:42:24.581 E/DataLoader( 2701): 	at android.content.Loader.startLoading(Loader.java:303)
+11-28 13:42:24.581 E/DataLoader( 2701): 	at android.app.LoaderManagerImpl$LoaderInfo.start(LoaderManager.java:291)
+11-28 13:42:24.581 E/DataLoader( 2701): 	at android.app.LoaderManagerImpl.doStart(LoaderManager.java:791)
+11-28 13:42:24.581 E/DataLoader( 2701): 	at android.app.Fragment.onStart(Fragment.java:1645)
+11-28 13:42:24.581 E/DataLoader( 2701): 	at com.google.android.tvlauncher.home.HomeFragment.onStart(HomeFragment.java:306)
+11-28 13:42:24.581 E/DataLoader( 2701): 	at android.app.Fragment.performStart(Fragment.java:2548)
+11-28 13:42:24.581 E/DataLoader( 2701): 	at android.app.FragmentManagerImpl.moveToState(FragmentManager.java:1334)
+11-28 13:42:24.581 E/DataLoader( 2701): 	at android.app.FragmentManagerImpl.moveFragmentToExpectedState(FragmentManager.java:1576)
+11-28 13:42:24.581 E/DataLoader( 2701): 	at android.app.FragmentManagerImpl.moveToState(FragmentManager.java:1637)
+11-28 13:42:24.581 E/DataLoader( 2701): 	at android.app.FragmentManagerImpl.dispatchMoveToState(FragmentManager.java:3046)
+11-28 13:42:24.581 E/DataLoader( 2701): 	at android.app.FragmentManagerImpl.dispatchStart(FragmentManager.java:3003)
+11-28 13:42:24.581 E/DataLoader( 2701): 	at android.app.FragmentController.dispatchStart(FragmentController.java:193)
+11-28 13:42:24.581 E/DataLoader( 2701): 	at android.app.Activity.performStart(Activity.java:7165)
+11-28 13:42:24.581 E/DataLoader( 2701): 	at android.app.ActivityThread.handleStartActivity(ActivityThread.java:2937)
+11-28 13:42:24.581 E/DataLoader( 2701): 	at android.app.servertransaction.TransactionExecutor.performLifecycleSequence(TransactionExecutor.java:180)
+11-28 13:42:24.581 E/DataLoader( 2701): 	at android.app.servertransaction.TransactionExecutor.cycleToPath(TransactionExecutor.java:165)
+11-28 13:42:24.581 E/DataLoader( 2701): 	at android.app.servertransaction.TransactionExecutor.executeLifecycleState(TransactionExecutor.java:142)
+11-28 13:42:24.581 E/DataLoader( 2701): 	at android.app.servertransaction.TransactionExecutor.execute(TransactionExecutor.java:70)
+11-28 13:42:24.581 E/DataLoader( 2701): 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:1808)
+11-28 13:42:24.581 E/DataLoader( 2701): 	at android.os.Handler.dispatchMessage(Handler.java:106)
+11-28 13:42:24.581 E/DataLoader( 2701): 	at android.os.Looper.loop(Looper.java:193)
+11-28 13:42:24.581 E/DataLoader( 2701): 	at android.app.ActivityThread.main(ActivityThread.java:6669)
+11-28 13:42:24.581 E/DataLoader( 2701): 	at java.lang.reflect.Method.invoke(Native Method)
+11-28 13:42:24.581 E/DataLoader( 2701): 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:493)
+11-28 13:42:24.581 E/DataLoader( 2701): 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:858)
+11-28 13:42:24.582 E/PrtnrWidgetInfoLdr( 2701): Exception in onStartLoading() on registering content observer
+11-28 13:42:24.582 E/PrtnrWidgetInfoLdr( 2701): java.lang.SecurityException: Failed to find provider tvlauncher.widget for user 0; expected to find a valid ContentProvider for this authority
+11-28 13:42:24.582 E/PrtnrWidgetInfoLdr( 2701): 	at android.os.Parcel.createException(Parcel.java:1950)
+11-28 13:42:24.582 E/PrtnrWidgetInfoLdr( 2701): 	at android.os.Parcel.readException(Parcel.java:1918)
+11-28 13:42:24.582 E/PrtnrWidgetInfoLdr( 2701): 	at android.os.Parcel.readException(Parcel.java:1868)
+11-28 13:42:24.582 E/PrtnrWidgetInfoLdr( 2701): 	at android.content.IContentService$Stub$Proxy.registerContentObserver(IContentService.java:779)
+11-28 13:42:24.582 E/PrtnrWidgetInfoLdr( 2701): 	at android.content.ContentResolver.registerContentObserver(ContentResolver.java:1972)
+11-28 13:42:24.582 E/PrtnrWidgetInfoLdr( 2701): 	at android.content.ContentResolver.registerContentObserver(ContentResolver.java:1961)
+11-28 13:42:24.582 E/PrtnrWidgetInfoLdr( 2701): 	at com.google.android.tvlauncher.data.PartnerWidgetInfoLoader.onStartLoading(PartnerWidgetInfoLoader.java:66)
+11-28 13:42:24.582 E/PrtnrWidgetInfoLdr( 2701): 	at android.content.Loader.startLoading(Loader.java:303)
+11-28 13:42:24.582 E/PrtnrWidgetInfoLdr( 2701): 	at android.app.LoaderManagerImpl$LoaderInfo.start(LoaderManager.java:291)
+11-28 13:42:24.582 E/PrtnrWidgetInfoLdr( 2701): 	at android.app.LoaderManagerImpl.doStart(LoaderManager.java:791)
+11-28 13:42:24.582 E/PrtnrWidgetInfoLdr( 2701): 	at android.app.Fragment.onStart(Fragment.java:1645)
+11-28 13:42:24.582 E/PrtnrWidgetInfoLdr( 2701): 	at com.google.android.tvlauncher.home.HomeFragment.onStart(HomeFragment.java:306)
+11-28 13:42:24.582 E/PrtnrWidgetInfoLdr( 2701): 	at android.app.Fragment.performStart(Fragment.java:2548)
+11-28 13:42:24.582 E/PrtnrWidgetInfoLdr( 2701): 	at android.app.FragmentManagerImpl.moveToState(FragmentManager.java:1334)
+11-28 13:42:24.582 E/PrtnrWidgetInfoLdr( 2701): 	at android.app.FragmentManagerImpl.moveFragmentToExpectedState(FragmentManager.java:1576)
+11-28 13:42:24.582 E/PrtnrWidgetInfoLdr( 2701): 	at android.app.FragmentManagerImpl.moveToState(FragmentManager.java:1637)
+11-28 13:42:24.582 E/PrtnrWidgetInfoLdr( 2701): 	at android.app.FragmentManagerImpl.dispatchMoveToState(FragmentManager.java:3046)
+11-28 13:42:24.582 E/PrtnrWidgetInfoLdr( 2701): 	at android.app.FragmentManagerImpl.dispatchStart(FragmentManager.java:3003)
+11-28 13:42:24.582 E/PrtnrWidgetInfoLdr( 2701): 	at android.app.FragmentController.dispatchStart(FragmentController.java:193)
+11-28 13:42:24.582 E/PrtnrWidgetInfoLdr( 2701): 	at android.app.Activity.performStart(Activity.java:7165)
+11-28 13:42:24.582 E/PrtnrWidgetInfoLdr( 2701): 	at android.app.ActivityThread.handleStartActivity(ActivityThread.java:2937)
+11-28 13:42:24.582 E/PrtnrWidgetInfoLdr( 2701): 	at android.app.servertransaction.TransactionExecutor.performLifecycleSequence(TransactionExecutor.java:180)
+11-28 13:42:24.582 E/PrtnrWidgetInfoLdr( 2701): 	at android.app.servertransaction.TransactionExecutor.cycleToPath(TransactionExecutor.java:165)
+11-28 13:42:24.582 E/PrtnrWidgetInfoLdr( 2701): 	at android.app.servertransaction.TransactionExecutor.executeLifecycleState(TransactionExecutor.java:142)
+11-28 13:42:24.582 E/PrtnrWidgetInfoLdr( 2701): 	at android.app.servertransaction.TransactionExecutor.execute(TransactionExecutor.java:70)
+11-28 13:42:24.582 E/PrtnrWidgetInfoLdr( 2701): 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:1808)
+11-28 13:42:24.582 E/PrtnrWidgetInfoLdr( 2701): 	at android.os.Handler.dispatchMessage(Handler.java:106)
+11-28 13:42:24.582 E/PrtnrWidgetInfoLdr( 2701): 	at android.os.Looper.loop(Looper.java:193)
+11-28 13:42:24.582 E/PrtnrWidgetInfoLdr( 2701): 	at android.app.ActivityThread.main(ActivityThread.java:6669)
+11-28 13:42:24.582 E/PrtnrWidgetInfoLdr( 2701): 	at java.lang.reflect.Method.invoke(Native Method)
+11-28 13:42:24.582 E/PrtnrWidgetInfoLdr( 2701): 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:493)
+11-28 13:42:24.582 E/PrtnrWidgetInfoLdr( 2701): 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:858)
+11-28 13:42:24.584 D/NotifInteractonRcvr( 2477): Show unseen default level notification toasts
+11-28 13:42:24.591 D/gralloc_ranchu( 1586): gralloc_alloc: Creating ashmem region of size 315392
+11-28 13:42:24.591 E/ActivityThread( 2701): Failed to find provider info for tvlauncher.mic
+11-28 13:42:24.591 D/gralloc_ranchu( 1586): gralloc_alloc: Creating ashmem region of size 315392
+11-28 13:42:24.596 E/ActivityThread( 2701): Failed to find provider info for tvlauncher.widget
+11-28 13:42:24.592 D/gralloc_ranchu( 1586): gralloc_alloc: Creating ashmem region of size 315392
+11-28 13:42:24.598 W/SurfaceFlinger( 1911): Attempting to destroy on removed layer: 29b0db9 DockedStackDivider#0
+11-28 13:42:24.600 E/ActivityThread( 2701): Failed to find provider info for com.google.android.katniss.search.searchapi.VoiceInteractionProvider
+11-28 13:42:24.607 D/EGL_emulation( 2701): eglMakeCurrent: 0xce3d6300: ver 3 0 (tinfo 0xce3d5610)
+11-28 13:42:24.626 D/EGL_emulation( 3825): eglMakeCurrent: 0xdfe85ae0: ver 3 0 (tinfo 0xdfe839b0)
+11-28 13:42:24.626 I/WindowManager( 1952): Screen frozen for +69ms due to Window{36a906d u0 com.google.android.tvlauncher/com.google.android.tvlauncher.HomeScreen}
+11-28 13:42:24.628 D/EGL_emulation( 2701): eglMakeCurrent: 0xce3d6300: ver 3 0 (tinfo 0xce3d5610)
+11-28 13:42:24.629 D/gralloc_ranchu( 1586): gralloc_alloc: Creating ashmem region of size 315392
+11-28 13:42:24.630 D/EGL_emulation( 2701): eglMakeCurrent: 0xce3d6300: ver 3 0 (tinfo 0xce3d5610)
+11-28 13:42:24.635 D/gralloc_ranchu( 1586): gralloc_alloc: Creating ashmem region of size 315392
+11-28 13:42:24.640 D/gralloc_ranchu( 1586): gralloc_alloc: Creating ashmem region of size 315392
+11-28 13:42:24.853 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@6cfa38e)
+11-28 13:42:24.854 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@6cfa38e)
+11-28 13:42:25.854 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@98f2254)
+11-28 13:42:25.854 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@98f2254)
+11-28 13:42:26.644 I/system_server( 1952): Explicit concurrent copying GC freed 54024(2MB) AllocSpace objects, 25(500KB) LOS objects, 42% free, 5MB/9MB, paused 16us total 15.045ms
+11-28 13:42:26.854 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@ec16516)
+11-28 13:42:26.854 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@ec16516)
+11-28 13:42:27.587 D/TVNotifService( 2477): getConnectedInstanceBlocking - block
+11-28 13:42:27.587 D/TVNotifService( 2477): getConnectedInstanceBlockingWithTimeout - done
+11-28 13:42:27.601 D/hwcomposer( 1777): hw_composer sent 120 syncs in 94s
+11-28 13:42:27.602 E/Clearcut-EventLogger( 2701): Unexpected log parameter tray_notification_count
+11-28 13:42:27.788 E/TaskPersister( 1952): File error accessing recents directory (directory doesn't exist?).
+11-28 13:42:27.854 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@a28ee97)
+11-28 13:42:27.854 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@a28ee97)
+11-28 13:42:28.619 E/SurfaceFlinger( 1911): ro.sf.lcd_density must be defined as a build property
+11-28 13:42:28.619 D/gralloc_ranchu( 1586): gralloc_alloc: Creating ashmem region of size 823296
+11-28 13:42:28.624 D/HostConnection( 4873): createUnique: call
+11-28 13:42:28.624 D/HostConnection( 4873): HostConnection::get() New Host Connection established 0xf3ea0b90, tid 4873
+11-28 13:42:28.627 D/HostConnection( 4873): HostComposition ext ANDROID_EMU_CHECKSUM_HELPER_v1 ANDROID_EMU_native_sync_v2 ANDROID_EMU_dma_v1 ANDROID_EMU_sync_buffer_data ANDROID_EMU_hwc_color_transform ANDROID_EMU_hwc_display_power_mode GL_OES_EGL_image_external_essl3 GL_OES_vertex_array_object GL_KHR_texture_compression_astc_ldr ANDROID_EMU_host_side_tracing ANDROID_EMU_gles_max_version_3_0 
+11-28 13:42:28.627 E/eglCodecCommon( 4873): GoldfishAddressSpaceHostMemoryAllocator: ioctl_ping failed for device_type=5, ret=-1
+11-28 13:42:28.687 D/AndroidRuntime( 4877): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-28 13:42:28.708 W/app_process( 4877): Unexpected CPU variant for X86 using defaults: x86
+11-28 13:42:28.708 I/app_process( 4877): The ClassLoaderContext is a special shared library.
+11-28 13:42:28.709 I/app_process( 4877): The ClassLoaderContext is a special shared library.
+11-28 13:42:28.717 D/AndroidRuntime( 4877): Calling main entry com.android.commands.uiautomator.Launcher
+11-28 13:42:28.720 V/SettingsProvider( 1952): Notifying for 0: content://settings/secure/accessibility_enabled
+11-28 13:42:28.731 E/Clearcut-EventLogger( 2701): Unexpected log parameter tray_notification_count
+11-28 13:42:28.854 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@4e6bca2)
+11-28 13:42:28.854 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@4e6bca2)
+11-28 13:42:29.846 I/AccessibilityNodeInfoDumper( 4877): Skipping invisible child: android.view.accessibility.AccessibilityNodeInfo@115f0; boundsInParent: Rect(0, 0 - 50, 50); boundsInScreen: Rect(67, 0 - 110, -16); packageName: com.google.android.tvlauncher; className: android.view.View; text: null; error: null; maxTextLength: -1; contentDescription: null; tooltipText: null; viewIdResName: com.google.android.tvlauncher:id/button_background; checkable: false; checked: false; focusable: false; focused: false; selected: false; clickable: false; longClickable: false; contextClickable: false; enabled: true; password: false; scrollable: false; importantForAccessibility: false; visible: false; actions: [AccessibilityAction: ACTION_SELECT - null, AccessibilityAction: ACTION_CLEAR_SELECTION - null, AccessibilityAction: ACTION_ACCESSIBILITY_FOCUS - null, AccessibilityAction: ACTION_SHOW_ON_SCREEN - null]
+11-28 13:42:29.847 I/AccessibilityNodeInfoDumper( 4877): Skipping invisible child: android.view.accessibility.AccessibilityNodeInfo@119b1; boundsInParent: Rect(0, 0 - 16, 32); boundsInScreen: Rect(84, 0 - 100, -25); packageName: com.google.android.tvlauncher; className: android.widget.ImageView; text: null; error: null; maxTextLength: -1; contentDescription: null; tooltipText: null; viewIdResName: com.google.android.tvlauncher:id/search_icon; checkable: false; checked: false; focusable: false; focused: false; selected: false; clickable: false; longClickable: false; contextClickable: false; enabled: true; password: false; scrollable: false; importantForAccessibility: false; visible: false; actions: [AccessibilityAction: ACTION_SELECT - null, AccessibilityAction: ACTION_CLEAR_SELECTION - null, AccessibilityAction: ACTION_ACCESSIBILITY_FOCUS - null, AccessibilityAction: ACTION_SHOW_ON_SCREEN - null]
+11-28 13:42:29.847 I/AccessibilityNodeInfoDumper( 4877): Skipping invisible child: android.view.accessibility.AccessibilityNodeInfo@b817; boundsInParent: Rect(0, 0 - 50, 50); boundsInScreen: Rect(116, 0 - 166, -16); packageName: com.google.android.tvlauncher; className: android.widget.LinearLayout; text: null; error: null; maxTextLength: -1; contentDescription: There is 1 system notification; tooltipText: null; viewIdResName: com.google.android.tvlauncher:id/notification_panel_button; checkable: false; checked: false; focusable: true; focused: false; selected: false; clickable: true; longClickable: false; contextClickable: false; enabled: true; password: false; scrollable: false; importantForAccessibility: true; visible: false; actions: [AccessibilityAction: ACTION_FOCUS - null, AccessibilityAction: ACTION_SELECT - null, AccessibilityAction: ACTION_CLEAR_SELECTION - null, AccessibilityAction: ACTION_CLICK - null, AccessibilityAction: ACTION_ACCESSIBILITY_FOCUS - null, AccessibilityAction: ACTION_NEXT_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_SET_SELECTION - null, AccessibilityAction: ACTION_SHOW_ON_SCREEN - null]
+11-28 13:42:29.847 I/AccessibilityNodeInfoDumper( 4877): Skipping invisible child: android.view.accessibility.AccessibilityNodeInfo@bbd8; boundsInParent: Rect(0, 0 - 50, 50); boundsInScreen: Rect(172, 0 - 222, -16); packageName: com.google.android.tvlauncher; className: android.widget.LinearLayout; text: null; error: null; maxTextLength: -1; contentDescription: Settings; tooltipText: null; viewIdResName: com.google.android.tvlauncher:id/settings; checkable: false; checked: false; focusable: true; focused: false; selected: false; clickable: true; longClickable: false; contextClickable: false; enabled: true; password: false; scrollable: false; importantForAccessibility: true; visible: false; actions: [AccessibilityAction: ACTION_FOCUS - null, AccessibilityAction: ACTION_SELECT - null, AccessibilityAction: ACTION_CLEAR_SELECTION - null, AccessibilityAction: ACTION_CLICK - null, AccessibilityAction: ACTION_ACCESSIBILITY_FOCUS - null, AccessibilityAction: ACTION_NEXT_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_SET_SELECTION - null, AccessibilityAction: ACTION_SHOW_ON_SCREEN - null]
+11-28 13:42:29.847 I/AccessibilityNodeInfoDumper( 4877): Skipping invisible child: android.view.accessibility.AccessibilityNodeInfo@bf99; boundsInParent: Rect(0, 0 - 44, 33); boundsInScreen: Rect(228, 0 - 272, -25); packageName: com.google.android.tvlauncher; className: android.widget.TextView; text: 1:42; error: null; maxTextLength: -1; contentDescription: 1:42; tooltipText: null; viewIdResName: com.google.android.tvlauncher:id/clock; checkable: false; checked: false; focusable: false; focused: false; selected: false; clickable: false; longClickable: false; contextClickable: false; enabled: true; password: false; scrollable: false; importantForAccessibility: true; visible: false; actions: [AccessibilityAction: ACTION_SELECT - null, AccessibilityAction: ACTION_CLEAR_SELECTION - null, AccessibilityAction: ACTION_ACCESSIBILITY_FOCUS - null, AccessibilityAction: ACTION_NEXT_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_SET_SELECTION - null, AccessibilityAction: ACTION_SHOW_ON_SCREEN - null]
+11-28 13:42:29.847 I/AccessibilityNodeInfoDumper( 4877): Skipping invisible child: android.view.accessibility.AccessibilityNodeInfo@cadc; boundsInParent: Rect(0, 0 - 0, 80); boundsInScreen: Rect(220, 21 - 220, 101); packageName: com.google.android.tvlauncher; className: android.widget.FrameLayout; text: null; error: null; maxTextLength: -1; contentDescription: null; tooltipText: null; viewIdResName: null; checkable: false; checked: false; focusable: false; focused: false; selected: false; clickable: false; longClickable: false; contextClickable: false; enabled: true; password: false; scrollable: false; importantForAccessibility: false; visible: false; actions: [AccessibilityAction: ACTION_SELECT - null, AccessibilityAction: ACTION_CLEAR_SELECTION - null, AccessibilityAction: ACTION_ACCESSIBILITY_FOCUS - null, AccessibilityAction: ACTION_SHOW_ON_SCREEN - null]
+11-28 13:42:29.847 I/AccessibilityNodeInfoDumper( 4877): Skipping invisible child: android.view.accessibility.AccessibilityNodeInfo@d25e; boundsInParent: Rect(0, 0 - 90, 32); boundsInScreen: Rect(672, 45 - 320, 77); packageName: com.google.android.tvlauncher; className: android.widget.Button; text: DETAILS; error: null; maxTextLength: -1; contentDescription: null; tooltipText: null; viewIdResName: com.google.android.tvlauncher:id/tray_see_more; checkable: false; checked: false; focusable: true; focused: false; selected: false; clickable: true; longClickable: false; contextClickable: false; enabled: true; password: false; scrollable: false; importantForAccessibility: true; visible: false; actions: [AccessibilityAction: ACTION_FOCUS - null, AccessibilityAction: ACTION_SELECT - null, AccessibilityAction: ACTION_CLEAR_SELECTION - null, AccessibilityAction: ACTION_CLICK - null, AccessibilityAction: ACTION_ACCESSIBILITY_FOCUS - null, AccessibilityAction: ACTION_NEXT_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_SET_SELECTION - null, AccessibilityAction: ACTION_SHOW_ON_SCREEN - null]
+11-28 13:42:29.847 I/AccessibilityNodeInfoDumper( 4877): Skipping invisible child: android.view.accessibility.AccessibilityNodeInfo@d61f; boundsInParent: Rect(0, 0 - 90, 32); boundsInScreen: Rect(770, 45 - 320, 77); packageName: com.google.android.tvlauncher; className: android.widget.Button; text: DISMISS; error: null; maxTextLength: -1; contentDescription: null; tooltipText: null; viewIdResName: com.google.android.tvlauncher:id/tray_dismiss; checkable: false; checked: false; focusable: true; focused: false; selected: false; clickable: true; longClickable: false; contextClickable: false; enabled: true; password: false; scrollable: false; importantForAccessibility: true; visible: false; actions: [AccessibilityAction: ACTION_FOCUS - null, AccessibilityAction: ACTION_SELECT - null, AccessibilityAction: ACTION_CLEAR_SELECTION - null, AccessibilityAction: ACTION_CLICK - null, AccessibilityAction: ACTION_ACCESSIBILITY_FOCUS - null, AccessibilityAction: ACTION_NEXT_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_SET_SELECTION - null, AccessibilityAction: ACTION_SHOW_ON_SCREEN - null]
+11-28 13:42:29.848 W/AccessibilityNodeInfoDumper( 4877): Fetch time: 3ms
+11-28 13:42:29.848 W/WindowManager( 1952): removeWindowToken: Attempted to remove non-existing token: android.os.Binder@be9c884
+11-28 13:42:29.849 V/SettingsProvider( 1952): Notifying for 0: content://settings/secure/accessibility_enabled
+11-28 13:42:29.852 D/AndroidRuntime( 4877): Shutting down VM
+11-28 13:42:29.854 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@67ce8f0)
+11-28 13:42:29.856 E/Clearcut-EventLogger( 2701): Unexpected log parameter tray_notification_count
+11-28 13:42:29.860 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@67ce8f0)
+11-28 13:42:30.854 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@bc87e69)
+11-28 13:42:30.855 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@bc87e69)
+11-28 13:42:31.855 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@91800ee)
+11-28 13:42:31.855 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@91800ee)
+11-28 13:42:32.855 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@595198f)
+11-28 13:42:32.855 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@595198f)
+11-28 13:42:33.855 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@1dfa41c)
+11-28 13:42:33.855 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@1dfa41c)
+11-28 13:42:33.933 D/AndroidRuntime( 4893): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-28 13:42:33.954 W/app_process( 4893): Unexpected CPU variant for X86 using defaults: x86
+11-28 13:42:33.955 I/app_process( 4893): The ClassLoaderContext is a special shared library.
+11-28 13:42:33.955 I/app_process( 4893): The ClassLoaderContext is a special shared library.
+11-28 13:42:33.963 D/AndroidRuntime( 4893): Calling main entry com.android.commands.uiautomator.Launcher
+11-28 13:42:33.976 E/Clearcut-EventLogger( 2701): Unexpected log parameter tray_notification_count
+11-28 13:42:34.855 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@853bfab)
+11-28 13:42:34.855 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@853bfab)
+11-28 13:42:35.082 I/AccessibilityNodeInfoDumper( 4893): Skipping invisible child: android.view.accessibility.AccessibilityNodeInfo@115f3; boundsInParent: Rect(0, 0 - 50, 50); boundsInScreen: Rect(67, 0 - 110, -16); packageName: com.google.android.tvlauncher; className: android.view.View; text: null; error: null; maxTextLength: -1; contentDescription: null; tooltipText: null; viewIdResName: com.google.android.tvlauncher:id/button_background; checkable: false; checked: false; focusable: false; focused: false; selected: false; clickable: false; longClickable: false; contextClickable: false; enabled: true; password: false; scrollable: false; importantForAccessibility: false; visible: false; actions: [AccessibilityAction: ACTION_SELECT - null, AccessibilityAction: ACTION_CLEAR_SELECTION - null, AccessibilityAction: ACTION_ACCESSIBILITY_FOCUS - null, AccessibilityAction: ACTION_SHOW_ON_SCREEN - null]
+11-28 13:42:35.082 I/AccessibilityNodeInfoDumper( 4893): Skipping invisible child: android.view.accessibility.AccessibilityNodeInfo@119b4; boundsInParent: Rect(0, 0 - 16, 32); boundsInScreen: Rect(84, 0 - 100, -25); packageName: com.google.android.tvlauncher; className: android.widget.ImageView; text: null; error: null; maxTextLength: -1; contentDescription: null; tooltipText: null; viewIdResName: com.google.android.tvlauncher:id/search_icon; checkable: false; checked: false; focusable: false; focused: false; selected: false; clickable: false; longClickable: false; contextClickable: false; enabled: true; password: false; scrollable: false; importantForAccessibility: false; visible: false; actions: [AccessibilityAction: ACTION_SELECT - null, AccessibilityAction: ACTION_CLEAR_SELECTION - null, AccessibilityAction: ACTION_ACCESSIBILITY_FOCUS - null, AccessibilityAction: ACTION_SHOW_ON_SCREEN - null]
+11-28 13:42:35.082 I/AccessibilityNodeInfoDumper( 4893): Skipping invisible child: android.view.accessibility.AccessibilityNodeInfo@b81a; boundsInParent: Rect(0, 0 - 50, 50); boundsInScreen: Rect(116, 0 - 166, -16); packageName: com.google.android.tvlauncher; className: android.widget.LinearLayout; text: null; error: null; maxTextLength: -1; contentDescription: There is 1 system notification; tooltipText: null; viewIdResName: com.google.android.tvlauncher:id/notification_panel_button; checkable: false; checked: false; focusable: true; focused: false; selected: false; clickable: true; longClickable: false; contextClickable: false; enabled: true; password: false; scrollable: false; importantForAccessibility: true; visible: false; actions: [AccessibilityAction: ACTION_FOCUS - null, AccessibilityAction: ACTION_SELECT - null, AccessibilityAction: ACTION_CLEAR_SELECTION - null, AccessibilityAction: ACTION_CLICK - null, AccessibilityAction: ACTION_ACCESSIBILITY_FOCUS - null, AccessibilityAction: ACTION_NEXT_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_SET_SELECTION - null, AccessibilityAction: ACTION_SHOW_ON_SCREEN - null]
+11-28 13:42:35.082 I/AccessibilityNodeInfoDumper( 4893): Skipping invisible child: android.view.accessibility.AccessibilityNodeInfo@bbdb; boundsInParent: Rect(0, 0 - 50, 50); boundsInScreen: Rect(172, 0 - 222, -16); packageName: com.google.android.tvlauncher; className: android.widget.LinearLayout; text: null; error: null; maxTextLength: -1; contentDescription: Settings; tooltipText: null; viewIdResName: com.google.android.tvlauncher:id/settings; checkable: false; checked: false; focusable: true; focused: false; selected: false; clickable: true; longClickable: false; contextClickable: false; enabled: true; password: false; scrollable: false; importantForAccessibility: true; visible: false; actions: [AccessibilityAction: ACTION_FOCUS - null, AccessibilityAction: ACTION_SELECT - null, AccessibilityAction: ACTION_CLEAR_SELECTION - null, AccessibilityAction: ACTION_CLICK - null, AccessibilityAction: ACTION_ACCESSIBILITY_FOCUS - null, AccessibilityAction: ACTION_NEXT_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_SET_SELECTION - null, AccessibilityAction: ACTION_SHOW_ON_SCREEN - null]
+11-28 13:42:35.082 I/AccessibilityNodeInfoDumper( 4893): Skipping invisible child: android.view.accessibility.AccessibilityNodeInfo@bf9c; boundsInParent: Rect(0, 0 - 44, 33); boundsInScreen: Rect(228, 0 - 272, -25); packageName: com.google.android.tvlauncher; className: android.widget.TextView; text: 1:42; error: null; maxTextLength: -1; contentDescription: 1:42; tooltipText: null; viewIdResName: com.google.android.tvlauncher:id/clock; checkable: false; checked: false; focusable: false; focused: false; selected: false; clickable: false; longClickable: false; contextClickable: false; enabled: true; password: false; scrollable: false; importantForAccessibility: true; visible: false; actions: [AccessibilityAction: ACTION_SELECT - null, AccessibilityAction: ACTION_CLEAR_SELECTION - null, AccessibilityAction: ACTION_ACCESSIBILITY_FOCUS - null, AccessibilityAction: ACTION_NEXT_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_SET_SELECTION - null, AccessibilityAction: ACTION_SHOW_ON_SCREEN - null]
+11-28 13:42:35.082 I/AccessibilityNodeInfoDumper( 4893): Skipping invisible child: android.view.accessibility.AccessibilityNodeInfo@cadf; boundsInParent: Rect(0, 0 - 0, 80); boundsInScreen: Rect(220, 21 - 220, 101); packageName: com.google.android.tvlauncher; className: android.widget.FrameLayout; text: null; error: null; maxTextLength: -1; contentDescription: null; tooltipText: null; viewIdResName: null; checkable: false; checked: false; focusable: false; focused: false; selected: false; clickable: false; longClickable: false; contextClickable: false; enabled: true; password: false; scrollable: false; importantForAccessibility: false; visible: false; actions: [AccessibilityAction: ACTION_SELECT - null, AccessibilityAction: ACTION_CLEAR_SELECTION - null, AccessibilityAction: ACTION_ACCESSIBILITY_FOCUS - null, AccessibilityAction: ACTION_SHOW_ON_SCREEN - null]
+11-28 13:42:35.082 I/AccessibilityNodeInfoDumper( 4893): Skipping invisible child: android.view.accessibility.AccessibilityNodeInfo@d261; boundsInParent: Rect(0, 0 - 90, 32); boundsInScreen: Rect(672, 45 - 320, 77); packageName: com.google.android.tvlauncher; className: android.widget.Button; text: DETAILS; error: null; maxTextLength: -1; contentDescription: null; tooltipText: null; viewIdResName: com.google.android.tvlauncher:id/tray_see_more; checkable: false; checked: false; focusable: true; focused: false; selected: false; clickable: true; longClickable: false; contextClickable: false; enabled: true; password: false; scrollable: false; importantForAccessibility: true; visible: false; actions: [AccessibilityAction: ACTION_FOCUS - null, AccessibilityAction: ACTION_SELECT - null, AccessibilityAction: ACTION_CLEAR_SELECTION - null, AccessibilityAction: ACTION_CLICK - null, AccessibilityAction: ACTION_ACCESSIBILITY_FOCUS - null, AccessibilityAction: ACTION_NEXT_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_SET_SELECTION - null, AccessibilityAction: ACTION_SHOW_ON_SCREEN - null]
+11-28 13:42:35.083 I/AccessibilityNodeInfoDumper( 4893): Skipping invisible child: android.view.accessibility.AccessibilityNodeInfo@d622; boundsInParent: Rect(0, 0 - 90, 32); boundsInScreen: Rect(770, 45 - 320, 77); packageName: com.google.android.tvlauncher; className: android.widget.Button; text: DISMISS; error: null; maxTextLength: -1; contentDescription: null; tooltipText: null; viewIdResName: com.google.android.tvlauncher:id/tray_dismiss; checkable: false; checked: false; focusable: true; focused: false; selected: false; clickable: true; longClickable: false; contextClickable: false; enabled: true; password: false; scrollable: false; importantForAccessibility: true; visible: false; actions: [AccessibilityAction: ACTION_FOCUS - null, AccessibilityAction: ACTION_SELECT - null, AccessibilityAction: ACTION_CLEAR_SELECTION - null, AccessibilityAction: ACTION_CLICK - null, AccessibilityAction: ACTION_ACCESSIBILITY_FOCUS - null, AccessibilityAction: ACTION_NEXT_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_SET_SELECTION - null, AccessibilityAction: ACTION_SHOW_ON_SCREEN - null]
+11-28 13:42:35.084 W/AccessibilityNodeInfoDumper( 4893): Fetch time: 3ms
+11-28 13:42:33.966 V/SettingsProvider( 1952): Notifying for 0: content://settings/secure/accessibility_enabled
+11-28 13:42:35.084 W/WindowManager( 1952): removeWindowToken: Attempted to remove non-existing token: android.os.Binder@9e19825
+11-28 13:42:35.084 V/SettingsProvider( 1952): Notifying for 0: content://settings/secure/accessibility_enabled
+11-28 13:42:35.086 D/AndroidRuntime( 4893): Shutting down VM
+11-28 13:42:35.102 E/Clearcut-EventLogger( 2701): Unexpected log parameter tray_notification_count
+11-28 13:42:35.855 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@fb891a1)
+11-28 13:42:35.855 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@fb891a1)
+11-28 13:42:35.905 E/netmgr  ( 1809): Failed to open QEMU pipe 'qemud:network': Invalid argument
+11-28 13:42:35.905 E/netmgr  ( 1809): WifiForwarder unable to open QEMU pipe: Invalid argument
+11-28 13:42:36.855 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@17b3fc6)
+11-28 13:42:36.856 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@17b3fc6)
+11-28 13:42:37.856 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@80cab87)
+11-28 13:42:37.856 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@80cab87)
+11-28 13:42:38.856 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@b125ab4)
+11-28 13:42:38.856 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@b125ab4)
+11-28 13:42:39.643 E/memtrack( 1952): Couldn't load memtrack module
+11-28 13:42:39.643 W/android.os.Debug( 1952): failed to get memory consumption info: -1
+11-28 13:42:39.856 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@9aba6dd)
+11-28 13:42:39.856 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@9aba6dd)
+11-28 13:42:40.856 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@6db9252)
+11-28 13:42:40.856 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@6db9252)
+11-28 13:42:41.056 E/storaged( 1723): getDiskStats failed with result NOT_SUPPORTED and size 0
+11-28 13:42:41.138 E/SurfaceFlinger( 1911): ro.sf.lcd_density must be defined as a build property
+11-28 13:42:41.138 D/gralloc_ranchu( 1586): gralloc_alloc: Creating ashmem region of size 823296
+11-28 13:42:41.144 D/HostConnection( 4909): createUnique: call
+11-28 13:42:41.144 D/HostConnection( 4909): HostConnection::get() New Host Connection established 0xec420b90, tid 4909
+11-28 13:42:41.147 D/HostConnection( 4909): HostComposition ext ANDROID_EMU_CHECKSUM_HELPER_v1 ANDROID_EMU_native_sync_v2 ANDROID_EMU_dma_v1 ANDROID_EMU_sync_buffer_data ANDROID_EMU_hwc_color_transform ANDROID_EMU_hwc_display_power_mode GL_OES_EGL_image_external_essl3 GL_OES_vertex_array_object GL_KHR_texture_compression_astc_ldr ANDROID_EMU_host_side_tracing ANDROID_EMU_gles_max_version_3_0 
+11-28 13:42:41.147 E/eglCodecCommon( 4909): GoldfishAddressSpaceHostMemoryAllocator: ioctl_ping failed for device_type=5, ret=-1
+11-28 13:42:41.207 D/AndroidRuntime( 4913): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-28 13:42:41.228 W/app_process( 4913): Unexpected CPU variant for X86 using defaults: x86
+11-28 13:42:41.229 I/app_process( 4913): The ClassLoaderContext is a special shared library.
+11-28 13:42:41.229 I/app_process( 4913): The ClassLoaderContext is a special shared library.
+11-28 13:42:41.247 D/AndroidRuntime( 4913): Calling main entry com.android.commands.uiautomator.Launcher
+11-28 13:42:41.250 V/SettingsProvider( 1952): Notifying for 0: content://settings/secure/accessibility_enabled
+11-28 13:42:41.259 E/Clearcut-EventLogger( 2701): Unexpected log parameter tray_notification_count
+11-28 13:42:41.856 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@1c0d3d9)
+11-28 13:42:41.856 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@1c0d3d9)
+11-28 13:42:42.366 I/AccessibilityNodeInfoDumper( 4913): Skipping invisible child: android.view.accessibility.AccessibilityNodeInfo@115f7; boundsInParent: Rect(0, 0 - 50, 50); boundsInScreen: Rect(67, 0 - 110, -16); packageName: com.google.android.tvlauncher; className: android.view.View; text: null; error: null; maxTextLength: -1; contentDescription: null; tooltipText: null; viewIdResName: com.google.android.tvlauncher:id/button_background; checkable: false; checked: false; focusable: false; focused: false; selected: false; clickable: false; longClickable: false; contextClickable: false; enabled: true; password: false; scrollable: false; importantForAccessibility: false; visible: false; actions: [AccessibilityAction: ACTION_SELECT - null, AccessibilityAction: ACTION_CLEAR_SELECTION - null, AccessibilityAction: ACTION_ACCESSIBILITY_FOCUS - null, AccessibilityAction: ACTION_SHOW_ON_SCREEN - null]
+11-28 13:42:42.366 I/AccessibilityNodeInfoDumper( 4913): Skipping invisible child: android.view.accessibility.AccessibilityNodeInfo@119b8; boundsInParent: Rect(0, 0 - 16, 32); boundsInScreen: Rect(84, 0 - 100, -25); packageName: com.google.android.tvlauncher; className: android.widget.ImageView; text: null; error: null; maxTextLength: -1; contentDescription: null; tooltipText: null; viewIdResName: com.google.android.tvlauncher:id/search_icon; checkable: false; checked: false; focusable: false; focused: false; selected: false; clickable: false; longClickable: false; contextClickable: false; enabled: true; password: false; scrollable: false; importantForAccessibility: false; visible: false; actions: [AccessibilityAction: ACTION_SELECT - null, AccessibilityAction: ACTION_CLEAR_SELECTION - null, AccessibilityAction: ACTION_ACCESSIBILITY_FOCUS - null, AccessibilityAction: ACTION_SHOW_ON_SCREEN - null]
+11-28 13:42:42.366 I/AccessibilityNodeInfoDumper( 4913): Skipping invisible child: android.view.accessibility.AccessibilityNodeInfo@b81e; boundsInParent: Rect(0, 0 - 50, 50); boundsInScreen: Rect(116, 0 - 166, -16); packageName: com.google.android.tvlauncher; className: android.widget.LinearLayout; text: null; error: null; maxTextLength: -1; contentDescription: There is 1 system notification; tooltipText: null; viewIdResName: com.google.android.tvlauncher:id/notification_panel_button; checkable: false; checked: false; focusable: true; focused: false; selected: false; clickable: true; longClickable: false; contextClickable: false; enabled: true; password: false; scrollable: false; importantForAccessibility: true; visible: false; actions: [AccessibilityAction: ACTION_FOCUS - null, AccessibilityAction: ACTION_SELECT - null, AccessibilityAction: ACTION_CLEAR_SELECTION - null, AccessibilityAction: ACTION_CLICK - null, AccessibilityAction: ACTION_ACCESSIBILITY_FOCUS - null, AccessibilityAction: ACTION_NEXT_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_SET_SELECTION - null, AccessibilityAction: ACTION_SHOW_ON_SCREEN - null]
+11-28 13:42:42.366 I/AccessibilityNodeInfoDumper( 4913): Skipping invisible child: android.view.accessibility.AccessibilityNodeInfo@bbdf; boundsInParent: Rect(0, 0 - 50, 50); boundsInScreen: Rect(172, 0 - 222, -16); packageName: com.google.android.tvlauncher; className: android.widget.LinearLayout; text: null; error: null; maxTextLength: -1; contentDescription: Settings; tooltipText: null; viewIdResName: com.google.android.tvlauncher:id/settings; checkable: false; checked: false; focusable: true; focused: false; selected: false; clickable: true; longClickable: false; contextClickable: false; enabled: true; password: false; scrollable: false; importantForAccessibility: true; visible: false; actions: [AccessibilityAction: ACTION_FOCUS - null, AccessibilityAction: ACTION_SELECT - null, AccessibilityAction: ACTION_CLEAR_SELECTION - null, AccessibilityAction: ACTION_CLICK - null, AccessibilityAction: ACTION_ACCESSIBILITY_FOCUS - null, AccessibilityAction: ACTION_NEXT_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_SET_SELECTION - null, AccessibilityAction: ACTION_SHOW_ON_SCREEN - null]
+11-28 13:42:42.366 I/AccessibilityNodeInfoDumper( 4913): Skipping invisible child: android.view.accessibility.AccessibilityNodeInfo@bfa0; boundsInParent: Rect(0, 0 - 44, 33); boundsInScreen: Rect(228, 0 - 272, -25); packageName: com.google.android.tvlauncher; className: android.widget.TextView; text: 1:42; error: null; maxTextLength: -1; contentDescription: 1:42; tooltipText: null; viewIdResName: com.google.android.tvlauncher:id/clock; checkable: false; checked: false; focusable: false; focused: false; selected: false; clickable: false; longClickable: false; contextClickable: false; enabled: true; password: false; scrollable: false; importantForAccessibility: true; visible: false; actions: [AccessibilityAction: ACTION_SELECT - null, AccessibilityAction: ACTION_CLEAR_SELECTION - null, AccessibilityAction: ACTION_ACCESSIBILITY_FOCUS - null, AccessibilityAction: ACTION_NEXT_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_SET_SELECTION - null, AccessibilityAction: ACTION_SHOW_ON_SCREEN - null]
+11-28 13:42:42.366 I/AccessibilityNodeInfoDumper( 4913): Skipping invisible child: android.view.accessibility.AccessibilityNodeInfo@cae3; boundsInParent: Rect(0, 0 - 0, 80); boundsInScreen: Rect(220, 21 - 220, 101); packageName: com.google.android.tvlauncher; className: android.widget.FrameLayout; text: null; error: null; maxTextLength: -1; contentDescription: null; tooltipText: null; viewIdResName: null; checkable: false; checked: false; focusable: false; focused: false; selected: false; clickable: false; longClickable: false; contextClickable: false; enabled: true; password: false; scrollable: false; importantForAccessibility: false; visible: false; actions: [AccessibilityAction: ACTION_SELECT - null, AccessibilityAction: ACTION_CLEAR_SELECTION - null, AccessibilityAction: ACTION_ACCESSIBILITY_FOCUS - null, AccessibilityAction: ACTION_SHOW_ON_SCREEN - null]
+11-28 13:42:42.367 I/AccessibilityNodeInfoDumper( 4913): Skipping invisible child: android.view.accessibility.AccessibilityNodeInfo@d265; boundsInParent: Rect(0, 0 - 90, 32); boundsInScreen: Rect(672, 45 - 320, 77); packageName: com.google.android.tvlauncher; className: android.widget.Button; text: DETAILS; error: null; maxTextLength: -1; contentDescription: null; tooltipText: null; viewIdResName: com.google.android.tvlauncher:id/tray_see_more; checkable: false; checked: false; focusable: true; focused: false; selected: false; clickable: true; longClickable: false; contextClickable: false; enabled: true; password: false; scrollable: false; importantForAccessibility: true; visible: false; actions: [AccessibilityAction: ACTION_FOCUS - null, AccessibilityAction: ACTION_SELECT - null, AccessibilityAction: ACTION_CLEAR_SELECTION - null, AccessibilityAction: ACTION_CLICK - null, AccessibilityAction: ACTION_ACCESSIBILITY_FOCUS - null, AccessibilityAction: ACTION_NEXT_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_SET_SELECTION - null, AccessibilityAction: ACTION_SHOW_ON_SCREEN - null]
+11-28 13:42:42.367 I/AccessibilityNodeInfoDumper( 4913): Skipping invisible child: android.view.accessibility.AccessibilityNodeInfo@d626; boundsInParent: Rect(0, 0 - 90, 32); boundsInScreen: Rect(770, 45 - 320, 77); packageName: com.google.android.tvlauncher; className: android.widget.Button; text: DISMISS; error: null; maxTextLength: -1; contentDescription: null; tooltipText: null; viewIdResName: com.google.android.tvlauncher:id/tray_dismiss; checkable: false; checked: false; focusable: true; focused: false; selected: false; clickable: true; longClickable: false; contextClickable: false; enabled: true; password: false; scrollable: false; importantForAccessibility: true; visible: false; actions: [AccessibilityAction: ACTION_FOCUS - null, AccessibilityAction: ACTION_SELECT - null, AccessibilityAction: ACTION_CLEAR_SELECTION - null, AccessibilityAction: ACTION_CLICK - null, AccessibilityAction: ACTION_ACCESSIBILITY_FOCUS - null, AccessibilityAction: ACTION_NEXT_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_SET_SELECTION - null, AccessibilityAction: ACTION_SHOW_ON_SCREEN - null]
+11-28 13:42:42.368 W/AccessibilityNodeInfoDumper( 4913): Fetch time: 4ms
+11-28 13:42:42.369 W/WindowManager( 1952): removeWindowToken: Attempted to remove non-existing token: android.os.Binder@f7e7923
+11-28 13:42:42.369 V/SettingsProvider( 1952): Notifying for 0: content://settings/secure/accessibility_enabled
+11-28 13:42:42.371 D/AndroidRuntime( 4913): Shutting down VM
+11-28 13:42:42.386 E/Clearcut-EventLogger( 2701): Unexpected log parameter tray_notification_count
+11-28 13:42:42.448 D/AndroidRuntime( 4927): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-28 13:42:42.469 W/app_process( 4927): Unexpected CPU variant for X86 using defaults: x86
+11-28 13:42:42.469 I/app_process( 4927): The ClassLoaderContext is a special shared library.
+11-28 13:42:42.477 D/AndroidRuntime( 4927): Calling main entry com.android.commands.input.Input
+11-28 13:42:42.478 I/Input   ( 4927): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_BACK, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=256478, downTime=256478, deviceId=-1, source=0x101 }
+11-28 13:42:42.479 I/Input   ( 4927): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_BACK, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=256478, downTime=256478, deviceId=-1, source=0x101 }
+11-28 13:42:42.479 D/AutofillManagerService( 1952): onBackKeyPressed()
+11-28 13:42:42.480 D/AndroidRuntime( 4927): Shutting down VM
+11-28 13:42:42.857 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@e24c4c)
+11-28 13:42:42.857 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@e24c4c)
+11-28 13:42:43.857 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@261d495)
+11-28 13:42:43.857 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@261d495)
+11-28 13:42:43.941 E/memtrack( 1952): Couldn't load memtrack module
+11-28 13:42:43.941 W/android.os.Debug( 1952): failed to get memory consumption info: -1
+11-28 13:42:44.857 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@2ab19aa)
+11-28 13:42:44.857 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@2ab19aa)
+11-28 13:42:45.857 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@827e99b)
+11-28 13:42:45.857 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@827e99b)
+11-28 13:42:46.542 D/AndroidRuntime( 4939): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-28 13:42:46.543 W/app_process( 4939): Could not reserve sentinel fault page
+11-28 13:42:46.563 W/app_process( 4939): Unexpected CPU variant for X86 using defaults: x86
+11-28 13:42:46.563 I/app_process( 4939): The ClassLoaderContext is a special shared library.
+11-28 13:42:46.563 I/app_process( 4939): The ClassLoaderContext is a special shared library.
+11-28 13:42:46.572 D/AndroidRuntime( 4939): Calling main entry com.android.commands.uiautomator.Launcher
+11-28 13:42:46.574 V/SettingsProvider( 1952): Notifying for 0: content://settings/secure/accessibility_enabled
+11-28 13:42:46.587 E/Clearcut-EventLogger( 2701): Unexpected log parameter tray_notification_count
+11-28 13:42:46.857 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@b792676)
+11-28 13:42:46.857 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@b792676)
+11-28 13:42:47.692 I/AccessibilityNodeInfoDumper( 4939): Skipping invisible child: android.view.accessibility.AccessibilityNodeInfo@115fa; boundsInParent: Rect(0, 0 - 50, 50); boundsInScreen: Rect(67, 0 - 110, -16); packageName: com.google.android.tvlauncher; className: android.view.View; text: null; error: null; maxTextLength: -1; contentDescription: null; tooltipText: null; viewIdResName: com.google.android.tvlauncher:id/button_background; checkable: false; checked: false; focusable: false; focused: false; selected: false; clickable: false; longClickable: false; contextClickable: false; enabled: true; password: false; scrollable: false; importantForAccessibility: false; visible: false; actions: [AccessibilityAction: ACTION_SELECT - null, AccessibilityAction: ACTION_CLEAR_SELECTION - null, AccessibilityAction: ACTION_ACCESSIBILITY_FOCUS - null, AccessibilityAction: ACTION_SHOW_ON_SCREEN - null]
+11-28 13:42:47.693 I/AccessibilityNodeInfoDumper( 4939): Skipping invisible child: android.view.accessibility.AccessibilityNodeInfo@119bb; boundsInParent: Rect(0, 0 - 16, 32); boundsInScreen: Rect(84, 0 - 100, -25); packageName: com.google.android.tvlauncher; className: android.widget.ImageView; text: null; error: null; maxTextLength: -1; contentDescription: null; tooltipText: null; viewIdResName: com.google.android.tvlauncher:id/search_icon; checkable: false; checked: false; focusable: false; focused: false; selected: false; clickable: false; longClickable: false; contextClickable: false; enabled: true; password: false; scrollable: false; importantForAccessibility: false; visible: false; actions: [AccessibilityAction: ACTION_SELECT - null, AccessibilityAction: ACTION_CLEAR_SELECTION - null, AccessibilityAction: ACTION_ACCESSIBILITY_FOCUS - null, AccessibilityAction: ACTION_SHOW_ON_SCREEN - null]
+11-28 13:42:47.693 I/AccessibilityNodeInfoDumper( 4939): Skipping invisible child: android.view.accessibility.AccessibilityNodeInfo@b821; boundsInParent: Rect(0, 0 - 50, 50); boundsInScreen: Rect(116, 0 - 166, -16); packageName: com.google.android.tvlauncher; className: android.widget.LinearLayout; text: null; error: null; maxTextLength: -1; contentDescription: There is 1 system notification; tooltipText: null; viewIdResName: com.google.android.tvlauncher:id/notification_panel_button; checkable: false; checked: false; focusable: true; focused: false; selected: false; clickable: true; longClickable: false; contextClickable: false; enabled: true; password: false; scrollable: false; importantForAccessibility: true; visible: false; actions: [AccessibilityAction: ACTION_FOCUS - null, AccessibilityAction: ACTION_SELECT - null, AccessibilityAction: ACTION_CLEAR_SELECTION - null, AccessibilityAction: ACTION_CLICK - null, AccessibilityAction: ACTION_ACCESSIBILITY_FOCUS - null, AccessibilityAction: ACTION_NEXT_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_SET_SELECTION - null, AccessibilityAction: ACTION_SHOW_ON_SCREEN - null]
+11-28 13:42:47.693 I/AccessibilityNodeInfoDumper( 4939): Skipping invisible child: android.view.accessibility.AccessibilityNodeInfo@bbe2; boundsInParent: Rect(0, 0 - 50, 50); boundsInScreen: Rect(172, 0 - 222, -16); packageName: com.google.android.tvlauncher; className: android.widget.LinearLayout; text: null; error: null; maxTextLength: -1; contentDescription: Settings; tooltipText: null; viewIdResName: com.google.android.tvlauncher:id/settings; checkable: false; checked: false; focusable: true; focused: false; selected: false; clickable: true; longClickable: false; contextClickable: false; enabled: true; password: false; scrollable: false; importantForAccessibility: true; visible: false; actions: [AccessibilityAction: ACTION_FOCUS - null, AccessibilityAction: ACTION_SELECT - null, AccessibilityAction: ACTION_CLEAR_SELECTION - null, AccessibilityAction: ACTION_CLICK - null, AccessibilityAction: ACTION_ACCESSIBILITY_FOCUS - null, AccessibilityAction: ACTION_NEXT_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_SET_SELECTION - null, AccessibilityAction: ACTION_SHOW_ON_SCREEN - null]
+11-28 13:42:47.693 I/AccessibilityNodeInfoDumper( 4939): Skipping invisible child: android.view.accessibility.AccessibilityNodeInfo@bfa3; boundsInParent: Rect(0, 0 - 44, 33); boundsInScreen: Rect(228, 0 - 272, -25); packageName: com.google.android.tvlauncher; className: android.widget.TextView; text: 1:42; error: null; maxTextLength: -1; contentDescription: 1:42; tooltipText: null; viewIdResName: com.google.android.tvlauncher:id/clock; checkable: false; checked: false; focusable: false; focused: false; selected: false; clickable: false; longClickable: false; contextClickable: false; enabled: true; password: false; scrollable: false; importantForAccessibility: true; visible: false; actions: [AccessibilityAction: ACTION_SELECT - null, AccessibilityAction: ACTION_CLEAR_SELECTION - null, AccessibilityAction: ACTION_ACCESSIBILITY_FOCUS - null, AccessibilityAction: ACTION_NEXT_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_SET_SELECTION - null, AccessibilityAction: ACTION_SHOW_ON_SCREEN - null]
+11-28 13:42:47.693 I/AccessibilityNodeInfoDumper( 4939): Skipping invisible child: android.view.accessibility.AccessibilityNodeInfo@cae6; boundsInParent: Rect(0, 0 - 0, 80); boundsInScreen: Rect(220, 21 - 220, 101); packageName: com.google.android.tvlauncher; className: android.widget.FrameLayout; text: null; error: null; maxTextLength: -1; contentDescription: null; tooltipText: null; viewIdResName: null; checkable: false; checked: false; focusable: false; focused: false; selected: false; clickable: false; longClickable: false; contextClickable: false; enabled: true; password: false; scrollable: false; importantForAccessibility: false; visible: false; actions: [AccessibilityAction: ACTION_SELECT - null, AccessibilityAction: ACTION_CLEAR_SELECTION - null, AccessibilityAction: ACTION_ACCESSIBILITY_FOCUS - null, AccessibilityAction: ACTION_SHOW_ON_SCREEN - null]
+11-28 13:42:47.693 I/AccessibilityNodeInfoDumper( 4939): Skipping invisible child: android.view.accessibility.AccessibilityNodeInfo@d268; boundsInParent: Rect(0, 0 - 90, 32); boundsInScreen: Rect(672, 45 - 320, 77); packageName: com.google.android.tvlauncher; className: android.widget.Button; text: DETAILS; error: null; maxTextLength: -1; contentDescription: null; tooltipText: null; viewIdResName: com.google.android.tvlauncher:id/tray_see_more; checkable: false; checked: false; focusable: true; focused: false; selected: false; clickable: true; longClickable: false; contextClickable: false; enabled: true; password: false; scrollable: false; importantForAccessibility: true; visible: false; actions: [AccessibilityAction: ACTION_FOCUS - null, AccessibilityAction: ACTION_SELECT - null, AccessibilityAction: ACTION_CLEAR_SELECTION - null, AccessibilityAction: ACTION_CLICK - null, AccessibilityAction: ACTION_ACCESSIBILITY_FOCUS - null, AccessibilityAction: ACTION_NEXT_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_SET_SELECTION - null, AccessibilityAction: ACTION_SHOW_ON_SCREEN - null]
+11-28 13:42:47.693 I/AccessibilityNodeInfoDumper( 4939): Skipping invisible child: android.view.accessibility.AccessibilityNodeInfo@d629; boundsInParent: Rect(0, 0 - 90, 32); boundsInScreen: Rect(770, 45 - 320, 77); packageName: com.google.android.tvlauncher; className: android.widget.Button; text: DISMISS; error: null; maxTextLength: -1; contentDescription: null; tooltipText: null; viewIdResName: com.google.android.tvlauncher:id/tray_dismiss; checkable: false; checked: false; focusable: true; focused: false; selected: false; clickable: true; longClickable: false; contextClickable: false; enabled: true; password: false; scrollable: false; importantForAccessibility: true; visible: false; actions: [AccessibilityAction: ACTION_FOCUS - null, AccessibilityAction: ACTION_SELECT - null, AccessibilityAction: ACTION_CLEAR_SELECTION - null, AccessibilityAction: ACTION_CLICK - null, AccessibilityAction: ACTION_ACCESSIBILITY_FOCUS - null, AccessibilityAction: ACTION_NEXT_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_SET_SELECTION - null, AccessibilityAction: ACTION_SHOW_ON_SCREEN - null]
+11-28 13:42:47.694 W/AccessibilityNodeInfoDumper( 4939): Fetch time: 3ms
+11-28 13:42:47.694 W/WindowManager( 1952): removeWindowToken: Attempted to remove non-existing token: android.os.Binder@b0de138
+11-28 13:42:47.695 V/SettingsProvider( 1952): Notifying for 0: content://settings/secure/accessibility_enabled
+11-28 13:42:47.697 D/AndroidRuntime( 4939): Shutting down VM
+11-28 13:42:47.699 E/Clearcut-EventLogger( 2701): Unexpected log parameter tray_notification_count
+11-28 13:42:47.857 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@c5bd8e4)
+11-28 13:42:47.857 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@c5bd8e4)
+11-28 13:42:48.858 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@389014d)
+11-28 13:42:48.858 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@389014d)
+11-28 13:42:49.858 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@e493402)
+11-28 13:42:49.858 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@e493402)
+11-28 13:42:50.774 D/AndroidRuntime( 4954): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-28 13:42:50.775 W/app_process( 4954): Could not reserve sentinel fault page
+11-28 13:42:50.794 W/app_process( 4954): Unexpected CPU variant for X86 using defaults: x86
+11-28 13:42:50.795 I/app_process( 4954): The ClassLoaderContext is a special shared library.
+11-28 13:42:50.803 D/AndroidRuntime( 4954): Calling main entry com.android.commands.input.Input
+11-28 13:42:50.804 I/Input   ( 4954): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_SHIFT_LEFT, scanCode=0, metaState=META_SHIFT_ON|META_SHIFT_LEFT_ON, flags=0x0, repeatCount=0, eventTime=264804, downTime=264804, deviceId=-1, source=0x101 }
+11-28 13:42:50.805 I/Input   ( 4954): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_L, scanCode=0, metaState=META_SHIFT_ON|META_SHIFT_LEFT_ON, flags=0x0, repeatCount=0, eventTime=264804, downTime=264804, deviceId=-1, source=0x101 }
+11-28 13:42:50.805 I/Input   ( 4954): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_L, scanCode=0, metaState=META_SHIFT_ON|META_SHIFT_LEFT_ON, flags=0x0, repeatCount=0, eventTime=264804, downTime=264804, deviceId=-1, source=0x101 }
+11-28 13:42:50.805 I/Input   ( 4954): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_SHIFT_LEFT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=264804, downTime=264804, deviceId=-1, source=0x101 }
+11-28 13:42:50.806 I/Input   ( 4954): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_O, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=264804, downTime=264804, deviceId=-1, source=0x101 }
+11-28 13:42:50.806 I/Input   ( 4954): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_O, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=264804, downTime=264804, deviceId=-1, source=0x101 }
+11-28 13:42:50.806 I/Input   ( 4954): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_V, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=264804, downTime=264804, deviceId=-1, source=0x101 }
+11-28 13:42:50.807 I/Input   ( 4954): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_V, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=264804, downTime=264804, deviceId=-1, source=0x101 }
+11-28 13:42:50.807 I/Input   ( 4954): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_E, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=264804, downTime=264804, deviceId=-1, source=0x101 }
+11-28 13:42:50.807 I/Input   ( 4954): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_E, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=264804, downTime=264804, deviceId=-1, source=0x101 }
+11-28 13:42:50.807 D/AndroidRuntime( 4954): Shutting down VM
+11-28 13:42:50.858 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@e8ff113)
+11-28 13:42:50.858 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@e8ff113)
+11-28 13:42:51.858 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@66f9f50)
+11-28 13:42:51.858 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@66f9f50)
+11-28 13:42:52.858 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@7f16549)
+11-28 13:42:52.859 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@7f16549)
+11-28 13:42:53.858 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@e1a8e4e)
+11-28 13:42:53.858 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@e1a8e4e)
+11-28 13:42:54.859 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@6fe8b6f)
+11-28 13:42:54.859 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@6fe8b6f)
+11-28 13:42:55.843 E/SurfaceFlinger( 1911): ro.sf.lcd_density must be defined as a build property
+11-28 13:42:55.843 D/gralloc_ranchu( 1586): gralloc_alloc: Creating ashmem region of size 823296
+11-28 13:42:55.848 D/HostConnection( 4966): createUnique: call
+11-28 13:42:55.849 D/HostConnection( 4966): HostConnection::get() New Host Connection established 0xe9220b90, tid 4966
+11-28 13:42:55.851 D/HostConnection( 4966): HostComposition ext ANDROID_EMU_CHECKSUM_HELPER_v1 ANDROID_EMU_native_sync_v2 ANDROID_EMU_dma_v1 ANDROID_EMU_sync_buffer_data ANDROID_EMU_hwc_color_transform ANDROID_EMU_hwc_display_power_mode GL_OES_EGL_image_external_essl3 GL_OES_vertex_array_object GL_KHR_texture_compression_astc_ldr ANDROID_EMU_host_side_tracing ANDROID_EMU_gles_max_version_3_0 
+11-28 13:42:55.851 E/eglCodecCommon( 4966): GoldfishAddressSpaceHostMemoryAllocator: ioctl_ping failed for device_type=5, ret=-1
+11-28 13:42:55.858 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@fb7607c)
+11-28 13:42:55.859 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@fb7607c)
+11-28 13:42:55.913 D/AndroidRuntime( 4970): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-28 13:42:55.934 W/app_process( 4970): Unexpected CPU variant for X86 using defaults: x86
+11-28 13:42:55.934 I/app_process( 4970): The ClassLoaderContext is a special shared library.
+11-28 13:42:55.934 I/app_process( 4970): The ClassLoaderContext is a special shared library.
+11-28 13:42:55.943 D/AndroidRuntime( 4970): Calling main entry com.android.commands.uiautomator.Launcher
+11-28 13:42:55.953 E/Clearcut-EventLogger( 2701): Unexpected log parameter tray_notification_count
+11-28 13:42:56.017 E/memtrack( 1952): Couldn't load memtrack module
+11-28 13:42:56.017 W/android.os.Debug( 1952): failed to get memory consumption info: -1
+11-28 13:42:56.025 E/memtrack( 1952): Couldn't load memtrack module
+11-28 13:42:56.025 W/android.os.Debug( 1952): failed to get memory consumption info: -1
+11-28 13:42:56.125 W/GLSUser ( 2400): [AppCertManager] Failed to get security token.
+11-28 13:42:56.125 W/GLSUser ( 2400): java.io.IOException: Invalid scope
+11-28 13:42:56.125 W/GLSUser ( 2400): 	at qqg.a(:com.google.android.gms@202414084@20.24.14 (080706-319035315):46)
+11-28 13:42:56.125 W/GLSUser ( 2400): 	at qqg.a(:com.google.android.gms@202414084@20.24.14 (080706-319035315):18)
+11-28 13:42:56.125 W/GLSUser ( 2400): 	at geu.a(:com.google.android.gms@202414084@20.24.14 (080706-319035315):17)
+11-28 13:42:56.125 W/GLSUser ( 2400): 	at ges.b(:com.google.android.gms@202414084@20.24.14 (080706-319035315):2)
+11-28 13:42:56.125 W/GLSUser ( 2400): 	at gen.a(:com.google.android.gms@202414084@20.24.14 (080706-319035315):0)
+11-28 13:42:56.125 W/GLSUser ( 2400): 	at geq.a(:com.google.android.gms@202414084@20.24.14 (080706-319035315):10)
+11-28 13:42:56.125 W/GLSUser ( 2400): 	at epi.call(:com.google.android.gms@202414084@20.24.14 (080706-319035315):0)
+11-28 13:42:56.125 W/GLSUser ( 2400): 	at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+11-28 13:42:56.125 W/GLSUser ( 2400): 	at joa.b(:com.google.android.gms@202414084@20.24.14 (080706-319035315):12)
+11-28 13:42:56.125 W/GLSUser ( 2400): 	at joa.run(:com.google.android.gms@202414084@20.24.14 (080706-319035315):7)
+11-28 13:42:56.125 W/GLSUser ( 2400): 	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1167)
+11-28 13:42:56.125 W/GLSUser ( 2400): 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:641)
+11-28 13:42:56.125 W/GLSUser ( 2400): 	at jtw.run(:com.google.android.gms@202414084@20.24.14 (080706-319035315):0)
+11-28 13:42:56.125 W/GLSUser ( 2400): 	at java.lang.Thread.run(Thread.java:764)
+11-28 13:42:56.155 W/GLSUser ( 2400): [AppCertManager] IOException while requesting key: 
+11-28 13:42:56.155 W/GLSUser ( 2400): java.io.IOException: Invalid device key response.
+11-28 13:42:56.155 W/GLSUser ( 2400): 	at geu.a(:com.google.android.gms@202414084@20.24.14 (080706-319035315):49)
+11-28 13:42:56.155 W/GLSUser ( 2400): 	at ges.b(:com.google.android.gms@202414084@20.24.14 (080706-319035315):2)
+11-28 13:42:56.155 W/GLSUser ( 2400): 	at gen.a(:com.google.android.gms@202414084@20.24.14 (080706-319035315):0)
+11-28 13:42:56.155 W/GLSUser ( 2400): 	at geq.a(:com.google.android.gms@202414084@20.24.14 (080706-319035315):10)
+11-28 13:42:56.155 W/GLSUser ( 2400): 	at epi.call(:com.google.android.gms@202414084@20.24.14 (080706-319035315):0)
+11-28 13:42:56.155 W/GLSUser ( 2400): 	at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+11-28 13:42:56.155 W/GLSUser ( 2400): 	at joa.b(:com.google.android.gms@202414084@20.24.14 (080706-319035315):12)
+11-28 13:42:56.155 W/GLSUser ( 2400): 	at joa.run(:com.google.android.gms@202414084@20.24.14 (080706-319035315):7)
+11-28 13:42:56.155 W/GLSUser ( 2400): 	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1167)
+11-28 13:42:56.155 W/GLSUser ( 2400): 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:641)
+11-28 13:42:56.155 W/GLSUser ( 2400): 	at jtw.run(:com.google.android.gms@202414084@20.24.14 (080706-319035315):0)
+11-28 13:42:56.155 W/GLSUser ( 2400): 	at java.lang.Thread.run(Thread.java:764)
+11-28 13:42:56.859 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@73a8a57)
+11-28 13:42:56.859 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@73a8a57)
+11-28 13:42:57.059 I/AccessibilityNodeInfoDumper( 4970): Skipping invisible child: android.view.accessibility.AccessibilityNodeInfo@115fd; boundsInParent: Rect(0, 0 - 50, 50); boundsInScreen: Rect(67, 0 - 110, -16); packageName: com.google.android.tvlauncher; className: android.view.View; text: null; error: null; maxTextLength: -1; contentDescription: null; tooltipText: null; viewIdResName: com.google.android.tvlauncher:id/button_background; checkable: false; checked: false; focusable: false; focused: false; selected: false; clickable: false; longClickable: false; contextClickable: false; enabled: true; password: false; scrollable: false; importantForAccessibility: false; visible: false; actions: [AccessibilityAction: ACTION_SELECT - null, AccessibilityAction: ACTION_CLEAR_SELECTION - null, AccessibilityAction: ACTION_ACCESSIBILITY_FOCUS - null, AccessibilityAction: ACTION_SHOW_ON_SCREEN - null]
+11-28 13:42:57.059 I/AccessibilityNodeInfoDumper( 4970): Skipping invisible child: android.view.accessibility.AccessibilityNodeInfo@119be; boundsInParent: Rect(0, 0 - 16, 32); boundsInScreen: Rect(84, 0 - 100, -25); packageName: com.google.android.tvlauncher; className: android.widget.ImageView; text: null; error: null; maxTextLength: -1; contentDescription: null; tooltipText: null; viewIdResName: com.google.android.tvlauncher:id/search_icon; checkable: false; checked: false; focusable: false; focused: false; selected: false; clickable: false; longClickable: false; contextClickable: false; enabled: true; password: false; scrollable: false; importantForAccessibility: false; visible: false; actions: [AccessibilityAction: ACTION_SELECT - null, AccessibilityAction: ACTION_CLEAR_SELECTION - null, AccessibilityAction: ACTION_ACCESSIBILITY_FOCUS - null, AccessibilityAction: ACTION_SHOW_ON_SCREEN - null]
+11-28 13:42:57.059 I/AccessibilityNodeInfoDumper( 4970): Skipping invisible child: android.view.accessibility.AccessibilityNodeInfo@b824; boundsInParent: Rect(0, 0 - 50, 50); boundsInScreen: Rect(116, 0 - 166, -16); packageName: com.google.android.tvlauncher; className: android.widget.LinearLayout; text: null; error: null; maxTextLength: -1; contentDescription: There is 1 system notification; tooltipText: null; viewIdResName: com.google.android.tvlauncher:id/notification_panel_button; checkable: false; checked: false; focusable: true; focused: false; selected: false; clickable: true; longClickable: false; contextClickable: false; enabled: true; password: false; scrollable: false; importantForAccessibility: true; visible: false; actions: [AccessibilityAction: ACTION_FOCUS - null, AccessibilityAction: ACTION_SELECT - null, AccessibilityAction: ACTION_CLEAR_SELECTION - null, AccessibilityAction: ACTION_CLICK - null, AccessibilityAction: ACTION_ACCESSIBILITY_FOCUS - null, AccessibilityAction: ACTION_NEXT_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_SET_SELECTION - null, AccessibilityAction: ACTION_SHOW_ON_SCREEN - null]
+11-28 13:42:57.059 I/AccessibilityNodeInfoDumper( 4970): Skipping invisible child: android.view.accessibility.AccessibilityNodeInfo@bbe5; boundsInParent: Rect(0, 0 - 50, 50); boundsInScreen: Rect(172, 0 - 222, -16); packageName: com.google.android.tvlauncher; className: android.widget.LinearLayout; text: null; error: null; maxTextLength: -1; contentDescription: Settings; tooltipText: null; viewIdResName: com.google.android.tvlauncher:id/settings; checkable: false; checked: false; focusable: true; focused: false; selected: false; clickable: true; longClickable: false; contextClickable: false; enabled: true; password: false; scrollable: false; importantForAccessibility: true; visible: false; actions: [AccessibilityAction: ACTION_FOCUS - null, AccessibilityAction: ACTION_SELECT - null, AccessibilityAction: ACTION_CLEAR_SELECTION - null, AccessibilityAction: ACTION_CLICK - null, AccessibilityAction: ACTION_ACCESSIBILITY_FOCUS - null, AccessibilityAction: ACTION_NEXT_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_SET_SELECTION - null, AccessibilityAction: ACTION_SHOW_ON_SCREEN - null]
+11-28 13:42:57.059 I/AccessibilityNodeInfoDumper( 4970): Skipping invisible child: android.view.accessibility.AccessibilityNodeInfo@bfa6; boundsInParent: Rect(0, 0 - 44, 33); boundsInScreen: Rect(228, 0 - 272, -25); packageName: com.google.android.tvlauncher; className: android.widget.TextView; text: 1:42; error: null; maxTextLength: -1; contentDescription: 1:42; tooltipText: null; viewIdResName: com.google.android.tvlauncher:id/clock; checkable: false; checked: false; focusable: false; focused: false; selected: false; clickable: false; longClickable: false; contextClickable: false; enabled: true; password: false; scrollable: false; importantForAccessibility: true; visible: false; actions: [AccessibilityAction: ACTION_SELECT - null, AccessibilityAction: ACTION_CLEAR_SELECTION - null, AccessibilityAction: ACTION_ACCESSIBILITY_FOCUS - null, AccessibilityAction: ACTION_NEXT_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_SET_SELECTION - null, AccessibilityAction: ACTION_SHOW_ON_SCREEN - null]
+11-28 13:42:57.059 I/AccessibilityNodeInfoDumper( 4970): Skipping invisible child: android.view.accessibility.AccessibilityNodeInfo@cae9; boundsInParent: Rect(0, 0 - 0, 80); boundsInScreen: Rect(220, 21 - 220, 101); packageName: com.google.android.tvlauncher; className: android.widget.FrameLayout; text: null; error: null; maxTextLength: -1; contentDescription: null; tooltipText: null; viewIdResName: null; checkable: false; checked: false; focusable: false; focused: false; selected: false; clickable: false; longClickable: false; contextClickable: false; enabled: true; password: false; scrollable: false; importantForAccessibility: false; visible: false; actions: [AccessibilityAction: ACTION_SELECT - null, AccessibilityAction: ACTION_CLEAR_SELECTION - null, AccessibilityAction: ACTION_ACCESSIBILITY_FOCUS - null, AccessibilityAction: ACTION_SHOW_ON_SCREEN - null]
+11-28 13:42:57.060 I/AccessibilityNodeInfoDumper( 4970): Skipping invisible child: android.view.accessibility.AccessibilityNodeInfo@d26b; boundsInParent: Rect(0, 0 - 90, 32); boundsInScreen: Rect(672, 45 - 320, 77); packageName: com.google.android.tvlauncher; className: android.widget.Button; text: DETAILS; error: null; maxTextLength: -1; contentDescription: null; tooltipText: null; viewIdResName: com.google.android.tvlauncher:id/tray_see_more; checkable: false; checked: false; focusable: true; focused: false; selected: false; clickable: true; longClickable: false; contextClickable: false; enabled: true; password: false; scrollable: false; importantForAccessibility: true; visible: false; actions: [AccessibilityAction: ACTION_FOCUS - null, AccessibilityAction: ACTION_SELECT - null, AccessibilityAction: ACTION_CLEAR_SELECTION - null, AccessibilityAction: ACTION_CLICK - null, AccessibilityAction: ACTION_ACCESSIBILITY_FOCUS - null, AccessibilityAction: ACTION_NEXT_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_SET_SELECTION - null, AccessibilityAction: ACTION_SHOW_ON_SCREEN - null]
+11-28 13:42:57.060 I/AccessibilityNodeInfoDumper( 4970): Skipping invisible child: android.view.accessibility.AccessibilityNodeInfo@d62c; boundsInParent: Rect(0, 0 - 90, 32); boundsInScreen: Rect(770, 45 - 320, 77); packageName: com.google.android.tvlauncher; className: android.widget.Button; text: DISMISS; error: null; maxTextLength: -1; contentDescription: null; tooltipText: null; viewIdResName: com.google.android.tvlauncher:id/tray_dismiss; checkable: false; checked: false; focusable: true; focused: false; selected: false; clickable: true; longClickable: false; contextClickable: false; enabled: true; password: false; scrollable: false; importantForAccessibility: true; visible: false; actions: [AccessibilityAction: ACTION_FOCUS - null, AccessibilityAction: ACTION_SELECT - null, AccessibilityAction: ACTION_CLEAR_SELECTION - null, AccessibilityAction: ACTION_CLICK - null, AccessibilityAction: ACTION_ACCESSIBILITY_FOCUS - null, AccessibilityAction: ACTION_NEXT_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY - null, AccessibilityAction: ACTION_SET_SELECTION - null, AccessibilityAction: ACTION_SHOW_ON_SCREEN - null]
+11-28 13:42:57.061 W/AccessibilityNodeInfoDumper( 4970): Fetch time: 4ms
+11-28 13:42:55.945 V/SettingsProvider( 1952): Notifying for 0: content://settings/secure/accessibility_enabled
+11-28 13:42:57.061 W/WindowManager( 1952): removeWindowToken: Attempted to remove non-existing token: android.os.Binder@c620d05
+11-28 13:42:57.062 V/SettingsProvider( 1952): Notifying for 0: content://settings/secure/accessibility_enabled
+11-28 13:42:57.064 D/AndroidRuntime( 4970): Shutting down VM
+11-28 13:42:57.068 E/Clearcut-EventLogger( 2701): Unexpected log parameter tray_notification_count

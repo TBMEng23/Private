@@ -1,0 +1,62 @@
+11-28 13:38:55.357 D/AndroidRuntime( 3814): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-28 13:38:55.387 D/AndroidRuntime( 3814): Calling main entry com.android.commands.monkey.Monkey
+11-28 13:38:55.411 I/AndroidRuntime( 3814): VM exiting with result code 0.
+11-28 13:38:55.486 W/TBMPERF ( 3825): seed applied: 4 keys
+11-28 13:38:55.610 W/TBMPERF ( 3825): BLOCK 122ms | ours: - | top: LayoutNodeLayoutDelegate.getMeasurePending$ui_release <- LayoutNode.getMeasurePending$ui_release <- MeasureAndLayoutDelegate.requestRemeasure <- AndroidComposeView.onRequestMeasure
+11-28 13:38:56.087 W/TBMPERF ( 3825): BLOCK 476ms | ours: - | top: NodeChainKt.access$getSentinelHead$p <- NodeChain.padChain <- NodeChain.updateFrom$ui_release <- LayoutNode.applyModifier
+11-28 13:39:03.878 E/AndroidRuntime( 3911): FATAL EXCEPTION: AsyncDvrDbTask-0
+11-28 13:39:03.878 E/AndroidRuntime( 3911): Process: com.android.tv, PID: 3911
+11-28 13:39:03.878 E/AndroidRuntime( 3911): java.lang.RuntimeException: An error occurred while executing doInBackground()
+11-28 13:39:03.878 E/AndroidRuntime( 3911): 	at android.os.AsyncTask$3.done(AsyncTask.java:354)
+11-28 13:39:03.878 E/AndroidRuntime( 3911): 	at java.util.concurrent.FutureTask.finishCompletion(FutureTask.java:383)
+11-28 13:39:03.878 E/AndroidRuntime( 3911): 	at java.util.concurrent.FutureTask.setException(FutureTask.java:252)
+11-28 13:39:03.878 E/AndroidRuntime( 3911): 	at java.util.concurrent.FutureTask.run(FutureTask.java:271)
+11-28 13:39:03.878 E/AndroidRuntime( 3911): 	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1167)
+11-28 13:39:03.878 E/AndroidRuntime( 3911): 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:641)
+11-28 13:39:03.878 E/AndroidRuntime( 3911): 	at java.lang.Thread.run(Thread.java:764)
+11-28 13:39:03.878 E/AndroidRuntime( 3911): Caused by: android.database.sqlite.SQLiteException: no such column: failed_reason (code 1 SQLITE_ERROR): , while compiling: SELECT _id, priority, type, input_id, channel_id, program_id, program_title, start_time_utc_millis, end_time_utc_millis, season_number, episode_number, episode_title, program_description, program_long_description, program_poster_art_uri, program_thumbnail_uri, state, failed_reason, series_recording_id FROM schedules
+11-28 13:39:03.878 E/AndroidRuntime( 3911): 	at android.database.sqlite.SQLiteConnection.nativePrepareStatement(Native Method)
+11-28 13:39:03.878 E/AndroidRuntime( 3911): 	at android.database.sqlite.SQLiteConnection.acquirePreparedStatement(SQLiteConnection.java:903)
+11-28 13:39:03.878 E/AndroidRuntime( 3911): 	at android.database.sqlite.SQLiteConnection.prepare(SQLiteConnection.java:514)
+11-28 13:39:03.878 E/AndroidRuntime( 3911): 	at android.database.sqlite.SQLiteSession.prepare(SQLiteSession.java:588)
+11-28 13:39:03.878 E/AndroidRuntime( 3911): 	at android.database.sqlite.SQLiteProgram.<init>(SQLiteProgram.java:58)
+11-28 13:39:03.878 E/AndroidRuntime( 3911): 	at android.database.sqlite.SQLiteQuery.<init>(SQLiteQuery.java:37)
+11-28 13:39:03.878 E/AndroidRuntime( 3911): 	at android.database.sqlite.SQLiteDirectCursorDriver.query(SQLiteDirectCursorDriver.java:46)
+11-28 13:39:03.878 E/AndroidRuntime( 3911): 	at android.database.sqlite.SQLiteDatabase.rawQueryWithFactory(SQLiteDatabase.java:1408)
+11-28 13:39:03.878 E/AndroidRuntime( 3911): 	at android.database.sqlite.SQLiteQueryBuilder.query(SQLiteQueryBuilder.java:399)
+11-28 13:39:03.878 E/AndroidRuntime( 3911): 	at android.database.sqlite.SQLiteQueryBuilder.query(SQLiteQueryBuilder.java:294)
+11-28 13:39:03.878 E/AndroidRuntime( 3911): 	at com.android.tv.dvr.provider.DvrDatabaseHelper.query(DvrDatabaseHelper.java:276)
+11-28 13:39:03.878 E/AndroidRuntime( 3911): 	at com.android.tv.dvr.provider.AsyncDvrDbTask$AsyncDvrQueryScheduleTask.doInDvrBackground(AsyncDvrDbTask.java:128)
+11-28 13:39:03.878 E/AndroidRuntime( 3911): 	at com.android.tv.dvr.provider.AsyncDvrDbTask$AsyncDvrQueryScheduleTask.doInDvrBackground(AsyncDvrDbTask.java:115)
+11-28 13:39:03.878 E/AndroidRuntime( 3911): 	at com.android.tv.dvr.provider.AsyncDvrDbTask.doInBackground(AsyncDvrDbTask.java:65)
+11-28 13:39:03.878 E/AndroidRuntime( 3911): 	at android.os.AsyncTask$2.call(AsyncTask.java:333)
+11-28 13:39:03.878 E/AndroidRuntime( 3911): 	at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+11-28 13:39:03.878 E/AndroidRuntime( 3911): 	... 3 more
+11-28 13:40:28.777 D/AndroidRuntime( 4029): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-28 13:40:28.905 D/AndroidRuntime( 4029): Calling main entry com.android.commands.uiautomator.Launcher
+11-28 13:40:29.942 D/AndroidRuntime( 4029): Shutting down VM
+11-28 13:40:30.011 D/AndroidRuntime( 4046): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-28 13:40:30.041 D/AndroidRuntime( 4046): Calling main entry com.android.commands.uiautomator.Launcher
+11-28 13:40:31.062 D/AndroidRuntime( 4046): Shutting down VM
+11-28 13:40:31.133 D/AndroidRuntime( 4062): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-28 13:40:31.163 D/AndroidRuntime( 4062): Calling main entry com.android.commands.uiautomator.Launcher
+11-28 13:40:32.179 D/AndroidRuntime( 4062): Shutting down VM
+11-28 13:40:32.247 D/AndroidRuntime( 4076): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-28 13:40:32.277 D/AndroidRuntime( 4076): Calling main entry com.android.commands.input.Input
+11-28 13:40:32.290 D/AndroidRuntime( 4076): Shutting down VM
+11-28 13:40:35.359 D/AndroidRuntime( 4088): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-28 13:40:35.389 D/AndroidRuntime( 4088): Calling main entry com.android.commands.uiautomator.Launcher
+11-28 13:40:36.404 D/AndroidRuntime( 4088): Shutting down VM
+11-28 13:40:36.472 D/AndroidRuntime( 4104): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-28 13:40:36.502 D/AndroidRuntime( 4104): Calling main entry com.android.commands.uiautomator.Launcher
+11-28 13:40:37.515 D/AndroidRuntime( 4104): Shutting down VM
+11-28 13:40:37.585 D/AndroidRuntime( 4117): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-28 13:40:37.614 D/AndroidRuntime( 4117): Calling main entry com.android.commands.input.Input
+11-28 13:40:37.630 D/AndroidRuntime( 4117): Shutting down VM
+11-28 13:40:37.786 W/TBMPERF ( 3825): BLOCK 100ms | ours: - | top: ThreadedRenderer.nSetStopped <- ThreadedRenderer.setStopped <- ViewRootImpl.performDraw <- ViewRootImpl.performTraversals
+11-28 13:40:42.708 D/AndroidRuntime( 4130): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-28 13:40:42.738 D/AndroidRuntime( 4130): Calling main entry com.android.commands.uiautomator.Launcher
+11-28 13:40:43.773 D/AndroidRuntime( 4130): Shutting down VM
+11-28 13:40:53.896 D/AndroidRuntime( 4149): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-28 13:40:53.926 D/AndroidRuntime( 4149): Calling main entry com.android.commands.uiautomator.Launcher
+11-28 13:40:54.950 D/AndroidRuntime( 4149): Shutting down VM

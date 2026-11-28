@@ -1,0 +1,487 @@
+--------- beginning of main
+11-28 13:41:34.845 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@b47a910)
+11-28 13:41:34.845 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@b47a910)
+11-28 13:41:35.845 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@5660c09)
+11-28 13:41:35.845 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@5660c09)
+11-28 13:41:35.899 E/netmgr  ( 1809): Failed to open QEMU pipe 'qemud:network': Invalid argument
+11-28 13:41:35.899 E/netmgr  ( 1809): WifiForwarder unable to open QEMU pipe: Invalid argument
+11-28 13:41:36.845 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@c140e0e)
+11-28 13:41:36.846 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@c140e0e)
+11-28 13:41:37.043 E/SurfaceFlinger( 1911): ro.sf.lcd_density must be defined as a build property
+11-28 13:41:37.043 D/gralloc_ranchu( 1586): gralloc_alloc: Creating ashmem region of size 823296
+11-28 13:41:37.048 D/HostConnection( 4391): createUnique: call
+11-28 13:41:37.049 D/HostConnection( 4391): HostConnection::get() New Host Connection established 0xe88a0b90, tid 4391
+11-28 13:41:37.051 D/HostConnection( 4391): HostComposition ext ANDROID_EMU_CHECKSUM_HELPER_v1 ANDROID_EMU_native_sync_v2 ANDROID_EMU_dma_v1 ANDROID_EMU_sync_buffer_data ANDROID_EMU_hwc_color_transform ANDROID_EMU_hwc_display_power_mode GL_OES_EGL_image_external_essl3 GL_OES_vertex_array_object GL_KHR_texture_compression_astc_ldr ANDROID_EMU_host_side_tracing ANDROID_EMU_gles_max_version_3_0 
+11-28 13:41:37.051 E/eglCodecCommon( 4391): GoldfishAddressSpaceHostMemoryAllocator: ioctl_ping failed for device_type=5, ret=-1
+11-28 13:41:37.130 D/AndroidRuntime( 4400): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-28 13:41:37.132 W/app_process( 4400): Could not reserve sentinel fault page
+11-28 13:41:37.151 W/app_process( 4400): Unexpected CPU variant for X86 using defaults: x86
+11-28 13:41:37.152 I/app_process( 4400): The ClassLoaderContext is a special shared library.
+11-28 13:41:37.152 I/app_process( 4400): The ClassLoaderContext is a special shared library.
+11-28 13:41:37.160 D/AndroidRuntime( 4400): Calling main entry com.android.commands.uiautomator.Launcher
+11-28 13:41:37.845 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@85a5fc5)
+11-28 13:41:37.846 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@85a5fc5)
+11-28 13:41:38.181 W/AccessibilityNodeInfoDumper( 4400): Fetch time: 11ms
+--------- beginning of system
+11-28 13:41:37.163 V/SettingsProvider( 1952): Notifying for 0: content://settings/secure/accessibility_enabled
+11-28 13:41:38.181 W/WindowManager( 1952): removeWindowToken: Attempted to remove non-existing token: android.os.Binder@da6702f
+11-28 13:41:38.181 V/SettingsProvider( 1952): Notifying for 0: content://settings/secure/accessibility_enabled
+11-28 13:41:38.183 D/AndroidRuntime( 4400): Shutting down VM
+11-28 13:41:38.255 D/AndroidRuntime( 4413): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-28 13:41:38.257 W/app_process( 4413): Could not reserve sentinel fault page
+11-28 13:41:38.276 W/app_process( 4413): Unexpected CPU variant for X86 using defaults: x86
+11-28 13:41:38.276 I/app_process( 4413): The ClassLoaderContext is a special shared library.
+11-28 13:41:38.285 D/AndroidRuntime( 4413): Calling main entry com.android.commands.input.Input
+11-28 13:41:38.286 I/Input   ( 4413): injectMotionEvent: MotionEvent { action=ACTION_DOWN, actionButton=0, id[0]=0, x[0]=288.0, y[0]=618.0, toolType[0]=TOOL_TYPE_UNKNOWN, buttonState=0, metaState=0, flags=0x0, edgeFlags=0x0, pointerCount=1, historySize=0, eventTime=192285, downTime=192285, deviceId=0, source=0x1002 }
+11-28 13:41:38.287 I/Input   ( 4413): injectMotionEvent: MotionEvent { action=ACTION_UP, actionButton=0, id[0]=0, x[0]=288.0, y[0]=618.0, toolType[0]=TOOL_TYPE_UNKNOWN, buttonState=0, metaState=0, flags=0x0, edgeFlags=0x0, pointerCount=1, historySize=0, eventTime=192285, downTime=192285, deviceId=0, source=0x1002 }
+11-28 13:41:38.288 D/AndroidRuntime( 4413): Shutting down VM
+11-28 13:41:38.495 D/AndroidRuntime( 4423): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-28 13:41:38.497 W/app_process( 4423): Could not reserve sentinel fault page
+11-28 13:41:38.516 W/app_process( 4423): Unexpected CPU variant for X86 using defaults: x86
+11-28 13:41:38.517 I/app_process( 4423): The ClassLoaderContext is a special shared library.
+11-28 13:41:38.525 D/AndroidRuntime( 4423): Calling main entry com.android.commands.input.Input
+11-28 13:41:38.527 I/Input   ( 4423): injectMotionEvent: MotionEvent { action=ACTION_DOWN, actionButton=0, id[0]=0, x[0]=224.0, y[0]=618.0, toolType[0]=TOOL_TYPE_UNKNOWN, buttonState=0, metaState=0, flags=0x0, edgeFlags=0x0, pointerCount=1, historySize=0, eventTime=192525, downTime=192525, deviceId=0, source=0x1002 }
+11-28 13:41:38.528 I/Input   ( 4423): injectMotionEvent: MotionEvent { action=ACTION_UP, actionButton=0, id[0]=0, x[0]=224.0, y[0]=618.0, toolType[0]=TOOL_TYPE_UNKNOWN, buttonState=0, metaState=0, flags=0x0, edgeFlags=0x0, pointerCount=1, historySize=0, eventTime=192525, downTime=192525, deviceId=0, source=0x1002 }
+11-28 13:41:38.529 D/AndroidRuntime( 4423): Shutting down VM
+11-28 13:41:38.737 D/AndroidRuntime( 4433): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-28 13:41:38.759 W/app_process( 4433): Unexpected CPU variant for X86 using defaults: x86
+11-28 13:41:38.759 I/app_process( 4433): The ClassLoaderContext is a special shared library.
+11-28 13:41:38.767 D/AndroidRuntime( 4433): Calling main entry com.android.commands.input.Input
+11-28 13:41:38.767 I/Input   ( 4433): injectMotionEvent: MotionEvent { action=ACTION_DOWN, actionButton=0, id[0]=0, x[0]=160.0, y[0]=618.0, toolType[0]=TOOL_TYPE_UNKNOWN, buttonState=0, metaState=0, flags=0x0, edgeFlags=0x0, pointerCount=1, historySize=0, eventTime=192767, downTime=192767, deviceId=0, source=0x1002 }
+11-28 13:41:38.788 I/Input   ( 4433): injectMotionEvent: MotionEvent { action=ACTION_UP, actionButton=0, id[0]=0, x[0]=160.0, y[0]=618.0, toolType[0]=TOOL_TYPE_UNKNOWN, buttonState=0, metaState=0, flags=0x0, edgeFlags=0x0, pointerCount=1, historySize=0, eventTime=192767, downTime=192767, deviceId=0, source=0x1002 }
+11-28 13:41:38.794 D/AndroidRuntime( 4433): Shutting down VM
+11-28 13:41:38.845 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@333e04b)
+11-28 13:41:38.845 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@333e04b)
+11-28 13:41:39.006 D/AndroidRuntime( 4443): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-28 13:41:39.032 W/app_process( 4443): Unexpected CPU variant for X86 using defaults: x86
+11-28 13:41:39.033 I/app_process( 4443): The ClassLoaderContext is a special shared library.
+11-28 13:41:39.041 D/AndroidRuntime( 4443): Calling main entry com.android.commands.input.Input
+11-28 13:41:39.045 I/Input   ( 4443): injectMotionEvent: MotionEvent { action=ACTION_DOWN, actionButton=0, id[0]=0, x[0]=96.0, y[0]=618.0, toolType[0]=TOOL_TYPE_UNKNOWN, buttonState=0, metaState=0, flags=0x0, edgeFlags=0x0, pointerCount=1, historySize=0, eventTime=193041, downTime=193041, deviceId=0, source=0x1002 }
+11-28 13:41:39.046 I/Input   ( 4443): injectMotionEvent: MotionEvent { action=ACTION_UP, actionButton=0, id[0]=0, x[0]=96.0, y[0]=618.0, toolType[0]=TOOL_TYPE_UNKNOWN, buttonState=0, metaState=0, flags=0x0, edgeFlags=0x0, pointerCount=1, historySize=0, eventTime=193041, downTime=193041, deviceId=0, source=0x1002 }
+11-28 13:41:39.047 D/AndroidRuntime( 4443): Shutting down VM
+11-28 13:41:39.255 D/AndroidRuntime( 4453): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-28 13:41:39.281 W/app_process( 4453): Unexpected CPU variant for X86 using defaults: x86
+11-28 13:41:39.282 I/app_process( 4453): The ClassLoaderContext is a special shared library.
+11-28 13:41:39.290 D/AndroidRuntime( 4453): Calling main entry com.android.commands.input.Input
+11-28 13:41:39.291 I/Input   ( 4453): injectMotionEvent: MotionEvent { action=ACTION_DOWN, actionButton=0, id[0]=0, x[0]=288.0, y[0]=618.0, toolType[0]=TOOL_TYPE_UNKNOWN, buttonState=0, metaState=0, flags=0x0, edgeFlags=0x0, pointerCount=1, historySize=0, eventTime=193290, downTime=193290, deviceId=0, source=0x1002 }
+11-28 13:41:39.292 I/Input   ( 4453): injectMotionEvent: MotionEvent { action=ACTION_UP, actionButton=0, id[0]=0, x[0]=288.0, y[0]=618.0, toolType[0]=TOOL_TYPE_UNKNOWN, buttonState=0, metaState=0, flags=0x0, edgeFlags=0x0, pointerCount=1, historySize=0, eventTime=193290, downTime=193290, deviceId=0, source=0x1002 }
+11-28 13:41:39.293 D/AndroidRuntime( 4453): Shutting down VM
+11-28 13:41:39.516 D/AndroidRuntime( 4463): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-28 13:41:39.543 W/app_process( 4463): Unexpected CPU variant for X86 using defaults: x86
+11-28 13:41:39.544 I/app_process( 4463): The ClassLoaderContext is a special shared library.
+11-28 13:41:39.554 D/AndroidRuntime( 4463): Calling main entry com.android.commands.input.Input
+11-28 13:41:39.555 I/Input   ( 4463): injectMotionEvent: MotionEvent { action=ACTION_DOWN, actionButton=0, id[0]=0, x[0]=224.0, y[0]=618.0, toolType[0]=TOOL_TYPE_UNKNOWN, buttonState=0, metaState=0, flags=0x0, edgeFlags=0x0, pointerCount=1, historySize=0, eventTime=193554, downTime=193554, deviceId=0, source=0x1002 }
+11-28 13:41:39.556 I/Input   ( 4463): injectMotionEvent: MotionEvent { action=ACTION_UP, actionButton=0, id[0]=0, x[0]=224.0, y[0]=618.0, toolType[0]=TOOL_TYPE_UNKNOWN, buttonState=0, metaState=0, flags=0x0, edgeFlags=0x0, pointerCount=1, historySize=0, eventTime=193554, downTime=193554, deviceId=0, source=0x1002 }
+11-28 13:41:39.557 D/AndroidRuntime( 4463): Shutting down VM
+11-28 13:41:39.769 D/AndroidRuntime( 4473): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-28 13:41:39.794 W/app_process( 4473): Unexpected CPU variant for X86 using defaults: x86
+11-28 13:41:39.795 I/app_process( 4473): The ClassLoaderContext is a special shared library.
+11-28 13:41:39.804 D/AndroidRuntime( 4473): Calling main entry com.android.commands.input.Input
+11-28 13:41:39.805 I/Input   ( 4473): injectMotionEvent: MotionEvent { action=ACTION_DOWN, actionButton=0, id[0]=0, x[0]=160.0, y[0]=618.0, toolType[0]=TOOL_TYPE_UNKNOWN, buttonState=0, metaState=0, flags=0x0, edgeFlags=0x0, pointerCount=1, historySize=0, eventTime=193804, downTime=193804, deviceId=0, source=0x1002 }
+11-28 13:41:39.806 I/Input   ( 4473): injectMotionEvent: MotionEvent { action=ACTION_UP, actionButton=0, id[0]=0, x[0]=160.0, y[0]=618.0, toolType[0]=TOOL_TYPE_UNKNOWN, buttonState=0, metaState=0, flags=0x0, edgeFlags=0x0, pointerCount=1, historySize=0, eventTime=193804, downTime=193804, deviceId=0, source=0x1002 }
+11-28 13:41:39.808 D/AndroidRuntime( 4473): Shutting down VM
+11-28 13:41:39.846 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@6f8a28)
+11-28 13:41:39.846 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@6f8a28)
+11-28 13:41:40.021 D/AndroidRuntime( 4483): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-28 13:41:40.042 W/app_process( 4483): Unexpected CPU variant for X86 using defaults: x86
+11-28 13:41:40.045 I/app_process( 4483): The ClassLoaderContext is a special shared library.
+11-28 13:41:40.057 D/AndroidRuntime( 4483): Calling main entry com.android.commands.input.Input
+11-28 13:41:40.059 I/Input   ( 4483): injectMotionEvent: MotionEvent { action=ACTION_DOWN, actionButton=0, id[0]=0, x[0]=96.0, y[0]=618.0, toolType[0]=TOOL_TYPE_UNKNOWN, buttonState=0, metaState=0, flags=0x0, edgeFlags=0x0, pointerCount=1, historySize=0, eventTime=194058, downTime=194058, deviceId=0, source=0x1002 }
+11-28 13:41:40.061 I/Input   ( 4483): injectMotionEvent: MotionEvent { action=ACTION_UP, actionButton=0, id[0]=0, x[0]=96.0, y[0]=618.0, toolType[0]=TOOL_TYPE_UNKNOWN, buttonState=0, metaState=0, flags=0x0, edgeFlags=0x0, pointerCount=1, historySize=0, eventTime=194058, downTime=194058, deviceId=0, source=0x1002 }
+11-28 13:41:40.062 D/AndroidRuntime( 4483): Shutting down VM
+11-28 13:41:40.273 D/AndroidRuntime( 4493): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-28 13:41:40.299 W/app_process( 4493): Unexpected CPU variant for X86 using defaults: x86
+11-28 13:41:40.300 I/app_process( 4493): The ClassLoaderContext is a special shared library.
+11-28 13:41:40.309 D/AndroidRuntime( 4493): Calling main entry com.android.commands.input.Input
+11-28 13:41:40.310 I/Input   ( 4493): injectMotionEvent: MotionEvent { action=ACTION_DOWN, actionButton=0, id[0]=0, x[0]=288.0, y[0]=618.0, toolType[0]=TOOL_TYPE_UNKNOWN, buttonState=0, metaState=0, flags=0x0, edgeFlags=0x0, pointerCount=1, historySize=0, eventTime=194309, downTime=194309, deviceId=0, source=0x1002 }
+11-28 13:41:40.310 I/Input   ( 4493): injectMotionEvent: MotionEvent { action=ACTION_UP, actionButton=0, id[0]=0, x[0]=288.0, y[0]=618.0, toolType[0]=TOOL_TYPE_UNKNOWN, buttonState=0, metaState=0, flags=0x0, edgeFlags=0x0, pointerCount=1, historySize=0, eventTime=194309, downTime=194309, deviceId=0, source=0x1002 }
+11-28 13:41:40.311 D/AndroidRuntime( 4493): Shutting down VM
+11-28 13:41:40.531 D/AndroidRuntime( 4503): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-28 13:41:40.558 W/app_process( 4503): Unexpected CPU variant for X86 using defaults: x86
+11-28 13:41:40.559 I/app_process( 4503): The ClassLoaderContext is a special shared library.
+11-28 13:41:40.570 D/AndroidRuntime( 4503): Calling main entry com.android.commands.input.Input
+11-28 13:41:40.573 I/Input   ( 4503): injectMotionEvent: MotionEvent { action=ACTION_DOWN, actionButton=0, id[0]=0, x[0]=224.0, y[0]=618.0, toolType[0]=TOOL_TYPE_UNKNOWN, buttonState=0, metaState=0, flags=0x0, edgeFlags=0x0, pointerCount=1, historySize=0, eventTime=194570, downTime=194570, deviceId=0, source=0x1002 }
+11-28 13:41:40.574 I/Input   ( 4503): injectMotionEvent: MotionEvent { action=ACTION_UP, actionButton=0, id[0]=0, x[0]=224.0, y[0]=618.0, toolType[0]=TOOL_TYPE_UNKNOWN, buttonState=0, metaState=0, flags=0x0, edgeFlags=0x0, pointerCount=1, historySize=0, eventTime=194570, downTime=194570, deviceId=0, source=0x1002 }
+11-28 13:41:40.574 D/AndroidRuntime( 4503): Shutting down VM
+11-28 13:41:40.783 D/AndroidRuntime( 4513): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-28 13:41:40.808 W/app_process( 4513): Unexpected CPU variant for X86 using defaults: x86
+11-28 13:41:40.808 I/app_process( 4513): The ClassLoaderContext is a special shared library.
+11-28 13:41:40.816 D/AndroidRuntime( 4513): Calling main entry com.android.commands.input.Input
+11-28 13:41:40.817 I/Input   ( 4513): injectMotionEvent: MotionEvent { action=ACTION_DOWN, actionButton=0, id[0]=0, x[0]=160.0, y[0]=618.0, toolType[0]=TOOL_TYPE_UNKNOWN, buttonState=0, metaState=0, flags=0x0, edgeFlags=0x0, pointerCount=1, historySize=0, eventTime=194816, downTime=194816, deviceId=0, source=0x1002 }
+11-28 13:41:40.818 I/Input   ( 4513): injectMotionEvent: MotionEvent { action=ACTION_UP, actionButton=0, id[0]=0, x[0]=160.0, y[0]=618.0, toolType[0]=TOOL_TYPE_UNKNOWN, buttonState=0, metaState=0, flags=0x0, edgeFlags=0x0, pointerCount=1, historySize=0, eventTime=194816, downTime=194816, deviceId=0, source=0x1002 }
+11-28 13:41:40.819 D/AndroidRuntime( 4513): Shutting down VM
+11-28 13:41:40.845 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@e863341)
+11-28 13:41:40.846 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@e863341)
+11-28 13:41:41.029 D/AndroidRuntime( 4523): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-28 13:41:41.053 W/app_process( 4523): Unexpected CPU variant for X86 using defaults: x86
+11-28 13:41:41.054 I/app_process( 4523): The ClassLoaderContext is a special shared library.
+11-28 13:41:41.055 E/storaged( 1723): getDiskStats failed with result NOT_SUPPORTED and size 0
+11-28 13:41:41.062 D/AndroidRuntime( 4523): Calling main entry com.android.commands.input.Input
+11-28 13:41:41.063 I/Input   ( 4523): injectMotionEvent: MotionEvent { action=ACTION_DOWN, actionButton=0, id[0]=0, x[0]=96.0, y[0]=618.0, toolType[0]=TOOL_TYPE_UNKNOWN, buttonState=0, metaState=0, flags=0x0, edgeFlags=0x0, pointerCount=1, historySize=0, eventTime=195063, downTime=195063, deviceId=0, source=0x1002 }
+11-28 13:41:41.064 I/Input   ( 4523): injectMotionEvent: MotionEvent { action=ACTION_UP, actionButton=0, id[0]=0, x[0]=96.0, y[0]=618.0, toolType[0]=TOOL_TYPE_UNKNOWN, buttonState=0, metaState=0, flags=0x0, edgeFlags=0x0, pointerCount=1, historySize=0, eventTime=195063, downTime=195063, deviceId=0, source=0x1002 }
+11-28 13:41:41.064 D/AndroidRuntime( 4523): Shutting down VM
+11-28 13:41:41.272 D/AndroidRuntime( 4533): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-28 13:41:41.298 W/app_process( 4533): Unexpected CPU variant for X86 using defaults: x86
+11-28 13:41:41.298 I/app_process( 4533): The ClassLoaderContext is a special shared library.
+11-28 13:41:41.307 D/AndroidRuntime( 4533): Calling main entry com.android.commands.input.Input
+11-28 13:41:41.308 I/Input   ( 4533): injectMotionEvent: MotionEvent { action=ACTION_DOWN, actionButton=0, id[0]=0, x[0]=288.0, y[0]=618.0, toolType[0]=TOOL_TYPE_UNKNOWN, buttonState=0, metaState=0, flags=0x0, edgeFlags=0x0, pointerCount=1, historySize=0, eventTime=195307, downTime=195307, deviceId=0, source=0x1002 }
+11-28 13:41:41.311 I/Input   ( 4533): injectMotionEvent: MotionEvent { action=ACTION_UP, actionButton=0, id[0]=0, x[0]=288.0, y[0]=618.0, toolType[0]=TOOL_TYPE_UNKNOWN, buttonState=0, metaState=0, flags=0x0, edgeFlags=0x0, pointerCount=1, historySize=0, eventTime=195307, downTime=195307, deviceId=0, source=0x1002 }
+11-28 13:41:41.312 D/AndroidRuntime( 4533): Shutting down VM
+11-28 13:41:41.527 D/AndroidRuntime( 4543): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-28 13:41:41.554 W/app_process( 4543): Unexpected CPU variant for X86 using defaults: x86
+11-28 13:41:41.555 I/app_process( 4543): The ClassLoaderContext is a special shared library.
+11-28 13:41:41.565 D/AndroidRuntime( 4543): Calling main entry com.android.commands.input.Input
+11-28 13:41:41.566 I/Input   ( 4543): injectMotionEvent: MotionEvent { action=ACTION_DOWN, actionButton=0, id[0]=0, x[0]=224.0, y[0]=618.0, toolType[0]=TOOL_TYPE_UNKNOWN, buttonState=0, metaState=0, flags=0x0, edgeFlags=0x0, pointerCount=1, historySize=0, eventTime=195565, downTime=195565, deviceId=0, source=0x1002 }
+11-28 13:41:41.567 I/Input   ( 4543): injectMotionEvent: MotionEvent { action=ACTION_UP, actionButton=0, id[0]=0, x[0]=224.0, y[0]=618.0, toolType[0]=TOOL_TYPE_UNKNOWN, buttonState=0, metaState=0, flags=0x0, edgeFlags=0x0, pointerCount=1, historySize=0, eventTime=195565, downTime=195565, deviceId=0, source=0x1002 }
+11-28 13:41:41.568 D/AndroidRuntime( 4543): Shutting down VM
+11-28 13:41:41.775 D/AndroidRuntime( 4553): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-28 13:41:41.777 W/app_process( 4553): Could not reserve sentinel fault page
+11-28 13:41:41.801 W/app_process( 4553): Unexpected CPU variant for X86 using defaults: x86
+11-28 13:41:41.801 I/app_process( 4553): The ClassLoaderContext is a special shared library.
+11-28 13:41:41.809 D/AndroidRuntime( 4553): Calling main entry com.android.commands.input.Input
+11-28 13:41:41.810 I/Input   ( 4553): injectMotionEvent: MotionEvent { action=ACTION_DOWN, actionButton=0, id[0]=0, x[0]=160.0, y[0]=618.0, toolType[0]=TOOL_TYPE_UNKNOWN, buttonState=0, metaState=0, flags=0x0, edgeFlags=0x0, pointerCount=1, historySize=0, eventTime=195809, downTime=195809, deviceId=0, source=0x1002 }
+11-28 13:41:41.811 I/Input   ( 4553): injectMotionEvent: MotionEvent { action=ACTION_UP, actionButton=0, id[0]=0, x[0]=160.0, y[0]=618.0, toolType[0]=TOOL_TYPE_UNKNOWN, buttonState=0, metaState=0, flags=0x0, edgeFlags=0x0, pointerCount=1, historySize=0, eventTime=195809, downTime=195809, deviceId=0, source=0x1002 }
+11-28 13:41:41.812 D/AndroidRuntime( 4553): Shutting down VM
+11-28 13:41:41.846 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@807d0e6)
+11-28 13:41:41.846 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@807d0e6)
+11-28 13:41:42.038 D/AndroidRuntime( 4563): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-28 13:41:42.060 W/app_process( 4563): Unexpected CPU variant for X86 using defaults: x86
+11-28 13:41:42.060 I/app_process( 4563): The ClassLoaderContext is a special shared library.
+11-28 13:41:42.070 D/AndroidRuntime( 4563): Calling main entry com.android.commands.input.Input
+11-28 13:41:42.071 I/Input   ( 4563): injectMotionEvent: MotionEvent { action=ACTION_DOWN, actionButton=0, id[0]=0, x[0]=96.0, y[0]=618.0, toolType[0]=TOOL_TYPE_UNKNOWN, buttonState=0, metaState=0, flags=0x0, edgeFlags=0x0, pointerCount=1, historySize=0, eventTime=196070, downTime=196070, deviceId=0, source=0x1002 }
+11-28 13:41:42.072 I/Input   ( 4563): injectMotionEvent: MotionEvent { action=ACTION_UP, actionButton=0, id[0]=0, x[0]=96.0, y[0]=618.0, toolType[0]=TOOL_TYPE_UNKNOWN, buttonState=0, metaState=0, flags=0x0, edgeFlags=0x0, pointerCount=1, historySize=0, eventTime=196070, downTime=196070, deviceId=0, source=0x1002 }
+11-28 13:41:42.073 D/AndroidRuntime( 4563): Shutting down VM
+11-28 13:41:42.846 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@4de3627)
+11-28 13:41:42.846 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@4de3627)
+11-28 13:41:43.846 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@4720d4)
+11-28 13:41:43.846 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@4720d4)
+11-28 13:41:43.854 E/memtrack( 1952): Couldn't load memtrack module
+11-28 13:41:43.854 W/android.os.Debug( 1952): failed to get memory consumption info: -1
+11-28 13:41:44.846 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@241c27d)
+11-28 13:41:44.846 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@241c27d)
+11-28 13:41:45.847 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@8f01572)
+11-28 13:41:45.847 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@8f01572)
+11-28 13:41:46.847 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@ee5b66c)
+11-28 13:41:46.847 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@ee5b66c)
+11-28 13:41:47.579 W/DnsTlsSocket( 1922): SSL_connect error 5, errno=111
+11-28 13:41:47.847 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@8ebc435)
+11-28 13:41:47.847 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@8ebc435)
+11-28 13:41:48.847 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@828e0ca)
+11-28 13:41:48.847 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@828e0ca)
+11-28 13:41:49.570 D/WificondControl( 1952): Scan result ready event
+11-28 13:41:49.847 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@421723b)
+11-28 13:41:49.847 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@421723b)
+11-28 13:41:50.259 E/SurfaceFlinger( 1911): ro.sf.lcd_density must be defined as a build property
+11-28 13:41:50.260 D/gralloc_ranchu( 1586): gralloc_alloc: Creating ashmem region of size 823296
+11-28 13:41:50.265 D/HostConnection( 4576): createUnique: call
+11-28 13:41:50.266 D/HostConnection( 4576): HostConnection::get() New Host Connection established 0xe63a0b90, tid 4576
+11-28 13:41:50.268 D/HostConnection( 4576): HostComposition ext ANDROID_EMU_CHECKSUM_HELPER_v1 ANDROID_EMU_native_sync_v2 ANDROID_EMU_dma_v1 ANDROID_EMU_sync_buffer_data ANDROID_EMU_hwc_color_transform ANDROID_EMU_hwc_display_power_mode GL_OES_EGL_image_external_essl3 GL_OES_vertex_array_object GL_KHR_texture_compression_astc_ldr ANDROID_EMU_host_side_tracing ANDROID_EMU_gles_max_version_3_0 
+11-28 13:41:50.268 E/eglCodecCommon( 4576): GoldfishAddressSpaceHostMemoryAllocator: ioctl_ping failed for device_type=5, ret=-1
+11-28 13:41:50.332 D/AndroidRuntime( 4578): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-28 13:41:50.352 W/app_process( 4578): Unexpected CPU variant for X86 using defaults: x86
+11-28 13:41:50.353 I/app_process( 4578): The ClassLoaderContext is a special shared library.
+11-28 13:41:50.361 D/AndroidRuntime( 4578): Calling main entry com.android.commands.input.Input
+11-28 13:41:50.361 I/Input   ( 4578): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_RIGHT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=204361, downTime=204361, deviceId=-1, source=0x101 }
+11-28 13:41:50.365 I/Input   ( 4578): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_RIGHT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=204361, downTime=204361, deviceId=-1, source=0x101 }
+11-28 13:41:50.366 I/Input   ( 4578): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_RIGHT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=204366, downTime=204366, deviceId=-1, source=0x101 }
+11-28 13:41:50.369 I/Input   ( 4578): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_RIGHT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=204366, downTime=204366, deviceId=-1, source=0x101 }
+11-28 13:41:50.383 I/Input   ( 4578): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_RIGHT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=204383, downTime=204383, deviceId=-1, source=0x101 }
+11-28 13:41:50.439 I/Input   ( 4578): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_RIGHT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=204383, downTime=204383, deviceId=-1, source=0x101 }
+11-28 13:41:50.440 I/Input   ( 4578): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_RIGHT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=204440, downTime=204440, deviceId=-1, source=0x101 }
+11-28 13:41:50.440 I/Input   ( 4578): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_RIGHT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=204440, downTime=204440, deviceId=-1, source=0x101 }
+11-28 13:41:50.441 I/Input   ( 4578): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_RIGHT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=204441, downTime=204441, deviceId=-1, source=0x101 }
+11-28 13:41:50.442 I/Input   ( 4578): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_RIGHT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=204441, downTime=204441, deviceId=-1, source=0x101 }
+11-28 13:41:50.442 I/Input   ( 4578): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_RIGHT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=204442, downTime=204442, deviceId=-1, source=0x101 }
+11-28 13:41:50.443 I/Input   ( 4578): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_RIGHT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=204442, downTime=204442, deviceId=-1, source=0x101 }
+11-28 13:41:50.443 I/Input   ( 4578): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_RIGHT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=204443, downTime=204443, deviceId=-1, source=0x101 }
+11-28 13:41:50.444 I/Input   ( 4578): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_RIGHT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=204443, downTime=204443, deviceId=-1, source=0x101 }
+11-28 13:41:50.445 I/Input   ( 4578): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_RIGHT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=204445, downTime=204445, deviceId=-1, source=0x101 }
+11-28 13:41:50.445 I/Input   ( 4578): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_RIGHT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=204445, downTime=204445, deviceId=-1, source=0x101 }
+11-28 13:41:50.445 D/AndroidRuntime( 4578): Shutting down VM
+11-28 13:41:50.520 D/AndroidRuntime( 4588): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-28 13:41:50.541 W/app_process( 4588): Unexpected CPU variant for X86 using defaults: x86
+11-28 13:41:50.542 I/app_process( 4588): The ClassLoaderContext is a special shared library.
+11-28 13:41:50.550 D/AndroidRuntime( 4588): Calling main entry com.android.commands.input.Input
+11-28 13:41:50.550 I/Input   ( 4588): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_LEFT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=204550, downTime=204550, deviceId=-1, source=0x101 }
+11-28 13:41:50.552 I/Input   ( 4588): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_LEFT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=204550, downTime=204550, deviceId=-1, source=0x101 }
+11-28 13:41:50.553 I/Input   ( 4588): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_LEFT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=204553, downTime=204553, deviceId=-1, source=0x101 }
+11-28 13:41:50.554 I/Input   ( 4588): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_LEFT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=204553, downTime=204553, deviceId=-1, source=0x101 }
+11-28 13:41:50.554 I/Input   ( 4588): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_LEFT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=204554, downTime=204554, deviceId=-1, source=0x101 }
+11-28 13:41:50.555 I/Input   ( 4588): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_LEFT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=204554, downTime=204554, deviceId=-1, source=0x101 }
+11-28 13:41:50.556 I/Input   ( 4588): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_LEFT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=204556, downTime=204556, deviceId=-1, source=0x101 }
+11-28 13:41:50.556 I/Input   ( 4588): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_LEFT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=204556, downTime=204556, deviceId=-1, source=0x101 }
+11-28 13:41:50.557 I/Input   ( 4588): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_LEFT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=204557, downTime=204557, deviceId=-1, source=0x101 }
+11-28 13:41:50.558 I/Input   ( 4588): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_LEFT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=204557, downTime=204557, deviceId=-1, source=0x101 }
+11-28 13:41:50.558 I/Input   ( 4588): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_LEFT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=204558, downTime=204558, deviceId=-1, source=0x101 }
+11-28 13:41:50.559 I/Input   ( 4588): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_LEFT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=204558, downTime=204558, deviceId=-1, source=0x101 }
+11-28 13:41:50.560 I/Input   ( 4588): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_LEFT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=204560, downTime=204560, deviceId=-1, source=0x101 }
+11-28 13:41:50.560 I/Input   ( 4588): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_LEFT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=204560, downTime=204560, deviceId=-1, source=0x101 }
+11-28 13:41:50.561 I/Input   ( 4588): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_LEFT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=204561, downTime=204561, deviceId=-1, source=0x101 }
+11-28 13:41:50.561 I/Input   ( 4588): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_LEFT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=204561, downTime=204561, deviceId=-1, source=0x101 }
+11-28 13:41:50.562 D/AndroidRuntime( 4588): Shutting down VM
+11-28 13:41:50.631 D/AndroidRuntime( 4598): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-28 13:41:50.652 W/app_process( 4598): Unexpected CPU variant for X86 using defaults: x86
+11-28 13:41:50.652 I/app_process( 4598): The ClassLoaderContext is a special shared library.
+11-28 13:41:50.661 D/AndroidRuntime( 4598): Calling main entry com.android.commands.input.Input
+11-28 13:41:50.661 I/Input   ( 4598): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_DOWN, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=204661, downTime=204661, deviceId=-1, source=0x101 }
+11-28 13:41:50.663 I/Input   ( 4598): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_DOWN, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=204661, downTime=204661, deviceId=-1, source=0x101 }
+11-28 13:41:50.663 I/Input   ( 4598): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_DOWN, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=204663, downTime=204663, deviceId=-1, source=0x101 }
+11-28 13:41:50.664 I/Input   ( 4598): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_DOWN, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=204663, downTime=204663, deviceId=-1, source=0x101 }
+11-28 13:41:50.664 I/Input   ( 4598): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_DOWN, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=204664, downTime=204664, deviceId=-1, source=0x101 }
+11-28 13:41:50.665 I/Input   ( 4598): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_DOWN, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=204664, downTime=204664, deviceId=-1, source=0x101 }
+11-28 13:41:50.665 I/Input   ( 4598): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_DOWN, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=204665, downTime=204665, deviceId=-1, source=0x101 }
+11-28 13:41:50.665 I/Input   ( 4598): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_DOWN, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=204665, downTime=204665, deviceId=-1, source=0x101 }
+11-28 13:41:50.666 I/Input   ( 4598): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_DOWN, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=204666, downTime=204666, deviceId=-1, source=0x101 }
+11-28 13:41:50.666 I/Input   ( 4598): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_DOWN, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=204666, downTime=204666, deviceId=-1, source=0x101 }
+11-28 13:41:50.667 I/Input   ( 4598): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_DOWN, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=204667, downTime=204667, deviceId=-1, source=0x101 }
+11-28 13:41:50.667 I/Input   ( 4598): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_DOWN, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=204667, downTime=204667, deviceId=-1, source=0x101 }
+11-28 13:41:50.668 D/AndroidRuntime( 4598): Shutting down VM
+11-28 13:41:50.727 D/AndroidRuntime( 4608): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-28 13:41:50.748 W/app_process( 4608): Unexpected CPU variant for X86 using defaults: x86
+11-28 13:41:50.749 I/app_process( 4608): The ClassLoaderContext is a special shared library.
+11-28 13:41:50.757 D/AndroidRuntime( 4608): Calling main entry com.android.commands.input.Input
+11-28 13:41:50.757 I/Input   ( 4608): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_UP, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=204757, downTime=204757, deviceId=-1, source=0x101 }
+11-28 13:41:50.760 I/Input   ( 4608): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_UP, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=204757, downTime=204757, deviceId=-1, source=0x101 }
+11-28 13:41:50.762 I/Input   ( 4608): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_UP, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=204762, downTime=204762, deviceId=-1, source=0x101 }
+11-28 13:41:50.764 I/Input   ( 4608): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_UP, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=204762, downTime=204762, deviceId=-1, source=0x101 }
+11-28 13:41:50.766 I/Input   ( 4608): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_UP, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=204766, downTime=204766, deviceId=-1, source=0x101 }
+11-28 13:41:50.769 I/Input   ( 4608): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_UP, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=204766, downTime=204766, deviceId=-1, source=0x101 }
+11-28 13:41:50.774 I/Input   ( 4608): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_UP, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=204774, downTime=204774, deviceId=-1, source=0x101 }
+11-28 13:41:50.785 I/Input   ( 4608): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_UP, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=204774, downTime=204774, deviceId=-1, source=0x101 }
+11-28 13:41:50.803 I/native  ( 2147): neural_language_identifier.cc:337 Portable Language Identification module loaded successfully.
+11-28 13:41:50.809 W/GInputConnectionWrapper( 2147): Fixing selection indices to 0, 0
+11-28 13:41:50.815 D/TVNotifService( 2477): skipped notification StatusBarNotification(pkg=android user=UserHandle{-1} id=8 tag=null key=-1|android|8|null|1000: Notification(channel=VIRTUAL_KEYBOARD pri=0 contentView=null vibrate=null sound=null defaults=0x0 flags=0x2 color=0xff607d8b category=sys vis=PRIVATE)) userId: 0
+11-28 13:41:50.816 E/SurfaceFlinger( 1911): ro.sf.lcd_density must be defined as a build property
+11-28 13:41:50.817 I/native  ( 2147): blacklist-assembly.cc:112 LoadBlacklist en
+11-28 13:41:50.817 I/native  ( 2147): blacklist.cc:212 No blacklist file for a language. (This is OK if the language is loaded for the first time.) /data/user/0/com.google.android.inputmethod.latin/files/personal/blacklist.en_us.list
+11-28 13:41:50.819 D/TVNotifService( 2477): skipped notification StatusBarNotification(pkg=android user=UserHandle{-1} id=8 tag=null key=-1|android|8|null|1000: Notification(channel=VIRTUAL_KEYBOARD pri=0 contentView=null vibrate=null sound=null defaults=0x0 flags=0x2 color=0xff607d8b category=sys vis=PRIVATE)) userId: 0
+11-28 13:41:50.819 I/Input   ( 4608): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_UP, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=204819, downTime=204819, deviceId=-1, source=0x101 }
+11-28 13:41:50.819 I/Input   ( 4608): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_UP, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=204819, downTime=204819, deviceId=-1, source=0x101 }
+11-28 13:41:50.820 I/Input   ( 4608): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_UP, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=204820, downTime=204820, deviceId=-1, source=0x101 }
+11-28 13:41:50.820 I/Input   ( 4608): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_UP, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=204820, downTime=204820, deviceId=-1, source=0x101 }
+11-28 13:41:50.821 D/AndroidRuntime( 4608): Shutting down VM
+11-28 13:41:50.829 D/gralloc_ranchu( 1586): gralloc_alloc: Creating ashmem region of size 823296
+11-28 13:41:50.829 D/gralloc_ranchu( 1586): gralloc_alloc: Creating ashmem region of size 823296
+11-28 13:41:50.830 D/gralloc_ranchu( 1586): gralloc_alloc: Creating ashmem region of size 823296
+11-28 13:41:50.831 D/HostConnection( 2147): HostConnection::get() New Host Connection established 0xcd0654f0, tid 4624
+11-28 13:41:50.834 D/HostConnection( 2147): HostComposition ext ANDROID_EMU_CHECKSUM_HELPER_v1 ANDROID_EMU_native_sync_v2 ANDROID_EMU_dma_v1 ANDROID_EMU_sync_buffer_data ANDROID_EMU_hwc_color_transform ANDROID_EMU_hwc_display_power_mode GL_OES_EGL_image_external_essl3 GL_OES_vertex_array_object GL_KHR_texture_compression_astc_ldr ANDROID_EMU_host_side_tracing ANDROID_EMU_gles_max_version_3_0 
+11-28 13:41:50.836 I/ConfigStore( 2147): android::hardware::configstore::V1_0::ISurfaceFlingerConfigs::hasWideColorDisplay retrieved: 0
+11-28 13:41:50.836 I/ConfigStore( 2147): android::hardware::configstore::V1_0::ISurfaceFlingerConfigs::hasHDRDisplay retrieved: 0
+11-28 13:41:50.836 I/OpenGLRenderer( 2147): Initialized EGL, version 1.4
+11-28 13:41:50.836 D/OpenGLRenderer( 2147): Swap behavior 1
+11-28 13:41:50.836 D/eglCodecCommon( 2147): setVertexArrayObject: set vao to 0 (0) 0 0
+11-28 13:41:50.836 D/EGL_emulation( 2147): eglCreateContext: 0xdfe853c0: maj 3 min 0 rcv 3
+11-28 13:41:50.838 D/EGL_emulation( 2147): eglMakeCurrent: 0xdfe853c0: ver 3 0 (tinfo 0xce1f4dd0)
+11-28 13:41:50.842 E/SurfaceFlinger( 1911): ro.sf.lcd_density must be defined as a build property
+11-28 13:41:50.847 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@8ab9934)
+11-28 13:41:50.847 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@8ab9934)
+11-28 13:41:50.850 D/DownloadManager( 2492): [9] Starting
+11-28 13:41:50.854 D/NetworkSecurityConfig( 2492): No Network Security Config specified, using platform default
+11-28 13:41:50.854 D/NetworkSecurityConfig( 2492): No Network Security Config specified, using platform default
+11-28 13:41:50.890 D/HostConnection( 2147): createUnique: call
+11-28 13:41:50.890 D/HostConnection( 2147): HostConnection::get() New Host Connection established 0xcd066ee0, tid 4624
+11-28 13:41:50.892 D/HostConnection( 2147): HostComposition ext ANDROID_EMU_CHECKSUM_HELPER_v1 ANDROID_EMU_native_sync_v2 ANDROID_EMU_dma_v1 ANDROID_EMU_sync_buffer_data ANDROID_EMU_hwc_color_transform ANDROID_EMU_hwc_display_power_mode GL_OES_EGL_image_external_essl3 GL_OES_vertex_array_object GL_KHR_texture_compression_astc_ldr ANDROID_EMU_host_side_tracing ANDROID_EMU_gles_max_version_3_0 
+11-28 13:41:50.892 E/eglCodecCommon( 2147): GoldfishAddressSpaceHostMemoryAllocator: ioctl_ping failed for device_type=5, ret=-1
+11-28 13:41:50.893 D/EGL_emulation( 2147): eglMakeCurrent: 0xdfe853c0: ver 3 0 (tinfo 0xce1f4dd0)
+11-28 13:41:50.925 D/AndroidRuntime( 4627): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-28 13:41:50.964 W/app_process( 4627): Unexpected CPU variant for X86 using defaults: x86
+11-28 13:41:50.967 I/app_process( 4627): The ClassLoaderContext is a special shared library.
+11-28 13:41:50.989 D/AndroidRuntime( 4627): Calling main entry com.android.commands.input.Input
+11-28 13:41:50.992 I/Input   ( 4627): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_RIGHT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=204992, downTime=204992, deviceId=-1, source=0x101 }
+11-28 13:41:51.029 I/Input   ( 4627): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_RIGHT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=204992, downTime=204992, deviceId=-1, source=0x101 }
+11-28 13:41:51.039 I/Input   ( 4627): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_RIGHT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=205039, downTime=205039, deviceId=-1, source=0x101 }
+11-28 13:41:51.045 I/Input   ( 4627): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_RIGHT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=205039, downTime=205039, deviceId=-1, source=0x101 }
+11-28 13:41:51.060 D/eglCodecCommon( 2147): setVertexArrayObject: set vao to 0 (0) 1 2
+11-28 13:41:51.114 E/AndroidIME( 2147): com.google.android.apps.inputmethod.libs.framework.core.metadata.KeyMappingDef$a: SoftKeyDef 0x7f0f0d16 (softkey_page_up) has not been defined.
+11-28 13:41:51.114 E/AndroidIME( 2147): com.google.android.apps.inputmethod.libs.framework.core.metadata.KeyMappingDef$a: SoftKeyDef 0x7f0f0d12 (softkey_page_down) has not been defined.
+11-28 13:41:51.114 E/AndroidIME( 2147): com.google.android.apps.inputmethod.libs.framework.core.metadata.KeyMappingDef$a: SoftKeyDef 0x7f0f0461 (softkey_candidate_del) has not been defined.
+11-28 13:41:51.114 E/AndroidIME( 2147): com.google.android.apps.inputmethod.libs.framework.core.metadata.KeyMappingDef$a: SoftKeyDef 0x7f0f0d17 (softkey_page_up_disabled) has not been defined.
+11-28 13:41:51.114 E/AndroidIME( 2147): com.google.android.apps.inputmethod.libs.framework.core.metadata.KeyMappingDef$a: SoftKeyDef 0x7f0f0d13 (softkey_page_down_disabled) has not been defined.
+11-28 13:41:51.114 E/AndroidIME( 2147): com.google.android.apps.inputmethod.libs.framework.core.metadata.KeyMappingDef$a: SoftKeyDef 0x7f0f0462 (softkey_candidate_del_composing) has not been defined.
+11-28 13:41:51.180 W/BasicHttpFileDownloader( 2147): Failed to download: https://storage.googleapis.com/gboard-emoji/dulcitone/emoji_search_en_us.json
+11-28 13:41:51.180 W/JSonCheckUpdateTask( 2147): fetchUpdateInfo() : Failed to download https://storage.googleapis.com/gboard-emoji/dulcitone/emoji_search_en_us.json
+11-28 13:41:51.216 D/DownloadManager( 2492): [9] Finished with status SUCCESS
+11-28 13:41:51.307 I/Input   ( 4627): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_RIGHT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=205307, downTime=205307, deviceId=-1, source=0x101 }
+11-28 13:41:51.308 I/Input   ( 4627): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_RIGHT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=205307, downTime=205307, deviceId=-1, source=0x101 }
+11-28 13:41:51.313 I/Input   ( 4627): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_RIGHT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=205313, downTime=205313, deviceId=-1, source=0x101 }
+11-28 13:41:51.328 V/DownloadManager( 2492): Deleting /data/data/com.android.providers.downloads/cache/main_en_us_d3_20170706.dict via provider delete
+11-28 13:41:51.347 I/Input   ( 4627): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_RIGHT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=205313, downTime=205313, deviceId=-1, source=0x101 }
+11-28 13:41:51.348 I/Input   ( 4627): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_RIGHT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=205348, downTime=205348, deviceId=-1, source=0x101 }
+11-28 13:41:51.351 I/Input   ( 4627): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_RIGHT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=205348, downTime=205348, deviceId=-1, source=0x101 }
+11-28 13:41:51.351 I/Input   ( 4627): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_RIGHT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=205351, downTime=205351, deviceId=-1, source=0x101 }
+11-28 13:41:51.352 I/Input   ( 4627): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_RIGHT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=205351, downTime=205351, deviceId=-1, source=0x101 }
+11-28 13:41:51.352 I/Input   ( 4627): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_RIGHT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=205352, downTime=205352, deviceId=-1, source=0x101 }
+11-28 13:41:51.352 I/Input   ( 4627): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_RIGHT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=205352, downTime=205352, deviceId=-1, source=0x101 }
+11-28 13:41:51.353 I/Input   ( 4627): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_RIGHT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=205353, downTime=205353, deviceId=-1, source=0x101 }
+11-28 13:41:51.353 I/Input   ( 4627): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_RIGHT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=205353, downTime=205353, deviceId=-1, source=0x101 }
+11-28 13:41:51.353 D/AndroidRuntime( 4627): Shutting down VM
+11-28 13:41:51.435 D/AndroidRuntime( 4643): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-28 13:41:51.465 W/app_process( 4643): Unexpected CPU variant for X86 using defaults: x86
+11-28 13:41:51.465 I/app_process( 4643): The ClassLoaderContext is a special shared library.
+11-28 13:41:51.474 D/AndroidRuntime( 4643): Calling main entry com.android.commands.input.Input
+11-28 13:41:51.474 I/Input   ( 4643): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_LEFT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=205474, downTime=205474, deviceId=-1, source=0x101 }
+11-28 13:41:51.475 I/Input   ( 4643): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_LEFT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=205474, downTime=205474, deviceId=-1, source=0x101 }
+11-28 13:41:51.476 I/Input   ( 4643): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_LEFT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=205476, downTime=205476, deviceId=-1, source=0x101 }
+11-28 13:41:51.476 I/Input   ( 4643): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_LEFT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=205476, downTime=205476, deviceId=-1, source=0x101 }
+11-28 13:41:51.480 I/Input   ( 4643): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_LEFT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=205480, downTime=205480, deviceId=-1, source=0x101 }
+11-28 13:41:51.481 I/Input   ( 4643): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_LEFT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=205480, downTime=205480, deviceId=-1, source=0x101 }
+11-28 13:41:51.481 I/Input   ( 4643): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_LEFT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=205481, downTime=205481, deviceId=-1, source=0x101 }
+11-28 13:41:51.481 I/Input   ( 4643): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_LEFT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=205481, downTime=205481, deviceId=-1, source=0x101 }
+11-28 13:41:51.482 I/Input   ( 4643): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_LEFT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=205482, downTime=205482, deviceId=-1, source=0x101 }
+11-28 13:41:51.482 I/Input   ( 4643): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_LEFT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=205482, downTime=205482, deviceId=-1, source=0x101 }
+11-28 13:41:51.482 I/Input   ( 4643): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_LEFT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=205482, downTime=205482, deviceId=-1, source=0x101 }
+11-28 13:41:51.482 I/Input   ( 4643): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_LEFT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=205482, downTime=205482, deviceId=-1, source=0x101 }
+11-28 13:41:51.483 I/Input   ( 4643): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_LEFT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=205483, downTime=205483, deviceId=-1, source=0x101 }
+11-28 13:41:51.483 I/Input   ( 4643): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_LEFT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=205483, downTime=205483, deviceId=-1, source=0x101 }
+11-28 13:41:51.483 I/Input   ( 4643): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_LEFT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=205483, downTime=205483, deviceId=-1, source=0x101 }
+11-28 13:41:51.483 I/Input   ( 4643): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_LEFT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=205483, downTime=205483, deviceId=-1, source=0x101 }
+11-28 13:41:51.483 D/AndroidRuntime( 4643): Shutting down VM
+11-28 13:41:51.562 D/AndroidRuntime( 4653): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-28 13:41:51.565 W/app_process( 4653): Could not reserve sentinel fault page
+11-28 13:41:51.588 W/app_process( 4653): Unexpected CPU variant for X86 using defaults: x86
+11-28 13:41:51.590 I/app_process( 4653): The ClassLoaderContext is a special shared library.
+11-28 13:41:51.601 D/AndroidRuntime( 4653): Calling main entry com.android.commands.input.Input
+11-28 13:41:51.602 I/Input   ( 4653): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_DOWN, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=205601, downTime=205601, deviceId=-1, source=0x101 }
+11-28 13:41:51.603 I/Input   ( 4653): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_DOWN, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=205601, downTime=205601, deviceId=-1, source=0x101 }
+11-28 13:41:51.603 I/Input   ( 4653): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_DOWN, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=205603, downTime=205603, deviceId=-1, source=0x101 }
+11-28 13:41:51.603 I/Input   ( 4653): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_DOWN, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=205603, downTime=205603, deviceId=-1, source=0x101 }
+11-28 13:41:51.603 I/Input   ( 4653): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_DOWN, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=205603, downTime=205603, deviceId=-1, source=0x101 }
+11-28 13:41:51.603 I/Input   ( 4653): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_DOWN, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=205603, downTime=205603, deviceId=-1, source=0x101 }
+11-28 13:41:51.604 I/Input   ( 4653): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_DOWN, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=205604, downTime=205604, deviceId=-1, source=0x101 }
+11-28 13:41:51.604 I/Input   ( 4653): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_DOWN, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=205604, downTime=205604, deviceId=-1, source=0x101 }
+11-28 13:41:51.604 I/Input   ( 4653): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_DOWN, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=205604, downTime=205604, deviceId=-1, source=0x101 }
+11-28 13:41:51.604 I/Input   ( 4653): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_DOWN, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=205604, downTime=205604, deviceId=-1, source=0x101 }
+11-28 13:41:51.604 I/Input   ( 4653): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_DOWN, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=205604, downTime=205604, deviceId=-1, source=0x101 }
+11-28 13:41:51.605 I/Input   ( 4653): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_DOWN, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=205604, downTime=205604, deviceId=-1, source=0x101 }
+11-28 13:41:51.605 D/AndroidRuntime( 4653): Shutting down VM
+11-28 13:41:51.606 W/app_process( 4653): Thread attaching while runtime is shutting down: Binder:4653_2
+11-28 13:41:51.606 I/AndroidRuntime( 4653): NOTE: attach of thread 'Binder:4653_2' failed
+11-28 13:41:51.705 D/AndroidRuntime( 4663): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-28 13:41:51.707 W/app_process( 4663): Could not reserve sentinel fault page
+11-28 13:41:51.737 W/app_process( 4663): Unexpected CPU variant for X86 using defaults: x86
+11-28 13:41:51.738 I/app_process( 4663): The ClassLoaderContext is a special shared library.
+11-28 13:41:51.754 D/AndroidRuntime( 4663): Calling main entry com.android.commands.input.Input
+11-28 13:41:51.755 I/Input   ( 4663): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_UP, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=205754, downTime=205754, deviceId=-1, source=0x101 }
+11-28 13:41:51.756 I/Input   ( 4663): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_UP, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=205754, downTime=205754, deviceId=-1, source=0x101 }
+11-28 13:41:51.756 I/Input   ( 4663): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_UP, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=205756, downTime=205756, deviceId=-1, source=0x101 }
+11-28 13:41:51.756 I/Input   ( 4663): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_UP, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=205756, downTime=205756, deviceId=-1, source=0x101 }
+11-28 13:41:51.757 I/Input   ( 4663): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_UP, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=205757, downTime=205757, deviceId=-1, source=0x101 }
+11-28 13:41:51.757 I/Input   ( 4663): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_UP, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=205757, downTime=205757, deviceId=-1, source=0x101 }
+11-28 13:41:51.757 I/Input   ( 4663): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_UP, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=205757, downTime=205757, deviceId=-1, source=0x101 }
+11-28 13:41:51.758 I/Input   ( 4663): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_UP, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=205757, downTime=205757, deviceId=-1, source=0x101 }
+11-28 13:41:51.758 I/Input   ( 4663): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_UP, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=205758, downTime=205758, deviceId=-1, source=0x101 }
+11-28 13:41:51.759 I/Input   ( 4663): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_UP, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=205758, downTime=205758, deviceId=-1, source=0x101 }
+11-28 13:41:51.759 I/Input   ( 4663): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_UP, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=205759, downTime=205759, deviceId=-1, source=0x101 }
+11-28 13:41:51.759 I/Input   ( 4663): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_UP, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=205759, downTime=205759, deviceId=-1, source=0x101 }
+11-28 13:41:51.759 D/AndroidRuntime( 4663): Shutting down VM
+11-28 13:41:51.761 W/app_process( 4663): Thread attaching while runtime is shutting down: Binder:4663_2
+11-28 13:41:51.761 I/AndroidRuntime( 4663): NOTE: attach of thread 'Binder:4663_2' failed
+11-28 13:41:51.849 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@6d38115)
+11-28 13:41:51.849 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@6d38115)
+11-28 13:41:51.855 I/native  ( 2147): language-utils-delegator.cc:41 Adding en to delegate.
+11-28 13:41:51.855 I/native  ( 2147): language-utils-delegator.cc:45 language en not found, so added it.
+11-28 13:41:51.893 D/AndroidRuntime( 4673): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-28 13:41:51.910 I/native  ( 2147): fst-model.cc:322 Created LM accumulator /data/user/0/com.google.android.inputmethod.latin/files/cache/en_US_d3.dict.20170706.lm.acc
+11-28 13:41:51.911 I/native  ( 2147): proto-store.cc:43 File not found: '/data/user/0/com.google.android.inputmethod.latin/files/personal/adapt_state.en.dat'.
+11-28 13:41:51.911 I/native  ( 2147): (This might be OK for example when a language is being loaded for the first time.)
+11-28 13:41:51.927 W/app_process( 4673): Unexpected CPU variant for X86 using defaults: x86
+11-28 13:41:51.928 I/app_process( 4673): The ClassLoaderContext is a special shared library.
+11-28 13:41:51.938 D/AndroidRuntime( 4673): Calling main entry com.android.commands.input.Input
+11-28 13:41:51.938 I/Input   ( 4673): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_RIGHT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=205938, downTime=205938, deviceId=-1, source=0x101 }
+11-28 13:41:51.939 I/Input   ( 4673): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_RIGHT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=205938, downTime=205938, deviceId=-1, source=0x101 }
+11-28 13:41:51.940 I/Input   ( 4673): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_RIGHT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=205940, downTime=205940, deviceId=-1, source=0x101 }
+11-28 13:41:51.940 I/Input   ( 4673): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_RIGHT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=205940, downTime=205940, deviceId=-1, source=0x101 }
+11-28 13:41:51.940 I/Input   ( 4673): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_RIGHT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=205940, downTime=205940, deviceId=-1, source=0x101 }
+11-28 13:41:51.941 I/Input   ( 4673): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_RIGHT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=205940, downTime=205940, deviceId=-1, source=0x101 }
+11-28 13:41:51.941 I/Input   ( 4673): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_RIGHT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=205941, downTime=205941, deviceId=-1, source=0x101 }
+11-28 13:41:51.941 I/Input   ( 4673): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_RIGHT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=205941, downTime=205941, deviceId=-1, source=0x101 }
+11-28 13:41:51.941 I/Input   ( 4673): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_RIGHT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=205941, downTime=205941, deviceId=-1, source=0x101 }
+11-28 13:41:51.941 I/Input   ( 4673): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_RIGHT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=205941, downTime=205941, deviceId=-1, source=0x101 }
+11-28 13:41:51.941 I/Input   ( 4673): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_RIGHT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=205941, downTime=205941, deviceId=-1, source=0x101 }
+11-28 13:41:51.942 I/Input   ( 4673): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_RIGHT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=205941, downTime=205941, deviceId=-1, source=0x101 }
+11-28 13:41:51.942 I/Input   ( 4673): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_RIGHT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=205942, downTime=205942, deviceId=-1, source=0x101 }
+11-28 13:41:51.942 I/Input   ( 4673): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_RIGHT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=205942, downTime=205942, deviceId=-1, source=0x101 }
+11-28 13:41:51.942 I/Input   ( 4673): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_RIGHT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=205942, downTime=205942, deviceId=-1, source=0x101 }
+11-28 13:41:51.942 I/Input   ( 4673): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_RIGHT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=205942, downTime=205942, deviceId=-1, source=0x101 }
+11-28 13:41:51.943 D/AndroidRuntime( 4673): Shutting down VM
+11-28 13:41:52.008 D/AndroidRuntime( 4683): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-28 13:41:52.009 W/app_process( 4683): Could not reserve sentinel fault page
+11-28 13:41:52.028 W/app_process( 4683): Unexpected CPU variant for X86 using defaults: x86
+11-28 13:41:52.029 I/app_process( 4683): The ClassLoaderContext is a special shared library.
+11-28 13:41:52.037 D/AndroidRuntime( 4683): Calling main entry com.android.commands.input.Input
+11-28 13:41:52.037 I/Input   ( 4683): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_LEFT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=206037, downTime=206037, deviceId=-1, source=0x101 }
+11-28 13:41:52.039 I/Input   ( 4683): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_LEFT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=206037, downTime=206037, deviceId=-1, source=0x101 }
+11-28 13:41:52.039 I/Input   ( 4683): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_LEFT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=206039, downTime=206039, deviceId=-1, source=0x101 }
+11-28 13:41:52.039 I/Input   ( 4683): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_LEFT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=206039, downTime=206039, deviceId=-1, source=0x101 }
+11-28 13:41:52.040 I/Input   ( 4683): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_LEFT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=206040, downTime=206040, deviceId=-1, source=0x101 }
+11-28 13:41:52.040 I/Input   ( 4683): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_LEFT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=206040, downTime=206040, deviceId=-1, source=0x101 }
+11-28 13:41:52.040 I/Input   ( 4683): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_LEFT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=206040, downTime=206040, deviceId=-1, source=0x101 }
+11-28 13:41:52.041 I/Input   ( 4683): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_LEFT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=206040, downTime=206040, deviceId=-1, source=0x101 }
+11-28 13:41:52.041 I/Input   ( 4683): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_LEFT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=206041, downTime=206041, deviceId=-1, source=0x101 }
+11-28 13:41:52.041 I/Input   ( 4683): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_LEFT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=206041, downTime=206041, deviceId=-1, source=0x101 }
+11-28 13:41:52.041 I/Input   ( 4683): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_LEFT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=206041, downTime=206041, deviceId=-1, source=0x101 }
+11-28 13:41:52.043 I/Input   ( 4683): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_LEFT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=206041, downTime=206041, deviceId=-1, source=0x101 }
+11-28 13:41:52.043 I/Input   ( 4683): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_LEFT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=206043, downTime=206043, deviceId=-1, source=0x101 }
+11-28 13:41:52.043 I/Input   ( 4683): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_LEFT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=206043, downTime=206043, deviceId=-1, source=0x101 }
+11-28 13:41:52.044 I/Input   ( 4683): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_LEFT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=206044, downTime=206044, deviceId=-1, source=0x101 }
+11-28 13:41:52.044 I/Input   ( 4683): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_LEFT, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=206044, downTime=206044, deviceId=-1, source=0x101 }
+11-28 13:41:52.045 D/AndroidRuntime( 4683): Shutting down VM
+11-28 13:41:52.102 D/AndroidRuntime( 4693): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-28 13:41:52.104 W/app_process( 4693): Could not reserve sentinel fault page
+11-28 13:41:52.122 W/app_process( 4693): Unexpected CPU variant for X86 using defaults: x86
+11-28 13:41:52.123 I/app_process( 4693): The ClassLoaderContext is a special shared library.
+11-28 13:41:52.131 D/AndroidRuntime( 4693): Calling main entry com.android.commands.input.Input
+11-28 13:41:52.131 I/Input   ( 4693): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_DOWN, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=206131, downTime=206131, deviceId=-1, source=0x101 }
+11-28 13:41:52.133 I/Input   ( 4693): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_DOWN, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=206131, downTime=206131, deviceId=-1, source=0x101 }
+11-28 13:41:52.134 I/Input   ( 4693): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_DOWN, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=206134, downTime=206134, deviceId=-1, source=0x101 }
+11-28 13:41:52.135 I/Input   ( 4693): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_DOWN, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=206134, downTime=206134, deviceId=-1, source=0x101 }
+11-28 13:41:52.135 I/Input   ( 4693): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_DOWN, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=206135, downTime=206135, deviceId=-1, source=0x101 }
+11-28 13:41:52.136 I/Input   ( 4693): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_DOWN, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=206135, downTime=206135, deviceId=-1, source=0x101 }
+11-28 13:41:52.136 I/Input   ( 4693): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_DOWN, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=206136, downTime=206136, deviceId=-1, source=0x101 }
+11-28 13:41:52.136 I/Input   ( 4693): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_DOWN, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=206136, downTime=206136, deviceId=-1, source=0x101 }
+11-28 13:41:52.137 I/Input   ( 4693): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_DOWN, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=206137, downTime=206137, deviceId=-1, source=0x101 }
+11-28 13:41:52.137 I/Input   ( 4693): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_DOWN, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=206137, downTime=206137, deviceId=-1, source=0x101 }
+11-28 13:41:52.137 I/Input   ( 4693): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_DOWN, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=206137, downTime=206137, deviceId=-1, source=0x101 }
+11-28 13:41:52.137 I/Input   ( 4693): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_DOWN, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=206137, downTime=206137, deviceId=-1, source=0x101 }
+11-28 13:41:52.138 D/AndroidRuntime( 4693): Shutting down VM
+11-28 13:41:52.204 D/AndroidRuntime( 4703): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-28 13:41:52.226 W/app_process( 4703): Unexpected CPU variant for X86 using defaults: x86
+11-28 13:41:52.227 I/app_process( 4703): The ClassLoaderContext is a special shared library.
+11-28 13:41:52.237 D/AndroidRuntime( 4703): Calling main entry com.android.commands.input.Input
+11-28 13:41:52.237 I/Input   ( 4703): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_UP, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=206237, downTime=206237, deviceId=-1, source=0x101 }
+11-28 13:41:52.239 I/Input   ( 4703): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_UP, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=206237, downTime=206237, deviceId=-1, source=0x101 }
+11-28 13:41:52.239 I/Input   ( 4703): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_UP, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=206239, downTime=206239, deviceId=-1, source=0x101 }
+11-28 13:41:52.239 I/Input   ( 4703): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_UP, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=206239, downTime=206239, deviceId=-1, source=0x101 }
+11-28 13:41:52.240 I/Input   ( 4703): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_UP, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=206240, downTime=206240, deviceId=-1, source=0x101 }
+11-28 13:41:52.240 I/Input   ( 4703): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_UP, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=206240, downTime=206240, deviceId=-1, source=0x101 }
+11-28 13:41:52.240 I/Input   ( 4703): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_UP, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=206240, downTime=206240, deviceId=-1, source=0x101 }
+11-28 13:41:52.241 I/Input   ( 4703): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_UP, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=206240, downTime=206240, deviceId=-1, source=0x101 }
+11-28 13:41:52.241 I/Input   ( 4703): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_UP, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=206241, downTime=206241, deviceId=-1, source=0x101 }
+11-28 13:41:52.241 I/Input   ( 4703): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_UP, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=206241, downTime=206241, deviceId=-1, source=0x101 }
+11-28 13:41:52.242 I/Input   ( 4703): injectKeyEvent: KeyEvent { action=ACTION_DOWN, keyCode=KEYCODE_DPAD_UP, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=206242, downTime=206242, deviceId=-1, source=0x101 }
+11-28 13:41:52.242 I/Input   ( 4703): injectKeyEvent: KeyEvent { action=ACTION_UP, keyCode=KEYCODE_DPAD_UP, scanCode=0, metaState=0, flags=0x0, repeatCount=0, eventTime=206242, downTime=206242, deviceId=-1, source=0x101 }
+11-28 13:41:52.243 D/AndroidRuntime( 4703): Shutting down VM
+11-28 13:41:52.849 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@4a08c2a)
+11-28 13:41:52.849 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@4a08c2a)
+11-28 13:41:53.849 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@58caa1b)
+11-28 13:41:53.849 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@58caa1b)
+11-28 13:41:54.849 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@49ad7b8)
+11-28 13:41:54.849 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@49ad7b8)
+11-28 13:41:55.849 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@3f81991)
+11-28 13:41:55.850 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@3f81991)
+11-28 13:41:56.849 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@f9340f6)
+11-28 13:41:56.850 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@f9340f6)
+11-28 13:41:57.849 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@3c1ccf7)
+11-28 13:41:57.850 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@3c1ccf7)
+11-28 13:41:58.849 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@401b764)
+11-28 13:41:58.850 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@401b764)
+11-28 13:41:59.850 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@5f3bdcd)
+11-28 13:41:59.850 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@5f3bdcd)
+11-28 13:42:00.000 E/memtrack( 1952): Couldn't load memtrack module
+11-28 13:42:00.000 W/android.os.Debug( 1952): failed to get memory consumption info: -1
+11-28 13:42:00.283 E/SurfaceFlinger( 1911): ro.sf.lcd_density must be defined as a build property
+11-28 13:42:00.283 D/gralloc_ranchu( 1586): gralloc_alloc: Creating ashmem region of size 823296
+11-28 13:42:00.291 D/HostConnection( 4715): createUnique: call
+11-28 13:42:00.292 D/HostConnection( 4715): HostConnection::get() New Host Connection established 0xf2020b90, tid 4715
+11-28 13:42:00.294 D/HostConnection( 4715): HostComposition ext ANDROID_EMU_CHECKSUM_HELPER_v1 ANDROID_EMU_native_sync_v2 ANDROID_EMU_dma_v1 ANDROID_EMU_sync_buffer_data ANDROID_EMU_hwc_color_transform ANDROID_EMU_hwc_display_power_mode GL_OES_EGL_image_external_essl3 GL_OES_vertex_array_object GL_KHR_texture_compression_astc_ldr ANDROID_EMU_host_side_tracing ANDROID_EMU_gles_max_version_3_0 
+11-28 13:42:00.295 E/eglCodecCommon( 4715): GoldfishAddressSpaceHostMemoryAllocator: ioctl_ping failed for device_type=5, ret=-1

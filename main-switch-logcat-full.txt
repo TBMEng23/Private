@@ -1,0 +1,296 @@
+--------- beginning of main
+11-28 13:40:52.838 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@e28feaa)
+11-28 13:40:52.838 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@e28feaa)
+11-28 13:40:53.822 E/SurfaceFlinger( 1911): ro.sf.lcd_density must be defined as a build property
+11-28 13:40:53.822 D/gralloc_ranchu( 1586): gralloc_alloc: Creating ashmem region of size 823296
+11-28 13:40:53.829 D/HostConnection( 4145): createUnique: call
+11-28 13:40:53.829 D/HostConnection( 4145): HostConnection::get() New Host Connection established 0xf0620b90, tid 4145
+11-28 13:40:53.832 D/HostConnection( 4145): HostComposition ext ANDROID_EMU_CHECKSUM_HELPER_v1 ANDROID_EMU_native_sync_v2 ANDROID_EMU_dma_v1 ANDROID_EMU_sync_buffer_data ANDROID_EMU_hwc_color_transform ANDROID_EMU_hwc_display_power_mode GL_OES_EGL_image_external_essl3 GL_OES_vertex_array_object GL_KHR_texture_compression_astc_ldr ANDROID_EMU_host_side_tracing ANDROID_EMU_gles_max_version_3_0 
+11-28 13:40:53.832 E/eglCodecCommon( 4145): GoldfishAddressSpaceHostMemoryAllocator: ioctl_ping failed for device_type=5, ret=-1
+11-28 13:40:53.838 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@6886a9b)
+11-28 13:40:53.838 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@6886a9b)
+11-28 13:40:53.896 D/AndroidRuntime( 4149): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-28 13:40:53.917 W/app_process( 4149): Unexpected CPU variant for X86 using defaults: x86
+11-28 13:40:53.917 I/app_process( 4149): The ClassLoaderContext is a special shared library.
+11-28 13:40:53.917 I/app_process( 4149): The ClassLoaderContext is a special shared library.
+11-28 13:40:53.926 D/AndroidRuntime( 4149): Calling main entry com.android.commands.uiautomator.Launcher
+11-28 13:40:53.942 D/hwcomposer( 1777): hw_composer sent 72 syncs in 67s
+11-28 13:40:54.838 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@1705b76)
+11-28 13:40:54.839 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@1705b76)
+11-28 13:40:54.947 W/AccessibilityNodeInfoDumper( 4149): Fetch time: 10ms
+--------- beginning of system
+11-28 13:40:53.929 V/SettingsProvider( 1952): Notifying for 0: content://settings/secure/accessibility_enabled
+11-28 13:40:54.948 W/WindowManager( 1952): removeWindowToken: Attempted to remove non-existing token: android.os.Binder@772ce38
+11-28 13:40:54.948 V/SettingsProvider( 1952): Notifying for 0: content://settings/secure/accessibility_enabled
+11-28 13:40:54.950 D/AndroidRuntime( 4149): Shutting down VM
+11-28 13:40:55.056 D/AndroidRuntime( 4169): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-28 13:40:55.058 W/app_process( 4169): Could not reserve sentinel fault page
+11-28 13:40:55.077 W/app_process( 4169): Unexpected CPU variant for X86 using defaults: x86
+11-28 13:40:55.077 I/app_process( 4169): The ClassLoaderContext is a special shared library.
+11-28 13:40:55.077 I/app_process( 4169): The ClassLoaderContext is a special shared library.
+11-28 13:40:55.086 D/AndroidRuntime( 4169): Calling main entry com.android.commands.uiautomator.Launcher
+11-28 13:40:55.838 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@4feb902)
+11-28 13:40:55.839 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@4feb902)
+11-28 13:40:56.004 E/memtrack( 1952): Couldn't load memtrack module
+11-28 13:40:56.004 W/android.os.Debug( 1952): failed to get memory consumption info: -1
+11-28 13:40:56.110 W/AccessibilityNodeInfoDumper( 4169): Fetch time: 12ms
+11-28 13:40:55.089 V/SettingsProvider( 1952): Notifying for 0: content://settings/secure/accessibility_enabled
+11-28 13:40:56.111 W/WindowManager( 1952): removeWindowToken: Attempted to remove non-existing token: android.os.Binder@ea295e4
+11-28 13:40:56.111 V/SettingsProvider( 1952): Notifying for 0: content://settings/secure/accessibility_enabled
+11-28 13:40:56.112 D/AndroidRuntime( 4169): Shutting down VM
+11-28 13:40:56.180 D/AndroidRuntime( 4182): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-28 13:40:56.201 W/app_process( 4182): Unexpected CPU variant for X86 using defaults: x86
+11-28 13:40:56.202 I/app_process( 4182): The ClassLoaderContext is a special shared library.
+11-28 13:40:56.210 D/AndroidRuntime( 4182): Calling main entry com.android.commands.input.Input
+11-28 13:40:56.211 I/Input   ( 4182): injectMotionEvent: MotionEvent { action=ACTION_DOWN, actionButton=0, id[0]=0, x[0]=288.0, y[0]=594.0, toolType[0]=TOOL_TYPE_UNKNOWN, buttonState=0, metaState=0, flags=0x0, edgeFlags=0x0, pointerCount=1, historySize=0, eventTime=150210, downTime=150210, deviceId=0, source=0x1002 }
+11-28 13:40:56.213 I/Input   ( 4182): injectMotionEvent: MotionEvent { action=ACTION_UP, actionButton=0, id[0]=0, x[0]=288.0, y[0]=594.0, toolType[0]=TOOL_TYPE_UNKNOWN, buttonState=0, metaState=0, flags=0x0, edgeFlags=0x0, pointerCount=1, historySize=0, eventTime=150210, downTime=150210, deviceId=0, source=0x1002 }
+11-28 13:40:56.214 D/AndroidRuntime( 4182): Shutting down VM
+11-28 13:40:56.838 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@278bd7c)
+11-28 13:40:56.838 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@278bd7c)
+11-28 13:40:57.839 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@10ca605)
+11-28 13:40:57.839 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@10ca605)
+11-28 13:40:58.839 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@9d6665a)
+11-28 13:40:58.839 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@9d6665a)
+11-28 13:40:59.839 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@715308b)
+11-28 13:40:59.840 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@715308b)
+11-28 13:41:00.250 E/SurfaceFlinger( 1911): ro.sf.lcd_density must be defined as a build property
+11-28 13:41:00.250 D/gralloc_ranchu( 1586): gralloc_alloc: Creating ashmem region of size 823296
+11-28 13:41:00.257 D/HostConnection( 4194): createUnique: call
+11-28 13:41:00.257 D/HostConnection( 4194): HostConnection::get() New Host Connection established 0xe8ea0b90, tid 4194
+11-28 13:41:00.260 D/HostConnection( 4194): HostComposition ext ANDROID_EMU_CHECKSUM_HELPER_v1 ANDROID_EMU_native_sync_v2 ANDROID_EMU_dma_v1 ANDROID_EMU_sync_buffer_data ANDROID_EMU_hwc_color_transform ANDROID_EMU_hwc_display_power_mode GL_OES_EGL_image_external_essl3 GL_OES_vertex_array_object GL_KHR_texture_compression_astc_ldr ANDROID_EMU_host_side_tracing ANDROID_EMU_gles_max_version_3_0 
+11-28 13:41:00.260 E/eglCodecCommon( 4194): GoldfishAddressSpaceHostMemoryAllocator: ioctl_ping failed for device_type=5, ret=-1
+11-28 13:41:00.323 D/AndroidRuntime( 4198): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-28 13:41:00.344 W/app_process( 4198): Unexpected CPU variant for X86 using defaults: x86
+11-28 13:41:00.344 I/app_process( 4198): The ClassLoaderContext is a special shared library.
+11-28 13:41:00.344 I/app_process( 4198): The ClassLoaderContext is a special shared library.
+11-28 13:41:00.353 D/AndroidRuntime( 4198): Calling main entry com.android.commands.uiautomator.Launcher
+11-28 13:41:00.839 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@f244a67)
+11-28 13:41:00.839 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@f244a67)
+11-28 13:41:01.371 W/AccessibilityNodeInfoDumper( 4198): Fetch time: 8ms
+11-28 13:41:00.355 V/SettingsProvider( 1952): Notifying for 0: content://settings/secure/accessibility_enabled
+11-28 13:41:01.372 W/WindowManager( 1952): removeWindowToken: Attempted to remove non-existing token: android.os.Binder@8b69d81
+11-28 13:41:01.372 V/SettingsProvider( 1952): Notifying for 0: content://settings/secure/accessibility_enabled
+11-28 13:41:01.374 D/AndroidRuntime( 4198): Shutting down VM
+11-28 13:41:01.444 D/AndroidRuntime( 4211): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-28 13:41:01.465 W/app_process( 4211): Unexpected CPU variant for X86 using defaults: x86
+11-28 13:41:01.466 I/app_process( 4211): The ClassLoaderContext is a special shared library.
+11-28 13:41:01.474 D/AndroidRuntime( 4211): Calling main entry com.android.commands.input.Input
+11-28 13:41:01.475 I/Input   ( 4211): injectMotionEvent: MotionEvent { action=ACTION_DOWN, actionButton=0, id[0]=0, x[0]=224.0, y[0]=594.0, toolType[0]=TOOL_TYPE_UNKNOWN, buttonState=0, metaState=0, flags=0x0, edgeFlags=0x0, pointerCount=1, historySize=0, eventTime=155474, downTime=155474, deviceId=0, source=0x1002 }
+11-28 13:41:01.477 I/Input   ( 4211): injectMotionEvent: MotionEvent { action=ACTION_UP, actionButton=0, id[0]=0, x[0]=224.0, y[0]=594.0, toolType[0]=TOOL_TYPE_UNKNOWN, buttonState=0, metaState=0, flags=0x0, edgeFlags=0x0, pointerCount=1, historySize=0, eventTime=155474, downTime=155474, deviceId=0, source=0x1002 }
+11-28 13:41:01.478 D/AndroidRuntime( 4211): Shutting down VM
+11-28 13:41:01.839 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@1ae90bd)
+11-28 13:41:01.839 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@1ae90bd)
+11-28 13:41:02.839 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@69b66b2)
+11-28 13:41:02.840 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@69b66b2)
+11-28 13:41:03.840 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@9212603)
+11-28 13:41:03.840 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@9212603)
+11-28 13:41:04.840 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@6044980)
+11-28 13:41:04.840 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@6044980)
+11-28 13:41:05.514 E/SurfaceFlinger( 1911): ro.sf.lcd_density must be defined as a build property
+11-28 13:41:05.514 D/gralloc_ranchu( 1586): gralloc_alloc: Creating ashmem region of size 823296
+11-28 13:41:05.520 D/HostConnection( 4224): createUnique: call
+11-28 13:41:05.520 D/HostConnection( 4224): HostConnection::get() New Host Connection established 0xed620b90, tid 4224
+11-28 13:41:05.523 D/HostConnection( 4224): HostComposition ext ANDROID_EMU_CHECKSUM_HELPER_v1 ANDROID_EMU_native_sync_v2 ANDROID_EMU_dma_v1 ANDROID_EMU_sync_buffer_data ANDROID_EMU_hwc_color_transform ANDROID_EMU_hwc_display_power_mode GL_OES_EGL_image_external_essl3 GL_OES_vertex_array_object GL_KHR_texture_compression_astc_ldr ANDROID_EMU_host_side_tracing ANDROID_EMU_gles_max_version_3_0 
+11-28 13:41:05.523 E/eglCodecCommon( 4224): GoldfishAddressSpaceHostMemoryAllocator: ioctl_ping failed for device_type=5, ret=-1
+11-28 13:41:05.587 D/AndroidRuntime( 4228): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-28 13:41:05.607 W/app_process( 4228): Unexpected CPU variant for X86 using defaults: x86
+11-28 13:41:05.608 I/app_process( 4228): The ClassLoaderContext is a special shared library.
+11-28 13:41:05.608 I/app_process( 4228): The ClassLoaderContext is a special shared library.
+11-28 13:41:05.616 D/AndroidRuntime( 4228): Calling main entry com.android.commands.uiautomator.Launcher
+11-28 13:41:05.840 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@1861f5f)
+11-28 13:41:05.840 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@1861f5f)
+11-28 13:41:06.641 W/AccessibilityNodeInfoDumper( 4228): Fetch time: 12ms
+11-28 13:41:05.619 V/SettingsProvider( 1952): Notifying for 0: content://settings/secure/accessibility_enabled
+11-28 13:41:06.641 W/WindowManager( 1952): removeWindowToken: Attempted to remove non-existing token: android.os.Binder@7387bb9
+11-28 13:41:06.642 V/SettingsProvider( 1952): Notifying for 0: content://settings/secure/accessibility_enabled
+11-28 13:41:06.643 D/AndroidRuntime( 4228): Shutting down VM
+11-28 13:41:06.713 D/AndroidRuntime( 4241): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-28 13:41:06.733 W/app_process( 4241): Unexpected CPU variant for X86 using defaults: x86
+11-28 13:41:06.734 I/app_process( 4241): The ClassLoaderContext is a special shared library.
+11-28 13:41:06.747 D/AndroidRuntime( 4241): Calling main entry com.android.commands.input.Input
+11-28 13:41:06.748 I/Input   ( 4241): injectMotionEvent: MotionEvent { action=ACTION_DOWN, actionButton=0, id[0]=0, x[0]=160.0, y[0]=594.0, toolType[0]=TOOL_TYPE_UNKNOWN, buttonState=0, metaState=0, flags=0x0, edgeFlags=0x0, pointerCount=1, historySize=0, eventTime=160747, downTime=160747, deviceId=0, source=0x1002 }
+11-28 13:41:06.750 I/Input   ( 4241): injectMotionEvent: MotionEvent { action=ACTION_UP, actionButton=0, id[0]=0, x[0]=160.0, y[0]=594.0, toolType[0]=TOOL_TYPE_UNKNOWN, buttonState=0, metaState=0, flags=0x0, edgeFlags=0x0, pointerCount=1, historySize=0, eventTime=160747, downTime=160747, deviceId=0, source=0x1002 }
+11-28 13:41:06.753 D/AndroidRuntime( 4241): Shutting down VM
+11-28 13:41:06.840 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@adc1a75)
+11-28 13:41:06.840 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@adc1a75)
+11-28 13:41:07.233 I/com.tbm.iptv( 3825): JIT allocated 65KB for stack maps of void com.tbm.iptv.ui.HomeScreenKt$BrowseSection$3.invoke(androidx.compose.foundation.layout.BoxWithConstraintsScope, androidx.compose.runtime.Composer, int)
+11-28 13:41:07.241 I/com.tbm.iptv( 3825): JIT allocated 50KB for compiled code of void com.tbm.iptv.ui.HomeScreenKt$BrowseSection$3.invoke(androidx.compose.foundation.layout.BoxWithConstraintsScope, androidx.compose.runtime.Composer, int)
+11-28 13:41:07.241 I/com.tbm.iptv( 3825): Compiler allocated 7MB to compile void com.tbm.iptv.ui.HomeScreenKt$BrowseSection$3.invoke(androidx.compose.foundation.layout.BoxWithConstraintsScope, androidx.compose.runtime.Composer, int)
+11-28 13:41:07.263 I/com.tbm.iptv( 3825): Background concurrent copying GC freed 204066(5MB) AllocSpace objects, 0(0B) LOS objects, 16% free, 30MB/36MB, paused 12us total 164.909ms
+11-28 13:41:07.432 I/com.tbm.iptv( 3825): NativeAlloc concurrent copying GC freed 301042(7MB) AllocSpace objects, 0(0B) LOS objects, 16% free, 30MB/36MB, paused 20us total 137.332ms
+11-28 13:41:07.840 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@b451a0a)
+11-28 13:41:07.840 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@b451a0a)
+11-28 13:41:08.841 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@817527b)
+11-28 13:41:08.841 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@817527b)
+11-28 13:41:09.841 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@331c898)
+11-28 13:41:09.841 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@331c898)
+11-28 13:41:10.795 E/SurfaceFlinger( 1911): ro.sf.lcd_density must be defined as a build property
+11-28 13:41:10.795 D/gralloc_ranchu( 1586): gralloc_alloc: Creating ashmem region of size 823296
+11-28 13:41:10.802 D/HostConnection( 4254): createUnique: call
+11-28 13:41:10.802 D/HostConnection( 4254): HostConnection::get() New Host Connection established 0xe9720b90, tid 4254
+11-28 13:41:10.805 D/HostConnection( 4254): HostComposition ext ANDROID_EMU_CHECKSUM_HELPER_v1 ANDROID_EMU_native_sync_v2 ANDROID_EMU_dma_v1 ANDROID_EMU_sync_buffer_data ANDROID_EMU_hwc_color_transform ANDROID_EMU_hwc_display_power_mode GL_OES_EGL_image_external_essl3 GL_OES_vertex_array_object GL_KHR_texture_compression_astc_ldr ANDROID_EMU_host_side_tracing ANDROID_EMU_gles_max_version_3_0 
+11-28 13:41:10.805 E/eglCodecCommon( 4254): GoldfishAddressSpaceHostMemoryAllocator: ioctl_ping failed for device_type=5, ret=-1
+11-28 13:41:10.840 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@4e0e8f1)
+11-28 13:41:10.841 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@4e0e8f1)
+11-28 13:41:10.868 D/AndroidRuntime( 4258): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-28 13:41:10.889 W/app_process( 4258): Unexpected CPU variant for X86 using defaults: x86
+11-28 13:41:10.890 I/app_process( 4258): The ClassLoaderContext is a special shared library.
+11-28 13:41:10.890 I/app_process( 4258): The ClassLoaderContext is a special shared library.
+11-28 13:41:10.898 D/AndroidRuntime( 4258): Calling main entry com.android.commands.uiautomator.Launcher
+11-28 13:41:11.841 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@2c6d644)
+11-28 13:41:11.841 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@2c6d644)
+11-28 13:41:11.920 W/AccessibilityNodeInfoDumper( 4258): Fetch time: 9ms
+11-28 13:41:10.901 V/SettingsProvider( 1952): Notifying for 0: content://settings/secure/accessibility_enabled
+11-28 13:41:11.920 W/WindowManager( 1952): removeWindowToken: Attempted to remove non-existing token: android.os.Binder@622ccd6
+11-28 13:41:11.921 V/SettingsProvider( 1952): Notifying for 0: content://settings/secure/accessibility_enabled
+11-28 13:41:11.929 D/AndroidRuntime( 4258): Shutting down VM
+11-28 13:41:11.997 D/AndroidRuntime( 4271): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-28 13:41:12.018 W/app_process( 4271): Unexpected CPU variant for X86 using defaults: x86
+11-28 13:41:12.018 I/app_process( 4271): The ClassLoaderContext is a special shared library.
+11-28 13:41:12.026 D/AndroidRuntime( 4271): Calling main entry com.android.commands.input.Input
+11-28 13:41:12.027 I/Input   ( 4271): injectMotionEvent: MotionEvent { action=ACTION_DOWN, actionButton=0, id[0]=0, x[0]=96.0, y[0]=594.0, toolType[0]=TOOL_TYPE_UNKNOWN, buttonState=0, metaState=0, flags=0x0, edgeFlags=0x0, pointerCount=1, historySize=0, eventTime=166026, downTime=166026, deviceId=0, source=0x1002 }
+11-28 13:41:12.029 I/Input   ( 4271): injectMotionEvent: MotionEvent { action=ACTION_UP, actionButton=0, id[0]=0, x[0]=96.0, y[0]=594.0, toolType[0]=TOOL_TYPE_UNKNOWN, buttonState=0, metaState=0, flags=0x0, edgeFlags=0x0, pointerCount=1, historySize=0, eventTime=166026, downTime=166026, deviceId=0, source=0x1002 }
+11-28 13:41:12.030 D/AndroidRuntime( 4271): Shutting down VM
+11-28 13:41:12.841 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@356e062)
+11-28 13:41:12.841 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@356e062)
+11-28 13:41:13.841 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@22795f3)
+11-28 13:41:13.842 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@22795f3)
+11-28 13:41:14.841 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@77d12b0)
+11-28 13:41:14.842 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@77d12b0)
+11-28 13:41:15.842 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@12c529)
+11-28 13:41:15.842 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@12c529)
+11-28 13:41:16.071 E/SurfaceFlinger( 1911): ro.sf.lcd_density must be defined as a build property
+11-28 13:41:16.071 D/gralloc_ranchu( 1586): gralloc_alloc: Creating ashmem region of size 823296
+11-28 13:41:16.077 D/HostConnection( 4283): createUnique: call
+11-28 13:41:16.077 D/HostConnection( 4283): HostConnection::get() New Host Connection established 0xf0ea0b90, tid 4283
+11-28 13:41:16.080 D/HostConnection( 4283): HostComposition ext ANDROID_EMU_CHECKSUM_HELPER_v1 ANDROID_EMU_native_sync_v2 ANDROID_EMU_dma_v1 ANDROID_EMU_sync_buffer_data ANDROID_EMU_hwc_color_transform ANDROID_EMU_hwc_display_power_mode GL_OES_EGL_image_external_essl3 GL_OES_vertex_array_object GL_KHR_texture_compression_astc_ldr ANDROID_EMU_host_side_tracing ANDROID_EMU_gles_max_version_3_0 
+11-28 13:41:16.080 E/eglCodecCommon( 4283): GoldfishAddressSpaceHostMemoryAllocator: ioctl_ping failed for device_type=5, ret=-1
+11-28 13:41:16.144 D/AndroidRuntime( 4287): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-28 13:41:16.164 W/app_process( 4287): Unexpected CPU variant for X86 using defaults: x86
+11-28 13:41:16.165 I/app_process( 4287): The ClassLoaderContext is a special shared library.
+11-28 13:41:16.165 I/app_process( 4287): The ClassLoaderContext is a special shared library.
+11-28 13:41:16.174 D/AndroidRuntime( 4287): Calling main entry com.android.commands.uiautomator.Launcher
+11-28 13:41:16.842 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@218a9dc)
+11-28 13:41:16.842 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@218a9dc)
+11-28 13:41:17.195 W/AccessibilityNodeInfoDumper( 4287): Fetch time: 9ms
+11-28 13:41:16.176 V/SettingsProvider( 1952): Notifying for 0: content://settings/secure/accessibility_enabled
+11-28 13:41:17.195 W/WindowManager( 1952): removeWindowToken: Attempted to remove non-existing token: android.os.Binder@6c6a0ae
+11-28 13:41:17.196 V/SettingsProvider( 1952): Notifying for 0: content://settings/secure/accessibility_enabled
+11-28 13:41:17.197 D/AndroidRuntime( 4287): Shutting down VM
+11-28 13:41:17.266 D/AndroidRuntime( 4300): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-28 13:41:17.286 W/app_process( 4300): Unexpected CPU variant for X86 using defaults: x86
+11-28 13:41:17.287 I/app_process( 4300): The ClassLoaderContext is a special shared library.
+11-28 13:41:17.295 D/AndroidRuntime( 4300): Calling main entry com.android.commands.input.Input
+11-28 13:41:17.296 I/Input   ( 4300): injectMotionEvent: MotionEvent { action=ACTION_DOWN, actionButton=0, id[0]=0, x[0]=160.0, y[0]=594.0, toolType[0]=TOOL_TYPE_UNKNOWN, buttonState=0, metaState=0, flags=0x0, edgeFlags=0x0, pointerCount=1, historySize=0, eventTime=171295, downTime=171295, deviceId=0, source=0x1002 }
+11-28 13:41:17.298 I/Input   ( 4300): injectMotionEvent: MotionEvent { action=ACTION_UP, actionButton=0, id[0]=0, x[0]=160.0, y[0]=594.0, toolType[0]=TOOL_TYPE_UNKNOWN, buttonState=0, metaState=0, flags=0x0, edgeFlags=0x0, pointerCount=1, historySize=0, eventTime=171295, downTime=171295, deviceId=0, source=0x1002 }
+11-28 13:41:17.298 D/AndroidRuntime( 4300): Shutting down VM
+11-28 13:41:17.842 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@b6019ba)
+11-28 13:41:17.842 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@b6019ba)
+11-28 13:41:18.842 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@f9dd06b)
+11-28 13:41:18.843 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@f9dd06b)
+11-28 13:41:19.842 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@97487c8)
+11-28 13:41:19.843 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@97487c8)
+11-28 13:41:20.843 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@4acf061)
+11-28 13:41:20.843 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@4acf061)
+11-28 13:41:21.334 E/SurfaceFlinger( 1911): ro.sf.lcd_density must be defined as a build property
+11-28 13:41:21.334 D/gralloc_ranchu( 1586): gralloc_alloc: Creating ashmem region of size 823296
+11-28 13:41:21.340 D/HostConnection( 4313): createUnique: call
+11-28 13:41:21.340 D/HostConnection( 4313): HostConnection::get() New Host Connection established 0xf3b20b90, tid 4313
+11-28 13:41:21.343 D/HostConnection( 4313): HostComposition ext ANDROID_EMU_CHECKSUM_HELPER_v1 ANDROID_EMU_native_sync_v2 ANDROID_EMU_dma_v1 ANDROID_EMU_sync_buffer_data ANDROID_EMU_hwc_color_transform ANDROID_EMU_hwc_display_power_mode GL_OES_EGL_image_external_essl3 GL_OES_vertex_array_object GL_KHR_texture_compression_astc_ldr ANDROID_EMU_host_side_tracing ANDROID_EMU_gles_max_version_3_0 
+11-28 13:41:21.343 E/eglCodecCommon( 4313): GoldfishAddressSpaceHostMemoryAllocator: ioctl_ping failed for device_type=5, ret=-1
+11-28 13:41:21.406 D/AndroidRuntime( 4317): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-28 13:41:21.426 W/app_process( 4317): Unexpected CPU variant for X86 using defaults: x86
+11-28 13:41:21.427 I/app_process( 4317): The ClassLoaderContext is a special shared library.
+11-28 13:41:21.427 I/app_process( 4317): The ClassLoaderContext is a special shared library.
+11-28 13:41:21.435 D/AndroidRuntime( 4317): Calling main entry com.android.commands.uiautomator.Launcher
+11-28 13:41:21.843 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@52e5874)
+11-28 13:41:21.843 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@52e5874)
+11-28 13:41:22.458 W/AccessibilityNodeInfoDumper( 4317): Fetch time: 12ms
+11-28 13:41:21.439 V/SettingsProvider( 1952): Notifying for 0: content://settings/secure/accessibility_enabled
+11-28 13:41:22.458 W/WindowManager( 1952): removeWindowToken: Attempted to remove non-existing token: android.os.Binder@ae61786
+11-28 13:41:22.459 V/SettingsProvider( 1952): Notifying for 0: content://settings/secure/accessibility_enabled
+11-28 13:41:22.460 D/AndroidRuntime( 4317): Shutting down VM
+11-28 13:41:22.531 D/AndroidRuntime( 4330): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-28 13:41:22.552 W/app_process( 4330): Unexpected CPU variant for X86 using defaults: x86
+11-28 13:41:22.552 I/app_process( 4330): The ClassLoaderContext is a special shared library.
+11-28 13:41:22.560 D/AndroidRuntime( 4330): Calling main entry com.android.commands.input.Input
+11-28 13:41:22.561 I/Input   ( 4330): injectMotionEvent: MotionEvent { action=ACTION_DOWN, actionButton=0, id[0]=0, x[0]=96.0, y[0]=594.0, toolType[0]=TOOL_TYPE_UNKNOWN, buttonState=0, metaState=0, flags=0x0, edgeFlags=0x0, pointerCount=1, historySize=0, eventTime=176560, downTime=176560, deviceId=0, source=0x1002 }
+11-28 13:41:22.563 I/Input   ( 4330): injectMotionEvent: MotionEvent { action=ACTION_UP, actionButton=0, id[0]=0, x[0]=96.0, y[0]=594.0, toolType[0]=TOOL_TYPE_UNKNOWN, buttonState=0, metaState=0, flags=0x0, edgeFlags=0x0, pointerCount=1, historySize=0, eventTime=176560, downTime=176560, deviceId=0, source=0x1002 }
+11-28 13:41:22.564 D/AndroidRuntime( 4330): Shutting down VM
+11-28 13:41:22.843 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@67c2612)
+11-28 13:41:22.843 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@67c2612)
+11-28 13:41:23.843 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@a61e1e3)
+11-28 13:41:23.843 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@a61e1e3)
+11-28 13:41:24.843 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@71287e0)
+11-28 13:41:24.844 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@71287e0)
+11-28 13:41:25.843 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@f8a4a99)
+11-28 13:41:25.844 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@f8a4a99)
+11-28 13:41:26.599 E/SurfaceFlinger( 1911): ro.sf.lcd_density must be defined as a build property
+11-28 13:41:26.600 D/gralloc_ranchu( 1586): gralloc_alloc: Creating ashmem region of size 823296
+11-28 13:41:26.606 D/HostConnection( 4342): createUnique: call
+11-28 13:41:26.606 D/HostConnection( 4342): HostConnection::get() New Host Connection established 0xe7aa0b90, tid 4342
+11-28 13:41:26.608 D/HostConnection( 4342): HostComposition ext ANDROID_EMU_CHECKSUM_HELPER_v1 ANDROID_EMU_native_sync_v2 ANDROID_EMU_dma_v1 ANDROID_EMU_sync_buffer_data ANDROID_EMU_hwc_color_transform ANDROID_EMU_hwc_display_power_mode GL_OES_EGL_image_external_essl3 GL_OES_vertex_array_object GL_KHR_texture_compression_astc_ldr ANDROID_EMU_host_side_tracing ANDROID_EMU_gles_max_version_3_0 
+11-28 13:41:26.608 E/eglCodecCommon( 4342): GoldfishAddressSpaceHostMemoryAllocator: ioctl_ping failed for device_type=5, ret=-1
+11-28 13:41:26.672 D/AndroidRuntime( 4346): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-28 13:41:26.693 W/app_process( 4346): Unexpected CPU variant for X86 using defaults: x86
+11-28 13:41:26.694 I/app_process( 4346): The ClassLoaderContext is a special shared library.
+11-28 13:41:26.694 I/app_process( 4346): The ClassLoaderContext is a special shared library.
+11-28 13:41:26.702 D/AndroidRuntime( 4346): Calling main entry com.android.commands.uiautomator.Launcher
+11-28 13:41:26.844 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@f48420c)
+11-28 13:41:26.844 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@f48420c)
+11-28 13:41:27.723 W/AccessibilityNodeInfoDumper( 4346): Fetch time: 10ms
+11-28 13:41:26.705 V/SettingsProvider( 1952): Notifying for 0: content://settings/secure/accessibility_enabled
+11-28 13:41:27.724 W/WindowManager( 1952): removeWindowToken: Attempted to remove non-existing token: android.os.Binder@bf2915e
+11-28 13:41:27.724 V/SettingsProvider( 1952): Notifying for 0: content://settings/secure/accessibility_enabled
+11-28 13:41:27.726 D/AndroidRuntime( 4346): Shutting down VM
+11-28 13:41:27.844 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@3d2656a)
+11-28 13:41:27.844 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@3d2656a)
+11-28 13:41:28.844 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@577aa5b)
+11-28 13:41:28.844 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@577aa5b)
+11-28 13:41:29.844 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@73d72f8)
+11-28 13:41:29.844 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@73d72f8)
+11-28 13:41:30.844 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@201b3d1)
+11-28 13:41:30.844 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@201b3d1)
+11-28 13:41:31.772 E/SurfaceFlinger( 1911): ro.sf.lcd_density must be defined as a build property
+11-28 13:41:31.772 D/gralloc_ranchu( 1586): gralloc_alloc: Creating ashmem region of size 823296
+11-28 13:41:31.779 D/HostConnection( 4361): createUnique: call
+11-28 13:41:31.779 D/HostConnection( 4361): HostConnection::get() New Host Connection established 0xe9320b90, tid 4361
+11-28 13:41:31.782 D/HostConnection( 4361): HostComposition ext ANDROID_EMU_CHECKSUM_HELPER_v1 ANDROID_EMU_native_sync_v2 ANDROID_EMU_dma_v1 ANDROID_EMU_sync_buffer_data ANDROID_EMU_hwc_color_transform ANDROID_EMU_hwc_display_power_mode GL_OES_EGL_image_external_essl3 GL_OES_vertex_array_object GL_KHR_texture_compression_astc_ldr ANDROID_EMU_host_side_tracing ANDROID_EMU_gles_max_version_3_0 
+11-28 13:41:31.782 E/eglCodecCommon( 4361): GoldfishAddressSpaceHostMemoryAllocator: ioctl_ping failed for device_type=5, ret=-1
+11-28 13:41:31.844 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@4296e36)
+11-28 13:41:31.844 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@4296e36)
+11-28 13:41:31.846 D/AndroidRuntime( 4365): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-28 13:41:31.866 W/app_process( 4365): Unexpected CPU variant for X86 using defaults: x86
+11-28 13:41:31.867 I/app_process( 4365): The ClassLoaderContext is a special shared library.
+11-28 13:41:31.867 I/app_process( 4365): The ClassLoaderContext is a special shared library.
+11-28 13:41:31.876 D/AndroidRuntime( 4365): Calling main entry com.android.commands.uiautomator.Launcher
+11-28 13:41:32.845 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@59cbc0d)
+11-28 13:41:32.845 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@59cbc0d)
+11-28 13:41:32.900 W/AccessibilityNodeInfoDumper( 4365): Fetch time: 15ms
+11-28 13:41:31.879 V/SettingsProvider( 1952): Notifying for 0: content://settings/secure/accessibility_enabled
+11-28 13:41:32.900 W/WindowManager( 1952): removeWindowToken: Attempted to remove non-existing token: android.os.Binder@8fc9137
+11-28 13:41:32.901 V/SettingsProvider( 1952): Notifying for 0: content://settings/secure/accessibility_enabled
+11-28 13:41:32.902 D/AndroidRuntime( 4365): Shutting down VM
+11-28 13:41:32.970 D/AndroidRuntime( 4379): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+11-28 13:41:32.991 W/app_process( 4379): Unexpected CPU variant for X86 using defaults: x86
+11-28 13:41:32.992 I/app_process( 4379): The ClassLoaderContext is a special shared library.
+11-28 13:41:33.000 D/AndroidRuntime( 4379): Calling main entry com.android.commands.input.Input
+11-28 13:41:33.001 I/Input   ( 4379): injectMotionEvent: MotionEvent { action=ACTION_DOWN, actionButton=0, id[0]=0, x[0]=288.0, y[0]=594.0, toolType[0]=TOOL_TYPE_UNKNOWN, buttonState=0, metaState=0, flags=0x0, edgeFlags=0x0, pointerCount=1, historySize=0, eventTime=187000, downTime=187000, deviceId=0, source=0x1002 }
+11-28 13:41:33.003 I/Input   ( 4379): injectMotionEvent: MotionEvent { action=ACTION_UP, actionButton=0, id[0]=0, x[0]=288.0, y[0]=594.0, toolType[0]=TOOL_TYPE_UNKNOWN, buttonState=0, metaState=0, flags=0x0, edgeFlags=0x0, pointerCount=1, historySize=0, eventTime=187000, downTime=187000, deviceId=0, source=0x1002 }
+11-28 13:41:33.004 D/AndroidRuntime( 4379): Shutting down VM
+11-28 13:41:33.845 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@47f09d3)
+11-28 13:41:33.845 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@47f09d3)
+11-28 13:41:34.845 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@b47a910)
+11-28 13:41:34.845 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@b47a910)
+11-28 13:41:35.845 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@5660c09)
+11-28 13:41:35.845 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@5660c09)
+11-28 13:41:35.899 E/netmgr  ( 1809): Failed to open QEMU pipe 'qemud:network': Invalid argument
+11-28 13:41:35.899 E/netmgr  ( 1809): WifiForwarder unable to open QEMU pipe: Invalid argument
+11-28 13:41:36.845 I/GnssLocationProvider( 1952): WakeLock acquired by sendMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@c140e0e)
+11-28 13:41:36.846 I/GnssLocationProvider( 1952): WakeLock released by handleMessage(REPORT_SV_STATUS, 0, com.android.server.location.GnssLocationProvider$SvStatusInfo@c140e0e)
+11-28 13:41:37.043 E/SurfaceFlinger( 1911): ro.sf.lcd_density must be defined as a build property
+11-28 13:41:37.043 D/gralloc_ranchu( 1586): gralloc_alloc: Creating ashmem region of size 823296
+11-28 13:41:37.048 D/HostConnection( 4391): createUnique: call
+11-28 13:41:37.049 D/HostConnection( 4391): HostConnection::get() New Host Connection established 0xe88a0b90, tid 4391
+11-28 13:41:37.051 D/HostConnection( 4391): HostComposition ext ANDROID_EMU_CHECKSUM_HELPER_v1 ANDROID_EMU_native_sync_v2 ANDROID_EMU_dma_v1 ANDROID_EMU_sync_buffer_data ANDROID_EMU_hwc_color_transform ANDROID_EMU_hwc_display_power_mode GL_OES_EGL_image_external_essl3 GL_OES_vertex_array_object GL_KHR_texture_compression_astc_ldr ANDROID_EMU_host_side_tracing ANDROID_EMU_gles_max_version_3_0 
+11-28 13:41:37.051 E/eglCodecCommon( 4391): GoldfishAddressSpaceHostMemoryAllocator: ioctl_ping failed for device_type=5, ret=-1

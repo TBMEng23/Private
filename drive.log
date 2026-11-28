@@ -1,0 +1,186 @@
+shot main-start-0
+shot main-start-1
+shot main-start-2
+shot main-start-3
+shot main-start-4
+shot main-start-5
+texts: ['חזרה', 'חשבון וסנכרון', 'התחבר כדי לשמור ולסנכרן את כל ההגדרות בין הטלפון, הטאבלט והסטרימר', 'G  ', 'המשך עם Google', 'או', 'אימייל', 'סיסמה', 'התחבר', 'צור חשבון חדש', 'שכחתי סיסמה', 'אולי אחר כך']
+tap אולי אחר כך 160 588
+tap Tamir 160 231
+home after 13 s
+shot main-home
+home texts: ['TBM', ' Player', 'חיפוש', 'פרופיל', 'הגדרות', 'לוח שידורים', 'הקלטות', 'קבצים במכשיר', '🔄 עונות ופרקים חדשים', 'גיבור בית (1980)', '4.1', 'פרקים חדשים', 'גיבור בית (1980)', 'Silent First (1995)', '8.7', 'פרקים חדשים', 'Silent First (1995)', 'Love Black (1987)', '7.7', 'פרקים חדשים', 'Love Black (1987)', '🆕 סדרות חדשות על המדף', 'עיר הדרך (2025)', '5.2', 'חדש', 'Dark Road (2025)', '4.2', 'חדש', 'Peppa Pig 5 (2025)', '6.4', 'בית', 'בית', 'טלוויזיה', 'טלוויזיה', 'סרטים', 'סרטים', 'סדרות', 'סדרות', 'מועדפים', 'מועדפים']
+   ! 11-28 13:38:55.357 D/AndroidRuntime( 3814): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+   ! 11-28 13:38:55.387 D/AndroidRuntime( 3814): Calling main entry com.android.commands.monkey.Monkey
+   ! 11-28 13:38:55.411 I/AndroidRuntime( 3814): VM exiting with result code 0.
+   ! 11-28 13:39:03.878 E/AndroidRuntime( 3911): FATAL EXCEPTION: AsyncDvrDbTask-0
+   ! 11-28 13:39:03.878 E/AndroidRuntime( 3911): Process: com.android.tv, PID: 3911
+   ! 11-28 13:39:03.878 E/AndroidRuntime( 3911): java.lang.RuntimeException: An error occurred while executing doInBackground()
+   ! 11-28 13:39:03.878 E/AndroidRuntime( 3911): 	at android.os.AsyncTask$3.done(AsyncTask.java:354)
+   ! 11-28 13:39:03.878 E/AndroidRuntime( 3911): 	at java.util.concurrent.FutureTask.finishCompletion(FutureTask.java:383)
+   ! 11-28 13:39:03.878 E/AndroidRuntime( 3911): 	at java.util.concurrent.FutureTask.setException(FutureTask.java:252)
+   ! 11-28 13:39:03.878 E/AndroidRuntime( 3911): 	at java.util.concurrent.FutureTask.run(FutureTask.java:271)
+   ! 11-28 13:39:03.878 E/AndroidRuntime( 3911): 	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1167)
+   ! 11-28 13:39:03.878 E/AndroidRuntime( 3911): 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:641)
+[main-load] blocks>80ms: 3; ANR lines: 0; FATAL: 1
+    BLOCK 476ms | ours: - | top: NodeChainKt.access$getSentinelHead$p <- NodeChain.padChain <- NodeChain.updateFrom$ui_release <- LayoutNode.applyModifier
+    BLOCK 122ms | ours: - | top: LayoutNodeLayoutDelegate.getMeasurePending$ui_release <- LayoutNode.getMeasurePending$ui_release <- MeasureAndLayoutDelegate.requestRemeasure <- AndroidComposeView.onRequestMeasure
+    BLOCK 100ms | ours: - | top: ThreadedRenderer.nSetStopped <- ThreadedRenderer.setStopped <- ViewRootImpl.performDraw <- ViewRootImpl.performTraversals
+tap בית 288 594
+shot main-sec-בית
+tap טלוויזיה 224 594
+shot main-sec-טלוויזיה
+tap סרטים 160 594
+shot main-sec-סרטים
+tap סדרות 96 594
+shot main-sec-סדרות
+tap סרטים 160 594
+shot main-sec-סרטים
+tap סדרות 96 594
+shot main-sec-סדרות
+NOT FOUND ערוצים
+shot main-sec-ערוצים
+tap בית 288 594
+shot main-sec-בית
+   ! 11-28 13:40:53.896 D/AndroidRuntime( 4149): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+   ! 11-28 13:40:53.926 D/AndroidRuntime( 4149): Calling main entry com.android.commands.uiautomator.Launcher
+   ! 11-28 13:40:54.950 D/AndroidRuntime( 4149): Shutting down VM
+   ! 11-28 13:40:55.056 D/AndroidRuntime( 4169): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+   ! 11-28 13:40:55.086 D/AndroidRuntime( 4169): Calling main entry com.android.commands.uiautomator.Launcher
+   ! 11-28 13:40:56.112 D/AndroidRuntime( 4169): Shutting down VM
+   ! 11-28 13:40:56.180 D/AndroidRuntime( 4182): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+   ! 11-28 13:40:56.210 D/AndroidRuntime( 4182): Calling main entry com.android.commands.input.Input
+   ! 11-28 13:40:56.214 D/AndroidRuntime( 4182): Shutting down VM
+   ! 11-28 13:41:00.323 D/AndroidRuntime( 4198): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+   ! 11-28 13:41:00.353 D/AndroidRuntime( 4198): Calling main entry com.android.commands.uiautomator.Launcher
+   ! 11-28 13:41:01.374 D/AndroidRuntime( 4198): Shutting down VM
+[main-switch] blocks>80ms: 0; ANR lines: 0; FATAL: 0
+rail {'בית': (288, 618), 'טלוויזיה': (224, 618), 'סרטים': (160, 618), 'סדרות': (96, 618)}
+shot main-after-rapid-taps
+shot main-after-rapid-keys
+   ! 11-28 13:41:37.130 D/AndroidRuntime( 4400): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+   ! 11-28 13:41:37.160 D/AndroidRuntime( 4400): Calling main entry com.android.commands.uiautomator.Launcher
+   ! 11-28 13:41:38.183 D/AndroidRuntime( 4400): Shutting down VM
+   ! 11-28 13:41:38.255 D/AndroidRuntime( 4413): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+   ! 11-28 13:41:38.285 D/AndroidRuntime( 4413): Calling main entry com.android.commands.input.Input
+   ! 11-28 13:41:38.288 D/AndroidRuntime( 4413): Shutting down VM
+   ! 11-28 13:41:38.495 D/AndroidRuntime( 4423): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+   ! 11-28 13:41:38.525 D/AndroidRuntime( 4423): Calling main entry com.android.commands.input.Input
+   ! 11-28 13:41:38.529 D/AndroidRuntime( 4423): Shutting down VM
+   ! 11-28 13:41:38.737 D/AndroidRuntime( 4433): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+   ! 11-28 13:41:38.767 D/AndroidRuntime( 4433): Calling main entry com.android.commands.input.Input
+   ! 11-28 13:41:38.794 D/AndroidRuntime( 4433): Shutting down VM
+[main-rapid] blocks>80ms: 0; ANR lines: 0; FATAL: 0
+tap סרטים 160 594
+tap 📂 קטגוריות הספק 137 144
+shot main-cats
+cats: ['TBM', ' Player', 'חיפוש', 'פרופיל', 'הגדרות', 'חיפוש בסדרות', 'ניהול קבוצות', 'תצוגה', '✨ מומלץ', '📂 קטגוריות הספק', 'IL | Series 6 (70)', 'הכל ›', 'גיבור בית (1980)', '4.1', 'גיבור בית (1980)', 'River King (2024)', '5.5', 'River King (2024)', 'Wild Night (1988)', '7.7', 'Wild Night (1988)', 'UK | Series 6 (77)', 'הכל ›', '7.7', '7.8', '4.8', 'בית', 'בית', 'טלוויזיה', 'טלוויזיה']
+open IL | Series 6 (70)
+shot main-details
+details: ['TBM', ' Player', 'חיפוש', 'פרופיל', 'הגדרות', 'חיפוש בסדרות', 'ניהול קבוצות', 'תצוגה', '✨ מומלץ', '📂 קטגוריות הספק', 'IL | Series 6 (70)', 'הכל ›', 'גיבור בית (1980)', '4.1', 'גיבור בית (1980)', 'River King (2024)', '5.5', 'River King (2024)', 'Wild Night (1988)', '7.7', 'Wild Night (1988)', 'UK | Series 6 (77)', 'הכל ›', '7.7', '7.8']
+shot main-back
+NOT FOUND סדרות
+shot ser-details
+ser details: ['Search movies, TV, and more', 'Search movies, TV, and more  ', 'Select to speak your search query', 'Finish setting up your TV Connect to a network and more', 'Finish setting up your TV', 'Connect to a network and more', 'Apps', 'Add app to favorites', 'Add app to favorites', 'Apps']
+NOT FOUND חיפוש
+shot search
+search: ['Search movies, TV, and more', 'Search movies, TV, and more  ', 'Select to speak your search query', 'Finish setting up your TV Connect to a network and more', 'Finish setting up your TV', 'Connect to a network and more', 'Apps', 'Add app to favorites', 'Add app to favorites', 'Apps']
+   ! 11-28 13:42:00.385 D/AndroidRuntime( 4724): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+   ! 11-28 13:42:00.415 D/AndroidRuntime( 4724): Calling main entry com.android.commands.uiautomator.Launcher
+   ! 11-28 13:42:01.458 D/AndroidRuntime( 4724): Shutting down VM
+   ! 11-28 13:42:01.528 D/AndroidRuntime( 4737): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+   ! 11-28 13:42:01.558 D/AndroidRuntime( 4737): Calling main entry com.android.commands.input.Input
+   ! 11-28 13:42:01.561 D/AndroidRuntime( 4737): Shutting down VM
+   ! 11-28 13:42:05.619 D/AndroidRuntime( 4749): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+   ! 11-28 13:42:05.649 D/AndroidRuntime( 4749): Calling main entry com.android.commands.uiautomator.Launcher
+   ! 11-28 13:42:06.678 D/AndroidRuntime( 4749): Shutting down VM
+   ! 11-28 13:42:06.751 D/AndroidRuntime( 4764): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+   ! 11-28 13:42:06.780 D/AndroidRuntime( 4764): Calling main entry com.android.commands.input.Input
+   ! 11-28 13:42:06.792 D/AndroidRuntime( 4764): Shutting down VM
+[main-nav] blocks>80ms: 0; ANR lines: 0; FATAL: 0
+alive: True
+tap ילדים 160 407
+NOT FOUND ילדים
+NOT FOUND ילדים
+NOT FOUND ילדים
+NOT FOUND ילדים
+NOT FOUND ילדים
+NOT FOUND ילדים
+NOT FOUND ילדים
+NOT FOUND ילדים
+NOT FOUND ילדים
+NOT FOUND ילדים
+NOT FOUND ילדים
+NOT FOUND ילדים
+NOT FOUND ילדים
+NOT FOUND ילדים
+NOT FOUND ילדים
+NOT FOUND ילדים
+NOT FOUND ילדים
+NOT FOUND ילדים
+NOT FOUND ילדים
+NOT FOUND ילדים
+NOT FOUND ילדים
+NOT FOUND ילדים
+NOT FOUND ילדים
+NOT FOUND ילדים
+NOT FOUND ילדים
+NOT FOUND ילדים
+NOT FOUND ילדים
+NOT FOUND ילדים
+NOT FOUND ילדים
+NOT FOUND ילדים
+NOT FOUND ילדים
+NOT FOUND ילדים
+NOT FOUND ילדים
+enter timeout; texts: ['TBM', ' Player', 'חיפוש', 'פרופיל', 'שלום פלג ושחף! 👋', 'מה בא לכם לראות היום?', 'מי צופה?', 'פלג', 'שחף', '🆕 חדש בשבילך (29)', 'Cars 6 (2021) HD', '5.5', 'Cars 6 (2021) HD', 'River Road (2021) FHD', '8.8', 'River Road (2021) FHD', 'Moana 6 (2024) FHD', '7.2', 'Moana 6 (2024) FHD', 'בית', 'בית', 'טלוויזיה', 'טלוויזיה', 'סרטים', 'סרטים', 'סדרות', 'סדרות', 'מועדפים', 'מועדפים']
+shot kids-0
+kids t=15s: ['TBM', ' Player', 'חיפוש', 'פרופיל', 'שלום פלג ושחף! 👋', 'מה בא לכם לראות היום?', 'מי צופה?', 'פלג', 'שחף', '🆕 חדש בשבילך (29)', 'Cars 6 (2021) HD', '5.5', 'Cars 6 (2021) HD', 'River Road (2021) FHD', '8.8', 'River Road (2021) FHD', 'Moana 6 (2024) FHD', '7.2', 'Moana 6 (2024) FHD', 'בית', 'בית', 'טלוויזיה', 'טלוויזיה', 'סרטים', 'סרטים']
+shot kids-1
+kids t=30s: ['TBM', ' Player', 'חיפוש', 'פרופיל', 'שלום פלג ושחף! 👋', 'מה בא לכם לראות היום?', 'מי צופה?', 'פלג', 'שחף', '🆕 חדש בשבילך (29)', 'Cars 6 (2021) HD', '5.5', 'Cars 6 (2021) HD', 'River Road (2021) FHD', '8.8', 'River Road (2021) FHD', 'Moana 6 (2024) FHD', '7.2', 'Moana 6 (2024) FHD', 'בית', 'בית', 'טלוויזיה', 'טלוויזיה', 'סרטים', 'סרטים']
+shot kids-2
+kids t=45s: ['TBM', ' Player', 'חיפוש', 'פרופיל', 'שלום פלג ושחף! 👋', 'מה בא לכם לראות היום?', 'מי צופה?', 'פלג', 'שחף', '🆕 חדש בשבילך (29)', 'Cars 6 (2021) HD', '5.5', 'Cars 6 (2021) HD', 'River Road (2021) FHD', '8.8', 'River Road (2021) FHD', 'Moana 6 (2024) FHD', '7.2', 'Moana 6 (2024) FHD', 'בית', 'בית', 'טלוויזיה', 'טלוויזיה', 'סרטים', 'סרטים']
+shot kids-3
+kids t=60s: ['TBM', ' Player', 'חיפוש', 'פרופיל', 'שלום פלג ושחף! 👋', 'מה בא לכם לראות היום?', 'מי צופה?', 'פלג', 'שחף', '🆕 חדש בשבילך (29)', 'Cars 6 (2021) HD', '5.5', 'Cars 6 (2021) HD', 'River Road (2021) FHD', '8.8', 'River Road (2021) FHD', 'Moana 6 (2024) FHD', '7.2', 'Moana 6 (2024) FHD', 'בית', 'בית', 'טלוויזיה', 'טלוויזיה', 'סרטים', 'סרטים']
+shot kids-4
+kids t=75s: ['TBM', ' Player', 'חיפוש', 'פרופיל', 'שלום פלג ושחף! 👋', 'מה בא לכם לראות היום?', 'מי צופה?', 'פלג', 'שחף', '🆕 חדש בשבילך (29)', 'Cars 6 (2021) HD', '5.5', 'Cars 6 (2021) HD', 'River Road (2021) FHD', '8.8', 'River Road (2021) FHD', 'Moana 6 (2024) FHD', '7.2', 'Moana 6 (2024) FHD', 'בית', 'בית', 'טלוויזיה', 'טלוויזיה', 'סרטים', 'סרטים']
+shot kids-5
+kids t=90s: ['TBM', ' Player', 'חיפוש', 'פרופיל', 'שלום פלג ושחף! 👋', 'מה בא לכם לראות היום?', 'מי צופה?', 'פלג', 'שחף', '🆕 חדש בשבילך (29)', 'Cars 6 (2021) HD', '5.5', 'Cars 6 (2021) HD', 'River Road (2021) FHD', '8.8', 'River Road (2021) FHD', 'Moana 6 (2024) FHD', '7.2', 'Moana 6 (2024) FHD', 'בית', 'בית', 'טלוויזיה', 'טלוויזיה', 'סרטים', 'סרטים']
+shot kids-6
+kids t=105s: ['TBM', ' Player', 'חיפוש', 'פרופיל', 'שלום פלג ושחף! 👋', 'מה בא לכם לראות היום?', 'מי צופה?', 'פלג', 'שחף', '🆕 חדש בשבילך (29)', 'Cars 6 (2021) HD', '5.5', 'Cars 6 (2021) HD', 'River Road (2021) FHD', '8.8', 'River Road (2021) FHD', 'Moana 6 (2024) FHD', '7.2', 'Moana 6 (2024) FHD', 'בית', 'בית', 'טלוויזיה', 'טלוויזיה', 'סרטים', 'סרטים']
+shot kids-7
+kids t=120s: ['TBM', ' Player', 'חיפוש', 'פרופיל', 'שלום פלג ושחף! 👋', 'מה בא לכם לראות היום?', 'מי צופה?', 'פלג', 'שחף', '🆕 חדש בשבילך (29)', 'Cars 6 (2021) HD', '5.5', 'Cars 6 (2021) HD', 'River Road (2021) FHD', '8.8', 'River Road (2021) FHD', 'Moana 6 (2024) FHD', '7.2', 'Moana 6 (2024) FHD', 'בית', 'בית', 'טלוויזיה', 'טלוויזיה', 'סרטים', 'סרטים']
+tap סרטים 160 594
+shot kids-sec-סרטים
+kids סרטים: ['TBM', ' Player', 'חיפוש', 'פרופיל', 'חיפוש בסרטים', 'תצוגה', '✨ מומלץ', '📂 קטגוריות הספק', '🆕 סרטים חדשים (37)', 'הכל ›', 'Cars 6 (2021) HD', '5.5', 'Cars 6 (2021) HD', 'River Road (2021) FHD', '8.8']
+tap סדרות 96 594
+shot kids-sec-סדרות
+kids סדרות: ['TBM', ' Player', 'חיפוש', 'פרופיל', 'חיפוש בסדרות', 'תצוגה', '✨ מומלץ', '📂 קטגוריות הספק', '🔄 עונות ופרקים חדשים', 'Peppa Pig 2 (1999)', '7.9', 'פרקים חדשים', 'Peppa Pig 2 (1999)', '🆕 סדרות חדשות על המדף', 'Peppa Pig 5 (2025)']
+NOT FOUND ערוצים
+shot kids-sec-ערוצים
+kids ערוצים: ['TBM', ' Player', 'חיפוש', 'פרופיל', 'חיפוש בסדרות', 'תצוגה', '✨ מומלץ', '📂 קטגוריות הספק', '🔄 עונות ופרקים חדשים', 'Peppa Pig 2 (1999)', '7.9', 'פרקים חדשים', 'Peppa Pig 2 (1999)', '🆕 סדרות חדשות על המדף', 'Peppa Pig 5 (2025)']
+tap בית 288 594
+shot kids-sec-בית
+kids בית: ['TBM', ' Player', 'חיפוש', 'פרופיל', 'שלום פלג ושחף! 👋', 'מה בא לכם לראות היום?', 'מי צופה?', 'פלג', 'שחף', '🆕 חדש בשבילך (29)', 'Cars 6 (2021) HD', '5.5', 'Cars 6 (2021) HD', 'River Road (2021) FHD', '8.8']
+tap סרטים 160 594
+shot kids-sec-סרטים
+kids סרטים: ['TBM', ' Player', 'חיפוש', 'פרופיל', 'חיפוש בסרטים', 'תצוגה', '✨ מומלץ', '📂 קטגוריות הספק', '🆕 סרטים חדשים (37)', 'הכל ›', 'Cars 6 (2021) HD', '5.5', 'Cars 6 (2021) HD', 'River Road (2021) FHD', '8.8']
+tap בית 288 594
+shot kids-sec-בית
+kids בית: ['TBM', ' Player', 'חיפוש', 'פרופיל', 'שלום פלג ושחף! 👋', 'מה בא לכם לראות היום?', 'מי צופה?', 'פלג', 'שחף', '🆕 חדש בשבילך (29)', 'Cars 6 (2021) HD', '5.5', 'Cars 6 (2021) HD', 'River Road (2021) FHD', '8.8']
+   ! 11-28 13:42:55.913 D/AndroidRuntime( 4970): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+   ! 11-28 13:42:55.943 D/AndroidRuntime( 4970): Calling main entry com.android.commands.uiautomator.Launcher
+   ! 11-28 13:42:57.064 D/AndroidRuntime( 4970): Shutting down VM
+   ! 11-28 13:42:57.254 D/AndroidRuntime( 5022): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+   ! 11-28 13:42:57.284 D/AndroidRuntime( 5022): Calling main entry com.android.commands.monkey.Monkey
+   ! 11-28 13:42:57.330 I/AndroidRuntime( 5022): VM exiting with result code 0.
+   ! 11-28 13:43:20.394 D/AndroidRuntime( 5093): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+   ! 11-28 13:43:20.425 D/AndroidRuntime( 5093): Calling main entry com.android.commands.uiautomator.Launcher
+   ! 11-28 13:43:21.446 D/AndroidRuntime( 5093): Shutting down VM
+   ! 11-28 13:43:21.517 D/AndroidRuntime( 5109): >>>>>> START com.android.internal.os.RuntimeInit uid 2000 <<<<<<
+   ! 11-28 13:43:21.548 D/AndroidRuntime( 5109): Calling main entry com.android.commands.uiautomator.Launcher
+   ! 11-28 13:43:22.563 D/AndroidRuntime( 5109): Shutting down VM
+[kids] blocks>80ms: 3; ANR lines: 0; FATAL: 4
+    BLOCK 404ms | ours: - | top: ThreadedRenderer.nSetStopped <- ThreadedRenderer.setStopped <- ViewRootImpl.performDraw <- ViewRootImpl.performTraversals
+    BLOCK 123ms | ours: - | top: ScatterSet.getSize <- MutableScatterSet.add <- FocusInvalidationManager.scheduleInvalidation <- FocusInvalidationManager.scheduleInvalidation
+    BLOCK 102ms | ours: - | top: ThreadedRenderer.nSetStopped <- ThreadedRenderer.setStopped <- ViewRootImpl.performDraw <- ViewRootImpl.performTraversals
