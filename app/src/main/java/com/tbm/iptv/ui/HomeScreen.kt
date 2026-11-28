@@ -293,8 +293,9 @@ private fun HomeRows(content: Content, ver: Int, wide: Boolean, nav: (Screen) ->
     val series = remember(content, ver, Catalog.ready.intValue) { Catalog.get(Kind.SERIES, content.series).items }
     val live by bgState("h-live", liveAll, empty = emptyList<Channel>()) { liveAll.filterIsInstance<Channel>() }
     val recentChKeys = remember(ver) { Prefs.recentChannels() }
-    val recentCh by bgState("h-recentch", live, recentChKeys, empty = emptyList<Channel>()) {
-        val byKey = live.associateBy { it.key }
+    val live0 = live
+    val recentCh by bgState("h-recentch", live0, recentChKeys, empty = emptyList<Channel>()) {
+        val byKey = live0.associateBy { it.key }
         recentChKeys.mapNotNull { byKey[it] }
     }
     val recent = remember(ver) { Prefs.recent() }
@@ -513,19 +514,21 @@ private fun BrowseSection(kind: Kind, all: List<Entry>, ver: Int, nav: (Screen) 
     val favs = remember(ver) { Prefs.favs() }
     val favCount by bgState("favcount:${kind.name}", filtered, favs, empty = 0) { filtered.count { it.key in favs } }
     val hasNew by bgState("hasnew:${kind.name}", filtered, empty = false) { filtered.any { ((it as? Channel)?.added ?: (it as? SeriesItem)?.added ?: 0L) > 0L } }
-    val recentKeys = remember(ver, filtered) {
+    val recentRaw = remember(ver) { if (kind == Kind.LIVE) emptyList() else Prefs.recent() }
+    val recentLive = remember(ver) { if (kind == Kind.LIVE) Prefs.recentChannels() else emptyList() }
+    val recentKeys by bgState("rk:${kind.name}", filtered, recentRaw, recentLive, empty = emptyList<String>()) {
         when (kind) {
-            Kind.LIVE -> Prefs.recentChannels()
+            Kind.LIVE -> recentLive
             // בדיקת "למבוגרים" רק לפריטים שנצפו לאחרונה (עשרות) – לא לכל הקטלוג (אלפים) על ה-thread הראשי
             Kind.MOVIE -> {
-                val rec = Prefs.recent().filter { it.item.kind == Kind.MOVIE }
+                val rec = recentRaw.filter { it.item.kind == Kind.MOVIE }
                 val keys = rec.mapTo(HashSet()) { it.item.key }
                 val byKey = HashMap<String, Entry>()
                 for (e in filtered) if (e.key in keys) byKey[e.key] = e
                 rec.filter { r -> !Catalog.isAdultName(r.item.title) && byKey[r.item.key]?.let { Catalog.isAdultItem(it) } != true }.map { it.item.key }
             }
             Kind.SERIES -> {
-                val rec = Prefs.recent().filter { it.item.kind == Kind.SERIES }
+                val rec = recentRaw.filter { it.item.kind == Kind.SERIES }
                 val names = rec.mapNotNullTo(HashSet()) { it.item.seriesName }
                 val byName = HashMap<String, Entry>()
                 for (e in filtered) if (e.name in names && e.name !in byName) byName[e.name] = e
@@ -544,13 +547,15 @@ private fun BrowseSection(kind: Kind, all: List<Entry>, ver: Int, nav: (Screen) 
     // חיפוש: ממתינים שתסיים להקליד (300ms) ומסננים ברקע – בלי לתקוע את המסך בין אות לאות
     var debQ by remember(kind) { mutableStateOf(query) }
     LaunchedEffect(query) { if (query.isBlank()) debQ = "" else { kotlinx.coroutines.delay(300); debQ = query } }
-    val baseItems = remember(filtered, group, favs, recentKeys) {
-        when (group) {
+    // ערכים מקומיים לפני החישוב ברקע (לא לקרוא state של Compose מחוט אחר)
+    val group0 = group; val rk0 = recentKeys
+    val baseItems by bgState("base:${kind.name}:$group0", filtered, group0, favs, rk0, empty = if (group0 == null) filtered else emptyList()) {
+        when (group0) {
             null -> filtered
             FAV_GROUP -> filtered.filter { it.key in favs }
-            RECENT_GROUP -> { val m = filtered.associateBy { it.key }; recentKeys.mapNotNull { m[it] } }
+            RECENT_GROUP -> { val m = filtered.associateBy { it.key }; rk0.mapNotNull { m[it] } }
             NEW_GROUP -> filtered.sortedByDescending { (it as? Channel)?.added ?: (it as? SeriesItem)?.added ?: 0L }.asSequence().filter { kind != Kind.MOVIE || it.isFreshTitle() }.take(200).toList()
-            else -> filtered.filter { it.group == group }
+            else -> filtered.filter { it.group == group0 }
         }
     }
     val shownItems by androidx.compose.runtime.produceState(baseItems, baseItems, debQ) {
@@ -1021,9 +1026,12 @@ fun PosterGrid(items: List<Entry>, favs: Set<String>, modifier: Modifier, onLong
 private fun FavoritesSection(content: Content, ver: Int, nav: (Screen) -> Unit) {
     val ctx = LocalContext.current
     val favs = remember(ver) { Prefs.favs() }
-    val live = remember(content, ver, Catalog.ready.intValue) { Catalog.get(Kind.LIVE, content.live).items.filterIsInstance<Channel>().filter { it.key in favs } }
-    val vod = remember(content, ver, Catalog.ready.intValue) { Catalog.get(Kind.MOVIE, content.movies).items.filterIsInstance<Channel>().filter { it.key in favs } }
-    val ser = remember(content, ver, Catalog.ready.intValue) { Catalog.get(Kind.SERIES, content.series).items.filterIsInstance<SeriesItem>().filter { it.key in favs } }
+    val lAll = remember(content, ver, Catalog.ready.intValue) { Catalog.get(Kind.LIVE, content.live).items }
+    val mAll = remember(content, ver, Catalog.ready.intValue) { Catalog.get(Kind.MOVIE, content.movies).items }
+    val sAll = remember(content, ver, Catalog.ready.intValue) { Catalog.get(Kind.SERIES, content.series).items }
+    val live by bgState("f-l", lAll, favs, empty = emptyList<Channel>()) { lAll.filterIsInstance<Channel>().filter { it.key in favs } }
+    val vod by bgState("f-m", mAll, favs, empty = emptyList<Channel>()) { mAll.filterIsInstance<Channel>().filter { it.key in favs } }
+    val ser by bgState("f-s", sAll, favs, empty = emptyList<SeriesItem>()) { sAll.filterIsInstance<SeriesItem>().filter { it.key in favs } }
     if (live.isEmpty() && vod.isEmpty() && ser.isEmpty()) {
         Box(Modifier.fillMaxSize()) {
             Text(L("אין מועדפים עדיין.\nלחיצה ארוכה על ערוץ, סרט או סדרה ← הוסף למועדפים."),
@@ -1802,33 +1810,37 @@ private fun KidsHome(content: Content, ver: Int, nav: (Screen) -> Unit) {
     val favs = remember(ver) { Prefs.favs() }
     val kids = remember(ver) { Prefs.kidsNames() }
     val child = remember(ver) { Prefs.kidChild.takeIf { it in kids } }
-    val favItems by bgState("k-fav", favs, live, movies, series, empty = emptyList<Entry>()) { (live + movies + series).filter { it.key in favs } }
+    val kLive = live; val kMov = movies; val kSer = series
+    val favItems by bgState("k-fav", favs, kLive, kMov, kSer, empty = emptyList<Entry>()) { (kLive + kMov + kSer).filter { it.key in favs } }
     LaunchedEffect(movies, series) { com.tbm.iptv.data.KidsFilter.scanAges(movies.take(80) + series.take(80), prof.age) }
     // שורות לפי דמויות ונושאים
-    val themeRows by bgState("k-themes", movies, series, empty = emptyList<Pair<String, List<Entry>>>()) {
+    val themeRaw by bgState("k-themes", kMov, kSer, empty = emptyList<Pair<String, List<Entry>>>()) {
         com.tbm.iptv.data.KidsThemes.all.mapNotNull { (title, rx) ->
-            val l = (movies + series).filter { e -> rx.containsMatchIn(e.name) || ((e as? SeriesItem)?.plot?.let { rx.containsMatchIn(it) } == true) }
+            val l = (kMov + kSer).filter { e -> rx.containsMatchIn(e.name) || ((e as? SeriesItem)?.plot?.let { rx.containsMatchIn(it) } == true) }
                 .take(30)
-            if (l.size >= 3) L(title) to l else null
+            if (l.size >= 3) title to l else null
         }
     }
-    val fresh by bgState("k-fresh", movies, series, empty = emptyList<Entry>()) { (movies + series).filter { it.addedAt() > 0 }.sortedByDescending { it.addedAt() }.asSequence().filter { it !is Channel || it.isFreshTitle() }.take(30).toList() }
+    // התרגום על המסך הראשי (לא מחוט רקע)
+    val themeRows = remember(themeRaw) { themeRaw.map { L(it.first) to it.second } }
+    val fresh by bgState("k-fresh", kMov, kSer, empty = emptyList<Entry>()) { (kMov + kSer).filter { it.addedAt() > 0 }.sortedByDescending { it.addedAt() }.asSequence().filter { it !is Channel || it.isFreshTitle() }.take(30).toList() }
     val recentK = remember(ver) { Prefs.recent() }
-    val resume by bgState("k-resume", movies, series, recentK, empty = emptyList<Entry>()) {
+    val resume by bgState("k-resume", kMov, kSer, recentK, empty = emptyList<Entry>()) {
         val keys = recentK.map { it.item.key }.toSet()
         val names = recentK.mapNotNullTo(HashSet()) { it.item.seriesName }
-        (movies.filter { it.key in keys } + series.filter { s -> s.name in names }).filterNot { Catalog.isAdultItem(it) }
+        (kMov.filter { it.key in keys } + kSer.filter { s -> s.name in names }).filterNot { Catalog.isAdultItem(it) }
     }
     val topics = prof.topics
-    val topicRows by bgState("k-topics", live, topics, empty = emptyList<Pair<String, List<Channel>>>()) {
+    val topicRaw by bgState("k-topics", kLive, topics, empty = emptyList<Pair<String, List<Channel>>>()) {
         topics.mapNotNull { t ->
             val rx = com.tbm.iptv.data.KidsFilter.topicRx[t] ?: return@mapNotNull null
-            val l = live.filter { rx.containsMatchIn(it.group) || rx.containsMatchIn(it.name) }.take(30)
-            val title = when (t) { "nature" -> L("🌿 טבע ובעלי חיים"); "sport" -> L("⚽ ספורט"); "docu" -> L("🔬 מדע ודוקו")
-                "music" -> L("🎵 מוזיקה"); else -> L("📚 חינוכי") }
-            if (l.isEmpty()) null else title to l
+            val l = kLive.filter { rx.containsMatchIn(it.group) || rx.containsMatchIn(it.name) }.take(30)
+            if (l.isEmpty()) null else t to l
         }
     }
+    val topicRows = remember(topicRaw) { topicRaw.map { (t, l) ->
+        (when (t) { "nature" -> L("🌿 טבע ובעלי חיים"); "sport" -> L("⚽ ספורט"); "docu" -> L("🔬 מדע ודוקו")
+            "music" -> L("🎵 מוזיקה"); else -> L("📚 חינוכי") }) to l } }
     // עד שהחישוב הראשון ברקע מסתיים – לא להציג "אין תוכן"
     val catBusy = Catalog.busy(Kind.MOVIE) || liveAll.isNotEmpty() && live.isEmpty() || movAll.isNotEmpty() && movies.isEmpty()
     var menu by remember { mutableStateOf<MenuTarget?>(null) }
