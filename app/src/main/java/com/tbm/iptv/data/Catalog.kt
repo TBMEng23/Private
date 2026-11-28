@@ -194,7 +194,11 @@ object Catalog {
     fun isAdult(group: String): Boolean = adultGroupCache.getOrPut(group) { adultRx.containsMatchIn(group) }
     /** פריט שהשם שלו מעיד על תוכן למבוגרים (גם בתוך קטגוריה רגילה) */
     fun isAdultItem(e: Entry) = isAdult(e.group) || isAdultName(e.name)
-    fun isAdultName(name: String) = adultNameRx.containsMatchIn(name) || xxxTagRx.containsMatchIn(name)
+    private val adultNameCache = java.util.concurrent.ConcurrentHashMap<String, Boolean>()
+    fun isAdultName(name: String): Boolean = adultNameCache[name] ?: (adultNameRx.containsMatchIn(name) || xxxTagRx.containsMatchIn(name)).also {
+        if (adultNameCache.size > 60_000) adultNameCache.clear()
+        adultNameCache[name] = it
+    }
     /** תוכן למבוגרים מוסתר? ("נעול" בלי קוד הורים = מוסתר, כדי שלא יוצג בטעות) */
     fun adultHidden() = Prefs.adultMode == "hide" || (Prefs.adultMode == "lock" && !Parental.hasPin())
 

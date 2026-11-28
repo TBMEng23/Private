@@ -510,13 +510,20 @@ private fun BrowseSection(kind: Kind, all: List<Entry>, ver: Int, nav: (Screen) 
     val recentKeys = remember(ver, filtered) {
         when (kind) {
             Kind.LIVE -> Prefs.recentChannels()
+            // בדיקת "למבוגרים" רק לפריטים שנצפו לאחרונה (עשרות) – לא לכל הקטלוג (אלפים) על ה-thread הראשי
             Kind.MOVIE -> {
-                val adult = filtered.filter { Catalog.isAdultItem(it) }.mapTo(HashSet()) { it.key }
-                Prefs.recent().filter { it.item.kind == Kind.MOVIE && it.item.key !in adult && !Catalog.isAdultName(it.item.title) }.map { it.item.key }
+                val rec = Prefs.recent().filter { it.item.kind == Kind.MOVIE }
+                val keys = rec.mapTo(HashSet()) { it.item.key }
+                val byKey = HashMap<String, Entry>()
+                for (e in filtered) if (e.key in keys) byKey[e.key] = e
+                rec.filter { r -> !Catalog.isAdultName(r.item.title) && byKey[r.item.key]?.let { Catalog.isAdultItem(it) } != true }.map { it.item.key }
             }
             Kind.SERIES -> {
-                val byName = filtered.filterNot { Catalog.isAdultItem(it) }.associateBy { it.name }
-                Prefs.recent().filter { it.item.kind == Kind.SERIES }.mapNotNull { r -> r.item.seriesName?.let { byName[it]?.key } }.distinct()
+                val rec = Prefs.recent().filter { it.item.kind == Kind.SERIES }
+                val names = rec.mapNotNullTo(HashSet()) { it.item.seriesName }
+                val byName = HashMap<String, Entry>()
+                for (e in filtered) if (e.name in names && e.name !in byName) byName[e.name] = e
+                rec.mapNotNull { r -> r.item.seriesName?.let { byName[it] }?.takeIf { !Catalog.isAdultItem(it) }?.key }.distinct()
             }
         }
     }
