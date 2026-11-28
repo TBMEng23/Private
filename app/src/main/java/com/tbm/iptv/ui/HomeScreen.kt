@@ -1869,8 +1869,16 @@ private fun KidsHome(content: Content, ver: Int, nav: (Screen) -> Unit) {
         if (catBusy && live.isEmpty() && movies.isEmpty() && series.isEmpty()) item {
             Row(Modifier.fillMaxWidth().padding(24.dp), horizontalArrangement = Arrangement.Center) { CircularProgressIndicator() }
         } else if (live.isEmpty() && movies.isEmpty() && series.isEmpty()) item {
-            Text(L("עדיין אין תוכן מאושר לפרופיל הזה. בקש מאבא או אמא לבחור תוכן בהגדרות ← בקרת הורים ← תוכן."),
-                modifier = Modifier.padding(24.dp), textAlign = TextAlign.Center)
+            Column(Modifier.fillMaxWidth().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(L("עדיין אין תוכן מאושר לפרופיל הזה. בקש מאבא או אמא לבחור תוכן בהגדרות ← בקרת הורים ← תוכן."), textAlign = TextAlign.Center)
+                // פרטים לאבחון (כדי לדעת למה הרשימה ריקה)
+                val approved = remember(ver) { Prefs.kidsInc(prof.id).size + Prefs.kidsGroups().size + Prefs.kidsItems().size }
+                Text(L("אבחון: אצל הספק {0} ערוצים, {1} סרטים, {2} סדרות · אושרו {3} · עד גיל {4} · אוטומטי {5} · רק נבחרות {6}",
+                    content.live.size, content.movies.size, content.series.size, approved, prof.age,
+                    if (prof.auto) "✓" else "✗", prof.pickOnly.joinToString(",").ifBlank { "-" }),
+                    fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(top = 10.dp))
+            }
         }
         // מי צופה? – מועדפים נפרדים לכל ילד
         if (kids.size > 1) item {

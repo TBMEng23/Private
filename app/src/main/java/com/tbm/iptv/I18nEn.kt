@@ -331,6 +331,7 @@ object I18nEn {
         "🔒 נעל בקוד" to "🔒 Lock with PIN",
         "🔓 בטל נעילה" to "🔓 Unlock",
         "🔔 תזכורת" to "🔔 Reminder",
+        "אבחון: אצל הספק {0} ערוצים, {1} סרטים, {2} סדרות · אושרו {3} · עד גיל {4} · אוטומטי {5} · רק נבחרות {6}" to "Diagnostics: provider has {0} channels, {1} movies, {2} series · approved {3} · age up to {4} · auto {5} · picked-only {6}",
         "מפתח TMDB · קולות ElevenLabs · Gemini" to "TMDB key · ElevenLabs voices · Gemini",
         "ניתוח הדמויות נכשל – ממשיך במצב רגיל ({0})" to "Character analysis failed – continuing in normal mode ({0})",
         "🎭 זוהו {0} דמויות – לכל אחת קול קבוע" to "🎭 {0} characters found – each has a fixed voice",
