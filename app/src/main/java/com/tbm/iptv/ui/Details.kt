@@ -466,7 +466,7 @@ private fun EpisodeRow(e: Episode, s: SeriesItem, info: MediaInfo?, ver: Int, cu
     FocusItem(Modifier.fillMaxWidth(), selected = current, onClick = onClick) {
         Column(Modifier.padding(horizontal = 16.dp, vertical = 10.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(Modifier.width(132.dp).aspectRatio(16f / 9f).clip(RoundedCornerShape(6.dp)).background(Color(0xFF1E1F25))) {
+                Box(Modifier.width(132.dp).aspectRatio(16f / 9f).roundClip(RoundedCornerShape(6.dp)).background(Color(0xFF1E1F25))) {
                     AsyncImage(e.image ?: info?.backdrops?.firstOrNull() ?: s.logo, null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
                     Box(Modifier.align(Alignment.Center).size(32.dp).background(Color(0x99000000), CircleShape).border(1.dp, Color.White, CircleShape),
                         contentAlignment = Alignment.Center) {

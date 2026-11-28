@@ -155,6 +155,9 @@ private const val RECENT_GROUP = "\u0000recent"
 fun HomeScreen(nav: (Screen) -> Unit) {
     val state by Repo.state.collectAsState()
     var section by rememberSaveable { mutableStateOf(Section.HOME) }
+    // התוכן מתחלף רק כשמפסיקים ללחוץ (מעבר מהיר בין חלוניות לא בונה כל חלונית בדרך)
+    var shown by rememberSaveable { mutableStateOf(section) }
+    LaunchedEffect(section) { if (shown != section) { kotlinx.coroutines.delay(180); shown = section } }
     // כפתור המיקרופון בשלט → מסך החיפוש עם הקשבה מיידית
     val voiceReq = VoiceBus.req.intValue
     LaunchedEffect(voiceReq) { if (voiceReq > 0 && VoiceBus.pending) section = Section.SEARCH }
@@ -166,7 +169,7 @@ fun HomeScreen(nav: (Screen) -> Unit) {
         val body: @Composable (Modifier) -> Unit = { m ->
             Box(m) {
                 when (val s = state) {
-                    is LoadState.Ready -> SectionContent(section, s.content, ver, wide, nav) { section = it }
+                    is LoadState.Ready -> SectionContent(shown, s.content, ver, wide, nav) { section = it }
                     is LoadState.Loading -> Column(Modifier.align(Alignment.Center), horizontalAlignment = Alignment.CenterHorizontally) {
                         CircularProgressIndicator(); Spacer(Modifier.height(12.dp)); Text(s.msg)
                     }
@@ -352,7 +355,7 @@ private fun HomeRows(content: Content, ver: Int, wide: Boolean, nav: (Screen) ->
                 itemsIndexed(recentCh) { i, c ->
                     FocusItem(onClick = { Launcher.play(ctx, recentCh.map { it.toPlay() }, i) }) {
                         Column(Modifier.width(130.dp).padding(4.dp)) {
-                            Box(Modifier.fillMaxWidth().aspectRatio(16f / 9f).clip(RoundedCornerShape(8.dp))
+                            Box(Modifier.fillMaxWidth().aspectRatio(16f / 9f).roundClip(RoundedCornerShape(8.dp))
                                 .background(MaterialTheme.colorScheme.surfaceVariant), contentAlignment = Alignment.Center) {
                                 AsyncImage(c.logo, null, Modifier.fillMaxSize().padding(10.dp), contentScale = ContentScale.Fit)
                             }
@@ -463,7 +466,7 @@ private fun Poster(
     FocusItem(Modifier.then(if (focusKey != null) Modifier.focusRequester(fr) else Modifier), onLongClick = onLong,
         onClick = { if (focusKey != null) FocusMemory.last = focusKey; onClick() }) {
         Column((if (width != null) Modifier.width(width) else Modifier.fillMaxWidth()).padding(4.dp)) {
-            Box(Modifier.fillMaxWidth().aspectRatio(2f / 3f).clip(RoundedCornerShape(6.dp)).background(MaterialTheme.colorScheme.surfaceVariant)) {
+            Box(Modifier.fillMaxWidth().aspectRatio(2f / 3f).roundClip(RoundedCornerShape(6.dp)).background(MaterialTheme.colorScheme.surfaceVariant)) {
                 if (logo == null) Text(name, Modifier.align(Alignment.Center).padding(6.dp), textAlign = TextAlign.Center, fontSize = 13.sp)
                 AsyncImage(logo, null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
                 if (fav) Icon(Icons.Filled.Star, null, tint = Gold, modifier = Modifier.align(Alignment.TopEnd).padding(4.dp).size(18.dp))
@@ -503,10 +506,11 @@ private fun BrowseSection(kind: Kind, all: List<Entry>, ver: Int, nav: (Screen) 
     val unlocked = Parental.unlocked
     val view = remember(all, ver, unlocked, Catalog.ready.intValue) { Catalog.get(kind, all) }
     val filtered = view.items
-    val counts = remember(filtered) { filtered.groupingBy { it.group }.eachCount() }
+    // ספירות על כל הקטלוג – ברקע ונשמרות בין מעברי חלוניות (בלי לתקוע את המסך)
+    val counts by bgState("counts:${kind.name}", filtered, empty = emptyMap<String, Int>()) { filtered.groupingBy { it.group }.eachCount() }
     val favs = remember(ver) { Prefs.favs() }
-    val favCount = remember(filtered, favs) { filtered.count { it.key in favs } }
-    val hasNew = remember(filtered) { filtered.any { ((it as? Channel)?.added ?: (it as? SeriesItem)?.added ?: 0L) > 0L } }
+    val favCount by bgState("favcount:${kind.name}", filtered, favs, empty = 0) { filtered.count { it.key in favs } }
+    val hasNew by bgState("hasnew:${kind.name}", filtered, empty = false) { filtered.any { ((it as? Channel)?.added ?: (it as? SeriesItem)?.added ?: 0L) > 0L } }
     val recentKeys = remember(ver, filtered) {
         when (kind) {
             Kind.LIVE -> Prefs.recentChannels()
@@ -898,7 +902,7 @@ fun ChannelList(
             ) {
                 Row(Modifier.padding(horizontal = 8.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text("${i + 1}", Modifier.width(40.dp), color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
-                    Box(Modifier.size(width = 52.dp, height = 34.dp).clip(RoundedCornerShape(4.dp)).background(Color(0x22FFFFFF)),
+                    Box(Modifier.size(width = 52.dp, height = 34.dp).roundClip(RoundedCornerShape(4.dp)).background(Color(0x22FFFFFF)),
                         contentAlignment = Alignment.Center) {
                         AsyncImage(c.logo, null, Modifier.fillMaxSize().padding(2.dp), contentScale = ContentScale.Fit)
                     }
@@ -953,7 +957,7 @@ private fun PreviewPane(ch: Channel?, queue: List<Channel>, modifier: Modifier, 
     var dialog by remember { mutableStateOf<EpgEntry?>(null) }
 
     Column(modifier.fillMaxHeight().padding(8.dp)) {
-        Box(Modifier.fillMaxWidth().aspectRatio(16f / 9f).clip(RoundedCornerShape(8.dp)).background(Color.Black).clickable { onFull() }) {
+        Box(Modifier.fillMaxWidth().aspectRatio(16f / 9f).roundClip(RoundedCornerShape(8.dp)).background(Color.Black).clickable { onFull() }) {
             AndroidView(factory = { PlayerView(it).apply { useController = false; this.player = player } }, modifier = Modifier.fillMaxSize())
             if (ch == null) Text(L("בחר ערוץ לתצוגה מקדימה\nלחיצה נוספת – מסך מלא"), Modifier.align(Alignment.Center),
                 textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -1621,7 +1625,7 @@ private fun FeaturedHero(list0: List<Entry>, kind: Kind, favs: Set<String>, nav:
             if (!pager.isScrollInProgress) runCatching { pager.animateScrollToPage(pager.settledPage + 1) }
         }
     }
-    Box(Modifier.fillMaxWidth().height(440.dp).padding(horizontal = 12.dp, vertical = 6.dp).clip(RoundedCornerShape(10.dp))
+    Box(Modifier.fillMaxWidth().height(440.dp).padding(horizontal = 12.dp, vertical = 6.dp).roundClip(RoundedCornerShape(10.dp))
         .background(MaterialTheme.colorScheme.surfaceVariant)) {
         androidx.compose.foundation.pager.HorizontalPager(pager, Modifier.fillMaxSize(), beyondViewportPageCount = 1) { page ->
             val e = list[page % n]
@@ -1659,7 +1663,7 @@ private fun FeaturedHero(list0: List<Entry>, kind: Kind, favs: Set<String>, nav:
             val curIdx = pager.currentPage % n
             list.indices.forEach { i ->
                 val cur = i == curIdx
-                Box(Modifier.size(if (cur) 9.dp else 7.dp).clip(RoundedCornerShape(50))
+                Box(Modifier.size(if (cur) 9.dp else 7.dp).roundClip(RoundedCornerShape(50))
                     .background(if (cur) Color.White else Color(0x66FFFFFF))
                     .clickable { scope.launch { pager.animateScrollToPage(pager.currentPage - curIdx + i) } })
             }
@@ -1750,7 +1754,7 @@ private fun RankedStrip(title: String, list0: List<Entry>, nav: (Screen) -> Unit
                             Text("${i + 1}", fontSize = 64.sp, fontWeight = FontWeight.Black, fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
                                 style = androidx.compose.ui.text.TextStyle(color = Color.White, drawStyle = androidx.compose.ui.graphics.drawscope.Stroke(width = 5f)),
                                 modifier = Modifier.width(if (i >= 9) 62.dp else 40.dp))
-                            Box(Modifier.weight(1f).aspectRatio(2f / 3f).clip(RoundedCornerShape(8.dp)).background(MaterialTheme.colorScheme.surfaceVariant)) {
+                            Box(Modifier.weight(1f).aspectRatio(2f / 3f).roundClip(RoundedCornerShape(8.dp)).background(MaterialTheme.colorScheme.surfaceVariant)) {
                                 if (e.logo == null) Text(e.name, Modifier.align(Alignment.Center).padding(6.dp), textAlign = TextAlign.Center, fontSize = 12.sp)
                                 AsyncImage(e.logo, null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
                                 com.tbm.iptv.data.Platforms.detect(e)?.let { PlatformBadge(it, Modifier.align(Alignment.BottomStart).padding(4.dp)) }
@@ -1821,7 +1825,7 @@ private fun KidsHome(content: Content, ver: Int, nav: (Screen) -> Unit) {
     val colors = listOf(Color(0xFFFF6F91), Color(0xFFFFB300), Color(0xFF00C2A8), Color(0xFF3A9BFF), Color(0xFF8E44AD))
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 20.dp)) {
         item {
-            Box(Modifier.fillMaxWidth().padding(12.dp).clip(RoundedCornerShape(22.dp))
+            Box(Modifier.fillMaxWidth().padding(12.dp).roundClip(RoundedCornerShape(22.dp))
                 .background(androidx.compose.ui.graphics.Brush.horizontalGradient(listOf(colors[prof.color % colors.size], colors[(prof.color + 2) % colors.size])))
                 .padding(20.dp)) {
                 Column {

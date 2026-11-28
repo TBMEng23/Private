@@ -126,8 +126,8 @@ fun FocusItem(
             }
             // שכבת גרפיקה רק לפריט המסומן (בלי זה כל פריט ברשימה יוצר שכבה – כבד מאוד בסטרימר)
             .then(if (scale != 1f) Modifier.graphicsLayer { scaleX = scale; scaleY = scale } else Modifier)
-            .clip(shape)
-            .background(bg)
+            .roundClip(shape)
+            .background(bg, shape)
             .border(if (focused) 3.dp else 0.dp, if (focused) Color.White else Color.Transparent, shape)
             .combinedClickable(
                 interactionSource = interaction,
@@ -137,6 +137,13 @@ fun FocusItem(
             )
     ) { androidx.compose.runtime.CompositionLocalProvider(LocalItemFocused provides focused) { content() } }
 }
+
+/**
+ * באנדרואיד 9 ומטה (כמו הסטרימר של שיאומי) כל clip יוצר שכבת View אמיתית – כבד מאוד ברשימות ארוכות
+ * וגורם לתקיעות במעבר בין חלוניות. שם מוותרים על חיתוך הפינות (הרקע עדיין מעוגל).
+ */
+val cheapLayers = android.os.Build.VERSION.SDK_INT < 29
+fun Modifier.roundClip(shape: androidx.compose.ui.graphics.Shape): Modifier = if (cheapLayers) this else this.clip(shape)
 
 /** האם הפריט שבתוכו נמצאים מסומן כרגע (לשינוי צבע טקסט בשורות תפריט) */
 val LocalItemFocused = androidx.compose.runtime.compositionLocalOf { false }
