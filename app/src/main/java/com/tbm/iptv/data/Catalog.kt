@@ -267,7 +267,7 @@ object Catalog {
         synchronized(cache) { cache[k] }?.let { v -> synchronized(lastByKind) { lastByKind[kind] = v }; return v }
         if (synchronized(pending) { pending.add(k) }) {
             Repo.scope.launch(kotlinx.coroutines.Dispatchers.Default) {
-                runCatching { build(kind, all) }
+                runCatching { build(kind, all) }.onFailure { e -> com.tbm.iptv.CrashLog.saveIfNone(e, "catalog-${kind.name}") }
                 synchronized(pending) { pending.remove(k) }
                 kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) { ready.intValue = ready.intValue + 1 }
             }

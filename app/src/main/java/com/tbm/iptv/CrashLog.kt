@@ -41,7 +41,8 @@ object CrashLog {
                 val done = java.util.concurrent.atomic.AtomicBoolean(false)
                 main.post { done.set(true) }
                 Thread.sleep(4000)
-                if (!done.get() && !reported) {
+                // דוח קודם עוד לא נקרא – לא דורסים אותו (אחרת הדוח מתאר רק את מה שקרה הכי מאוחר)
+                if (!done.get() && !reported && file?.exists() != true) {
                     reported = true
                     runCatching {
                         val tr = android.os.Looper.getMainLooper().thread.stackTrace
@@ -56,12 +57,15 @@ object CrashLog {
         }, "tbm-watchdog").apply { isDaemon = true; priority = Thread.MIN_PRIORITY }.start()
     }
 
+    /** שגיאה שנבלעה ברקע (למשל בניית רשימת התוכן) – נשמרת לדוח רק אם אין דוח אחר */
+    fun saveIfNone(e: Throwable, where: String) { if (file?.exists() != true) save(e, where) }
+
     fun read(): String? = file?.takeIf { it.exists() }?.readText()
 
     fun clear() { file?.delete() }
 }
 
-object BuildConfigLite { const val VERSION = "5.0.2" }
+object BuildConfigLite { const val VERSION = "5.0.3" }
 
 /** הגרסה האמיתית מתוך ה-APK (versionName + versionCode) */
 fun appVersion(ctx: android.content.Context): String = runCatching {

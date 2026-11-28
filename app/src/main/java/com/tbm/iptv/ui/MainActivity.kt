@@ -27,6 +27,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -377,33 +378,37 @@ private fun CrashReport() {
     val ctx = LocalContext.current
     var text by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(com.tbm.iptv.CrashLog.read()) }
     val t = text ?: return
-    androidx.compose.material3.AlertDialog(
-        onDismissRequest = { com.tbm.iptv.CrashLog.clear(); text = null },
-        title = { androidx.compose.material3.Text(L("האפליקציה נסגרה בפעם הקודמת")) },
-        text = {
-            androidx.compose.foundation.layout.Column {
+    // חלון פשוט ברוחב קבוע (AlertDialog מודד את כל הטקסט כמה פעמים – בסטרימר זה לבד תקע את המסך)
+    androidx.compose.ui.window.Dialog(onDismissRequest = { com.tbm.iptv.CrashLog.clear(); text = null }) {
+        androidx.compose.material3.Surface(shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
+            color = androidx.compose.material3.MaterialTheme.colorScheme.surface,
+            modifier = Modifier.width(560.dp)) {
+            androidx.compose.foundation.layout.Column(Modifier.padding(20.dp)) {
+                androidx.compose.material3.Text(L("האפליקציה נסגרה בפעם הקודמת"),
+                    fontSize = androidx.compose.ui.unit.TextUnit(20f, androidx.compose.ui.unit.TextUnitType.Sp))
                 androidx.compose.material3.Text(L("לחץ \"העתק\" ושלח את הדוח כדי שאפשר יהיה לתקן."),
-                    fontSize = androidx.compose.ui.unit.TextUnit(13f, androidx.compose.ui.unit.TextUnitType.Sp))
+                    fontSize = androidx.compose.ui.unit.TextUnit(13f, androidx.compose.ui.unit.TextUnitType.Sp),
+                    modifier = Modifier.padding(top = 6.dp))
                 androidx.compose.material3.Text(
-                    t.take(1500),
+                    t.take(1200),
                     fontSize = androidx.compose.ui.unit.TextUnit(10f, androidx.compose.ui.unit.TextUnitType.Sp),
-                    modifier = Modifier.padding(top = 8.dp).androidx_verticalScroll(),
+                    style = androidx.compose.ui.text.TextStyle(textDirection = androidx.compose.ui.text.style.TextDirection.Ltr),
+                    modifier = Modifier.padding(top = 8.dp).fillMaxWidth().androidx_verticalScroll(),
                 )
+                androidx.compose.foundation.layout.Row(Modifier.fillMaxWidth().padding(top = 8.dp),
+                    horizontalArrangement = androidx.compose.foundation.layout.Arrangement.End) {
+                    com.tbm.iptv.ui.TvTextButton(onClick = { com.tbm.iptv.CrashLog.clear(); text = null }) {
+                        androidx.compose.material3.Text(L("סגור"))
+                    }
+                    com.tbm.iptv.ui.TvTextButton(onClick = {
+                        val cm = ctx.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                        cm.setPrimaryClip(android.content.ClipData.newPlainText("TBM crash", t))
+                        android.widget.Toast.makeText(ctx, L("הועתק"), android.widget.Toast.LENGTH_SHORT).show()
+                    }) { androidx.compose.material3.Text(L("העתק")) }
+                }
             }
-        },
-        confirmButton = {
-            com.tbm.iptv.ui.TvTextButton(onClick = {
-                val cm = ctx.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
-                cm.setPrimaryClip(android.content.ClipData.newPlainText("TBM crash", t))
-                android.widget.Toast.makeText(ctx, L("הועתק"), android.widget.Toast.LENGTH_SHORT).show()
-            }) { androidx.compose.material3.Text(L("העתק")) }
-        },
-        dismissButton = {
-            com.tbm.iptv.ui.TvTextButton(onClick = { com.tbm.iptv.CrashLog.clear(); text = null }) {
-                androidx.compose.material3.Text(L("סגור"))
-            }
-        },
-    )
+        }
+    }
 }
 
 @Composable
