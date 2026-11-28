@@ -381,7 +381,7 @@ fun KidsContentScreen(profileId: String, onBack: () -> Unit) {
         com.tbm.iptv.data.Kind.MOVIE -> content?.movies.orEmpty()
         com.tbm.iptv.data.Kind.SERIES -> content?.series.orEmpty()
     }
-    val groups = remember(all) { all.groupingBy { it.group }.eachCount().toList() }
+    val groups by bgState("pk-groups:${kind.name}", all, empty = emptyList<Pair<String, Int>>()) { all.groupingBy { it.group }.eachCount().toList() }
     val inc = remember(ver) { Prefs.kidsInc(profileId) }
     val exc = remember(ver) { Prefs.kidsExc(profileId) }
     val legacy = remember(ver) { Prefs.kidsGroups() }
@@ -400,7 +400,7 @@ fun KidsContentScreen(profileId: String, onBack: () -> Unit) {
             else -> 0
         }
     }
-    val byGroup = remember(all) { all.groupBy { it.group } }
+    val byGroup by bgState("pk-by:${kind.name}", all, empty = emptyMap<String, List<com.tbm.iptv.data.Entry>>()) { all.groupBy { it.group } }
     val itemExc = remember(ver) { Prefs.kidsItemExc(profileId) }
     var expanded by remember(kind) { mutableStateOf<String?>(null) }
     // חיפוש גם בשמות הערוצים/הסרטים – הקטגוריה תיפתח אוטומטית

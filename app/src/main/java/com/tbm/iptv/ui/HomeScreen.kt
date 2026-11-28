@@ -1466,15 +1466,15 @@ private fun CatLine(name: String, count: Int?, locked: Boolean, accent: Boolean,
 
 // ============================================================ תצוגת שורות (כמו MyTVOnline)
 // ---- מטמון לחישובי רקע: בחזרה למסך התוצאה זמינה מיד (בלי רשימות ריקות שמאפסות את הגלילה) ----
-private val bgCache = HashMap<String, Pair<List<Any?>, Any?>>()
-private fun sameInputs(a: List<Any?>, b: List<Any?>) = a.size == b.size && a.indices.all { i ->
+internal val bgCache = HashMap<String, Pair<List<Any?>, Any?>>()
+internal fun sameInputs(a: List<Any?>, b: List<Any?>) = a.size == b.size && a.indices.all { i ->
     val x = a[i]; val y = b[i]; x === y || (x !is List<*> && x == y) }
 @Suppress("UNCHECKED_CAST")
-private fun <T> bgPeek(key: String, vararg inputs: Any?): T? = synchronized(bgCache) {
+internal fun <T> bgPeek(key: String, vararg inputs: Any?): T? = synchronized(bgCache) {
     bgCache[key]?.takeIf { sameInputs(it.first, inputs.toList()) }?.second as T? }
-private fun bgPut(key: String, value: Any?, vararg inputs: Any?) = synchronized(bgCache) { bgCache[key] = inputs.toList() to value }
+internal fun bgPut(key: String, value: Any?, vararg inputs: Any?) = synchronized(bgCache) { bgCache[key] = inputs.toList() to value }
 @Composable
-private fun <T> bgState(key: String, vararg inputs: Any?, empty: T, compute: () -> T): androidx.compose.runtime.State<T> {
+internal fun <T> bgState(key: String, vararg inputs: Any?, empty: T, compute: () -> T): androidx.compose.runtime.State<T> {
     val hit = bgPeek<T>(key, *inputs)
     return androidx.compose.runtime.produceState(hit ?: empty, *inputs) {
         val cached = bgPeek<T>(key, *inputs)

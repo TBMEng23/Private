@@ -84,8 +84,9 @@ fun GuideSection(content: Content) {
     val epgVer = Epg.version.intValue
     val view = remember(content, ver, Catalog.ready.intValue) { Catalog.get(Kind.LIVE, content.live) }
     var group by rememberSaveable { mutableStateOf<String?>(null) }
-    val chans = remember(view, group) {
-        view.items.filterIsInstance<Channel>().filter { group == null || it.group == group }
+    val g0 = group; val items0 = view.items
+    val chans by bgState("guide:$g0", items0, g0, empty = emptyList<Channel>()) {
+        items0.filterIsInstance<Channel>().filter { g0 == null || it.group == g0 }
     }
     val now0 = remember { System.currentTimeMillis() }
     var winStart by rememberSaveable {

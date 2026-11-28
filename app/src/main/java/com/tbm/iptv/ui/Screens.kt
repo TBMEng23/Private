@@ -143,7 +143,8 @@ fun ManageGroupsScreen(startKind: Kind, onBack: () -> Unit, onKids: (String) -> 
         Kind.SERIES -> content?.series
     } ?: emptyList()
     val ver = Prefs.version.intValue
-    val groupsRaw = remember(all, content, kind) { (all.map { it.group } + (content?.allGroups?.get(kind) ?: emptyList())).distinct() }
+    val extraGroups = content?.allGroups?.get(kind) ?: emptyList()
+    val groupsRaw by bgState("mg-raw:${kind.name}", all, extraGroups, empty = emptyList<String>()) { (all.map { it.group } + extraGroups).distinct() }
     // ביציאה: אם הסינון השתנה – טוען מחדש (חסכוני) או סורק שוב את לוח השידורים
     val filterSig = { Triple(Prefs.hidden(), Kind.entries.map { Prefs.allowedCountries(it) }, Prefs.hiddenItems()) to (Prefs.leanLoad to Prefs.epgVisibleOnly) }
     val startSig = remember { filterSig() }
@@ -158,14 +159,15 @@ fun ManageGroupsScreen(startKind: Kind, onBack: () -> Unit, onKids: (String) -> 
         }
     }
     val groups = remember(groupsRaw, ver, kind) { Catalog.orderGroups(kind, groupsRaw) }
-    val counts = remember(all) { all.groupingBy { it.group }.eachCount() }
+    val counts by bgState("mg-counts:${kind.name}", all, empty = emptyMap<String, Int>()) { all.groupingBy { it.group }.eachCount() }
     val countries = remember(groupsRaw) { groupsRaw.map { Countries.of(it) }.distinct().sortedBy { Countries.label(it) } }
     val hidden = remember(ver) { Prefs.hidden() }
     val allowed = remember(ver, kind) { Prefs.allowedCountries(kind) }
     val pinned = remember(ver, kind) { Prefs.pinnedGroups(kind) }
     val locked = remember(ver) { Prefs.lockedGroups() }
     val kidsOk = remember(ver) { Prefs.kidsGroups() }
-    val hiddenItems = remember(ver, all) { val h = Prefs.hiddenItems(); all.filter { it.key in h } }
+    val hSet = remember(ver) { Prefs.hiddenItems() }
+    val hiddenItems by bgState("mg-hidden:${kind.name}", all, hSet, empty = emptyList<Entry>()) { all.filter { it.key in hSet } }
     var q by remember { mutableStateOf("") }
     var groupMenu by remember { mutableStateOf<String?>(null) }
     var countriesOpen by remember { mutableStateOf(false) }
