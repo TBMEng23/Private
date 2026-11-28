@@ -90,6 +90,8 @@ object KidsFilter {
         m
     }
     @Volatile private var agesDirty = false
+    /** עולה כשסריקת גילאים הסתירה פריטים – כדי שרשימת הילדים תחושב מחדש */
+    @Volatile var agesVer = 0
     /** גיל סיווג ידוע לפריט, -1 = נבדק ולא נמצא סיווג, null = עוד לא נבדק */
     fun cachedAge(key: String): Int? = ages[key]
     fun cacheAge(key: String, age: Int?) { ages[key] = age ?: -1; agesDirty = true }
@@ -138,7 +140,7 @@ object KidsFilter {
                     }.forEachIndexed { _, d -> val a = d.await(); if (a != null && a > maxAge) hidden++ }
                 }
                 saveAges()
-                if (hidden > 0) kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) { Prefs.bump() }
+                if (hidden > 0) kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) { agesVer++; Prefs.bump() }
             } finally { scanning.set(false) }
         }
     }
@@ -252,11 +254,11 @@ object Catalog {
     /** מתעדכן כשחישוב ברקע הסתיים – המסכים מאזינים לו */
     val ready = androidx.compose.runtime.mutableIntStateOf(0)
     private val EMPTY = View(emptyList(), emptyList(), emptySet())
-    private val lastByKind = HashMap<Kind, View>()
+    private val lastByKind = HashMap<String, View>()
     private val pending = HashSet<String>()
 
     private fun keyOf(kind: Kind, all: List<Entry>) =
-        "${kind.name}|${System.identityHashCode(all)}|${all.size}|${Prefs.version.intValue}|${Parental.unlocked}|${Prefs.profileId}"
+        "${kind.name}|${System.identityHashCode(all)}|${all.size}|${Prefs.catalogSig()}|$agesVer|${Parental.unlocked}|${Prefs.profileId}"
 
     /**
      * לשימוש במסכים: אף פעם לא מחשב על ה-UI thread.
@@ -264,7 +266,9 @@ object Catalog {
      */
     fun get(kind: Kind, all: List<Entry>): View {
         val k = keyOf(kind, all)
-        synchronized(cache) { cache[k] }?.let { v -> synchronized(lastByKind) { lastByKind[kind] = v }; return v }
+        // התוצאה הקודמת רק של אותו פרופיל ואותו מצב נעילה – לא מציגים לפרופיל ילדים את הרשימה של פרופיל אחר בזמן החישוב
+        val lk = "${kind.name}|${Prefs.profileId}|${Parental.unlocked}"
+        synchronized(cache) { cache[k] }?.let { v -> synchronized(lastByKind) { lastByKind[lk] = v }; return v }
         if (synchronized(pending) { pending.add(k) }) {
             Repo.scope.launch(kotlinx.coroutines.Dispatchers.Default) {
                 runCatching { build(kind, all) }.onFailure { e -> com.tbm.iptv.CrashLog.saveIfNone(e, "catalog-${kind.name}") }
@@ -272,8 +276,11 @@ object Catalog {
                 kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) { ready.intValue = ready.intValue + 1 }
             }
         }
-        return synchronized(lastByKind) { lastByKind[kind] } ?: EMPTY
+        return synchronized(lastByKind) { lastByKind[lk] } ?: EMPTY
     }
+
+    /** חישוב ברקע עדיין רץ לסוג הזה */
+    fun busy(kind: Kind): Boolean = synchronized(pending) { pending.any { it.startsWith(kind.name + "|") } }
 
     /** מחשב מראש ברקע את שלושת סוגי התוכן (לפני מעבר פרופיל) */
     fun warm(c: Content) { build(Kind.LIVE, c.live); build(Kind.MOVIE, c.movies); build(Kind.SERIES, c.series) }

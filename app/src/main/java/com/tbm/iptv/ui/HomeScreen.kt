@@ -287,22 +287,24 @@ private fun SectionContent(section: Section, content: Content, ver: Int, wide: B
 @Composable
 private fun HomeRows(content: Content, ver: Int, wide: Boolean, nav: (Screen) -> Unit, go: (Section) -> Unit) {
     val ctx = LocalContext.current
-    val live = remember(content, ver, Catalog.ready.intValue) { Catalog.get(Kind.LIVE, content.live).items.filterIsInstance<Channel>() }
+    // כל מה שעובר על כל הקטלוג (אלפי פריטים) – ברקע ונשמר בין מעברי חלוניות; על המסך הראשי רק שליפה מהמטמון
+    val liveAll = remember(content, ver, Catalog.ready.intValue) { Catalog.get(Kind.LIVE, content.live).items }
     val movies = remember(content, ver, Catalog.ready.intValue) { Catalog.get(Kind.MOVIE, content.movies).items }
     val series = remember(content, ver, Catalog.ready.intValue) { Catalog.get(Kind.SERIES, content.series).items }
-    val recentCh = remember(live, ver) {
+    val live by bgState("h-live", liveAll, empty = emptyList<Channel>()) { liveAll.filterIsInstance<Channel>() }
+    val recentChKeys = remember(ver) { Prefs.recentChannels() }
+    val recentCh by bgState("h-recentch", live, recentChKeys, empty = emptyList<Channel>()) {
         val byKey = live.associateBy { it.key }
-        Prefs.recentChannels().mapNotNull { byKey[it] }
+        recentChKeys.mapNotNull { byKey[it] }
     }
     val recent = remember(ver) { Prefs.recent() }
-    val allowedKeys = remember(movies, series) { (movies.map { it.key } + series.map { it.key }).toHashSet() }
+    val allowedKeys by bgState("h-allowed", movies, series, empty = emptySet<String>()) { (movies.map { it.key } + series.map { it.key }).toHashSet() }
     // "המשך צפייה" – אף פעם לא תוכן למבוגרים (גם כשהוא מוצג/פתוח בהגדרות)
-    // נבדק רק על מה שבאמת נצפה (עשרות פריטים) – לא regex על כל הקטלוג בכל כניסה למסך הבית
-    val adultKeys = remember(content, recent) {
+    val adultKeys by bgState("h-adultk", content, recent, empty = emptySet<String>()) {
         val keys = recent.filter { it.item.kind == Kind.MOVIE }.mapTo(HashSet()) { it.item.key }
         content.movies.filter { it.key in keys && Catalog.isAdultItem(it) }.mapTo(HashSet()) { it.key }
     }
-    val adultSeries = remember(content, recent) {
+    val adultSeries by bgState("h-adults", content, recent, empty = emptySet<String>()) {
         val names = recent.mapNotNullTo(HashSet()) { it.item.seriesName }
         content.series.filter { it.name in names && Catalog.isAdultItem(it) }.mapTo(HashSet()) { it.name }
     }
@@ -310,11 +312,11 @@ private fun HomeRows(content: Content, ver: Int, wide: Boolean, nav: (Screen) ->
         it.item.key !in adultKeys && !Catalog.isAdultName(it.item.title) } }
     val recentEps = remember(recent, adultSeries) { recent.filter { it.item.kind == Kind.SERIES && it.item.seriesName !in adultSeries &&
         !Catalog.isAdultName(it.item.seriesName ?: it.item.title) }.distinctBy { it.item.seriesName } }
-    val newMovies = remember(movies) { movies.filterIsInstance<Channel>().filter { it.added > 0 }.sortedByDescending { it.added }.asSequence().filter { isPreferred(it) && it.isFreshTitle() }.take(30).toList() }
-    val newSeries = remember(series) { series.filterIsInstance<SeriesItem>().filter { it.added > 0 }.sortedByDescending { it.added }.asSequence().filter { isPreferred(it) }.take(30).toList() }
+    val newMovies by bgState("h-newm", movies, empty = emptyList<Channel>()) { movies.filterIsInstance<Channel>().filter { it.added > 0 }.sortedByDescending { it.added }.asSequence().filter { isPreferred(it) && it.isFreshTitle() }.take(30).toList() }
+    val newSeries by bgState("h-news", series, empty = emptyList<SeriesItem>()) { series.filterIsInstance<SeriesItem>().filter { it.added > 0 }.sortedByDescending { it.added }.asSequence().filter { isPreferred(it) }.take(30).toList() }
     // המדף: סדרות חדשות ועונות/פרקים חדשים (מה שהשתנה אצל הספק מאז הטעינה הקודמת)
     val shelfVer = com.tbm.iptv.data.Shelf.ready.intValue
-    val seriesByKey = remember(series) { series.associateBy { it.key } }
+    val seriesByKey by bgState("h-sbykey", series, empty = emptyMap<String, Entry>()) { series.associateBy { it.key } }
     val shelfNew = remember(seriesByKey, shelfVer) { com.tbm.iptv.data.Shelf.newSeries.mapNotNull { seriesByKey[it] }.filter { isPreferred(it) && it.isFreshTitle() } }
     val shelfUpd = remember(seriesByKey, shelfVer) { com.tbm.iptv.data.Shelf.updated.mapNotNull { seriesByKey[it.first] }.filter { isPreferred(it) } }
     var trendMovies by remember { mutableStateOf<List<Entry>>(emptyList()) }
@@ -1789,31 +1791,37 @@ fun PlatformBadge(p: com.tbm.iptv.data.Platforms.P, modifier: Modifier = Modifie
 @Composable
 private fun KidsHome(content: Content, ver: Int, nav: (Screen) -> Unit) {
     val prof = remember(ver) { Prefs.profile() }
-    val live = remember(content, ver, Catalog.ready.intValue) { Catalog.get(Kind.LIVE, content.live).items.filterIsInstance<Channel>() }
+    // פרופיל ילדים: כל הסינונים והמיונים על הקטלוג רצים ברקע (בסטרימר זה תקע את המסך ונראה כאילו התוכן נעלם)
+    val liveAll = remember(content, ver, Catalog.ready.intValue) { Catalog.get(Kind.LIVE, content.live).items }
+    val movAll = remember(content, ver, Catalog.ready.intValue) { Catalog.get(Kind.MOVIE, content.movies).items }
+    val serAll = remember(content, ver, Catalog.ready.intValue) { Catalog.get(Kind.SERIES, content.series).items }
+    val live by bgState("k-live", liveAll, empty = emptyList<Channel>()) { liveAll.filterIsInstance<Channel>() }
     // דיבוב עברי קודם
-    val movies = remember(content, ver, Catalog.ready.intValue) { Catalog.get(Kind.MOVIE, content.movies).items.sortedByDescending { com.tbm.iptv.data.Sources.hebDub(it) } }
-    val series = remember(content, ver, Catalog.ready.intValue) { Catalog.get(Kind.SERIES, content.series).items.sortedByDescending { com.tbm.iptv.data.Sources.hebDub(it) } }
+    val movies by bgState("k-mov", movAll, empty = emptyList<Entry>()) { movAll.sortedByDescending { com.tbm.iptv.data.Sources.hebDub(it) } }
+    val series by bgState("k-ser", serAll, empty = emptyList<Entry>()) { serAll.sortedByDescending { com.tbm.iptv.data.Sources.hebDub(it) } }
     val favs = remember(ver) { Prefs.favs() }
     val kids = remember(ver) { Prefs.kidsNames() }
     val child = remember(ver) { Prefs.kidChild.takeIf { it in kids } }
-    val favItems = remember(favs, live, movies, series) { (live + movies + series).filter { it.key in favs } }
+    val favItems by bgState("k-fav", favs, live, movies, series, empty = emptyList<Entry>()) { (live + movies + series).filter { it.key in favs } }
     LaunchedEffect(movies, series) { com.tbm.iptv.data.KidsFilter.scanAges(movies.take(80) + series.take(80), prof.age) }
     // שורות לפי דמויות ונושאים
-    val themeRows = remember(movies, series) {
+    val themeRows by bgState("k-themes", movies, series, empty = emptyList<Pair<String, List<Entry>>>()) {
         com.tbm.iptv.data.KidsThemes.all.mapNotNull { (title, rx) ->
             val l = (movies + series).filter { e -> rx.containsMatchIn(e.name) || ((e as? SeriesItem)?.plot?.let { rx.containsMatchIn(it) } == true) }
                 .take(30)
             if (l.size >= 3) L(title) to l else null
         }
     }
-    val fresh = remember(movies, series) { (movies + series).filter { it.addedAt() > 0 }.sortedByDescending { it.addedAt() }.asSequence().filter { it !is Channel || it.isFreshTitle() }.take(30).toList() }
-    val resume = remember(movies, ver) {
-        val recent = Prefs.recent()
-        val keys = recent.map { it.item.key }.toSet()
-        (movies.filter { it.key in keys } + series.filter { s -> recent.any { it.item.seriesName == s.name } }).filterNot { Catalog.isAdultItem(it) }
+    val fresh by bgState("k-fresh", movies, series, empty = emptyList<Entry>()) { (movies + series).filter { it.addedAt() > 0 }.sortedByDescending { it.addedAt() }.asSequence().filter { it !is Channel || it.isFreshTitle() }.take(30).toList() }
+    val recentK = remember(ver) { Prefs.recent() }
+    val resume by bgState("k-resume", movies, series, recentK, empty = emptyList<Entry>()) {
+        val keys = recentK.map { it.item.key }.toSet()
+        val names = recentK.mapNotNullTo(HashSet()) { it.item.seriesName }
+        (movies.filter { it.key in keys } + series.filter { s -> s.name in names }).filterNot { Catalog.isAdultItem(it) }
     }
-    val topicRows = remember(live, movies, series) {
-        prof.topics.mapNotNull { t ->
+    val topics = prof.topics
+    val topicRows by bgState("k-topics", live, topics, empty = emptyList<Pair<String, List<Channel>>>()) {
+        topics.mapNotNull { t ->
             val rx = com.tbm.iptv.data.KidsFilter.topicRx[t] ?: return@mapNotNull null
             val l = live.filter { rx.containsMatchIn(it.group) || rx.containsMatchIn(it.name) }.take(30)
             val title = when (t) { "nature" -> L("🌿 טבע ובעלי חיים"); "sport" -> L("⚽ ספורט"); "docu" -> L("🔬 מדע ודוקו")
@@ -1821,6 +1829,8 @@ private fun KidsHome(content: Content, ver: Int, nav: (Screen) -> Unit) {
             if (l.isEmpty()) null else title to l
         }
     }
+    // עד שהחישוב הראשון ברקע מסתיים – לא להציג "אין תוכן"
+    val catBusy = Catalog.busy(Kind.MOVIE) || liveAll.isNotEmpty() && live.isEmpty() || movAll.isNotEmpty() && movies.isEmpty()
     var menu by remember { mutableStateOf<MenuTarget?>(null) }
     val colors = listOf(Color(0xFFFF6F91), Color(0xFFFFB300), Color(0xFF00C2A8), Color(0xFF3A9BFF), Color(0xFF8E44AD))
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 20.dp)) {
@@ -1841,7 +1851,9 @@ private fun KidsHome(content: Content, ver: Int, nav: (Screen) -> Unit) {
                 }
             }
         }
-        if (live.isEmpty() && movies.isEmpty() && series.isEmpty()) item {
+        if (catBusy && live.isEmpty() && movies.isEmpty() && series.isEmpty()) item {
+            Row(Modifier.fillMaxWidth().padding(24.dp), horizontalArrangement = Arrangement.Center) { CircularProgressIndicator() }
+        } else if (live.isEmpty() && movies.isEmpty() && series.isEmpty()) item {
             Text(L("עדיין אין תוכן מאושר לפרופיל הזה. בקש מאבא או אמא לבחור תוכן בהגדרות ← בקרת הורים ← תוכן."),
                 modifier = Modifier.padding(24.dp), textAlign = TextAlign.Center)
         }

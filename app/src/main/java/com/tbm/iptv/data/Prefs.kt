@@ -46,6 +46,21 @@ object Prefs {
 
     fun bump() { version.intValue = version.intValue + 1; onChange?.invoke() }
 
+    // חתימת ההגדרות שמשפיעות על רשימת התוכן (הסתרות, ילדים, מדינות, סדר, נעילות, פרופילים).
+    // שינוי אחר (מיקום צפייה, היסטוריה, כתוביות…) לא מחייב לחשב מחדש את כל הקטלוג.
+    @Volatile private var sigV = -1
+    @Volatile private var sigVal = 0
+    private val catalogPrefixes = listOf("kinc_", "kexc_", "kxi_", "pin", "adult_mode", "locked_", "kids_", "hidden", "countries_",
+        "renames", "order", "pinned_", "gorder_", "profiles", "lean", "plex_", "kw_", "kblock")
+    fun catalogSig(): Int {
+        val v = version.intValue
+        if (v == sigV) return sigVal
+        var h = 1
+        for ((k, x) in sp.all.entries.sortedBy { it.key }) if (catalogPrefixes.any { k.startsWith(it) }) h = 31 * h + k.hashCode() * 7 + (x?.hashCode() ?: 0)
+        sigVal = h; sigV = v
+        return h
+    }
+
     /** מפתחות ששייכים למכשיר הזה בלבד ולא מסונכרנים */
     private fun isLocalKey(k: String) = k == "profile" || k == "device_id" || k.startsWith("cloud_") ||
         k.startsWith("mini_") || k == "pip_warned" || k == "player_landscape" ||
