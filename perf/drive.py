@@ -39,11 +39,22 @@ def launch(seed):
     adb("logcat", "-c")
     sh(f"monkey -p {PKG} -c android.intent.category.LEANBACK_LAUNCHER 1")
     time.sleep(3)
+def enter(profile):
+    """עובר את מסכי הפתיחה: התחברות (אולי אחר כך) ובורר הפרופילים"""
+    t0 = time.time()
+    while time.time() - t0 < 240:
+        tx = texts()
+        if "סרטים" in tx and "מי צופה?" not in tx: P("home after", int(time.time() - t0), "s"); return True
+        if "אולי אחר כך" in tx: tap_text("אולי אחר כך"); time.sleep(3); continue
+        if "מי צופה?" in tx: tap_text(profile); time.sleep(5); continue
+        time.sleep(4)
+    P("enter timeout; texts:", texts()[:40]); return False
 def dumplog(name):
     l = adb("logcat", "-d", "-v", "time", timeout=60).decode("utf-8", "replace")
     keep = [x for x in l.splitlines() if "TBMPERF" in x or "ANR in" in x or "FATAL" in x or "AndroidRuntime" in x or " E/" in x and PKG in x]
     open(f"{OUT}/{name}-logcat.txt", "w").write("\n".join(keep)); open(f"{OUT}/{name}-logcat-full.txt", "w").write(l[-400000:])
     blocks = [x for x in keep if "BLOCK" in x]
+    for f in [x for x in keep if "FATAL" in x or "AndroidRuntime" in x][:12]: P("   !", f[:300])
     P(f"[{name}] blocks>250ms: {len(blocks)}; ANR lines: {sum('ANR in' in x for x in keep)}; FATAL: {sum('FATAL' in x for x in keep)}")
     for b in sorted(blocks, key=lambda s: -int(re.search(r'BLOCK (\d+)ms', s).group(1)))[:15]: P("   ", b[b.find('BLOCK'):][:400])
 
@@ -54,9 +65,7 @@ if phase in ("all", "main"):
     launch("seed.json")
     for i in range(6): time.sleep(15); shot(f"main-start-{i}")
     P("texts:", texts()[:60])
-    # אם יש בורר פרופילים
-    if tap_text("Tamir"): time.sleep(5)
-    wait_text("סרטים", 180); shot("main-home")
+    enter("Tamir"); time.sleep(10); shot("main-home"); P("home texts:", texts()[:50])
     dumplog("main-load"); adb("logcat", "-c")
     for s in sections + ["סרטים", "סדרות", "ערוצים", "בית"]:
         tap_text(s); time.sleep(4); shot(f"main-sec-{s}")
@@ -78,5 +87,9 @@ if phase in ("all", "main"):
 
 if phase in ("all", "kids"):
     launch("seed_kids.json")
+    time.sleep(20); enter("ילדים")
     for i in range(8): time.sleep(15); shot(f"kids-{i}"); P(f"kids t={15*(i+1)}s:", [t for t in texts() if len(t) > 1][:25])
+    # מעבר בין חלוניות בפרופיל ילדים
+    for s_ in ["סרטים", "סדרות", "ערוצים", "בית", "סרטים", "בית"]:
+        tap_text(s_); time.sleep(4); shot(f"kids-sec-{s_}"); P(f"kids {s_}:", [t for t in texts() if len(t) > 1][:15])
     dumplog("kids")
