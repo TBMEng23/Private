@@ -258,7 +258,7 @@ object Catalog {
     private val pending = HashSet<String>()
 
     private fun keyOf(kind: Kind, all: List<Entry>) =
-        "${kind.name}|${System.identityHashCode(all)}|${all.size}|${Prefs.catalogSig()}|$agesVer|${Parental.unlocked}|${Prefs.profileId}"
+        "${kind.name}|${System.identityHashCode(all)}|${all.size}|${Prefs.catalogSig()}|${KidsFilter.agesVer}|${Parental.unlocked}|${Prefs.profileId}"
 
     /**
      * לשימוש במסכים: אף פעם לא מחשב על ה-UI thread.
