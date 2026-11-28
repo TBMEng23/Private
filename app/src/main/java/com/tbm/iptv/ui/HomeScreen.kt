@@ -438,7 +438,7 @@ private fun EntryRowStrip(
     title: String, list0: List<Entry>, kind: Kind, ctx: android.content.Context, nav: (Screen) -> Unit,
     tag: ((Entry) -> String?)? = null, onLong: (Entry) -> Unit,
 ) {
-    val list = remember(list0) { dedupeTitles(list0) }
+    val list = rememberDeduped(list0)
     RowTitle(title)
     LazyRow(contentPadding = PaddingValues(horizontal = 12.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         items(list) { e ->
@@ -1676,7 +1676,7 @@ private fun CategoryStrip(
     title: String, list0: List<Entry>, kind: Kind, favs: Set<String>, nav: (Screen) -> Unit, onSeeAll: (() -> Unit)?, onLong: (Entry) -> Unit,
 ) {
     val ctx = LocalContext.current
-    val list = remember(list0) { dedupeTitles(list0) }
+    val list = rememberDeduped(list0)
     val shown = remember(list) { list.take(30) }
     Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp, top = 14.dp), verticalAlignment = Alignment.CenterVertically) {
         Text("$title (${list.size})", fontSize = 17.sp, fontWeight = FontWeight.Bold, maxLines = 1,
@@ -1738,7 +1738,7 @@ private fun TmdbBadge() {
 /** שורת טרנדים עם מספרי דירוג גדולים (כמו MyTVOnline / נטפליקס) */
 @Composable
 private fun RankedStrip(title: String, list0: List<Entry>, nav: (Screen) -> Unit, onLong: (Entry) -> Unit) {
-    val list = remember(list0) { dedupeTitles(list0) }
+    val list = rememberDeduped(list0)
     Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 18.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
         Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
         TmdbBadge()
@@ -1887,6 +1887,27 @@ object FocusMemory { @Volatile var last: String? = null }
  * אותו סרט/סדרה מכמה קטגוריות של הספק (למשל "AMZ - X" ו-"4K-AMZ - X") מוצג בשורות פעם אחת;
  * בדף הפרטים כל הגרסאות מופיעות תחת "מקורות". עדיפות לגרסה שכבר התחלת לצפות בה, אחריה ל-HD (4K כבד לסטרימר).
  */
+private class IdKey(val o: Any) {
+    override fun equals(other: Any?) = other is IdKey && other.o === o
+    override fun hashCode() = System.identityHashCode(o)
+}
+private val dedupeCache = java.util.Collections.synchronizedMap(object : java.util.LinkedHashMap<IdKey, List<Entry>>(64, 0.75f, true) {
+    override fun removeEldestEntry(eldest: MutableMap.MutableEntry<IdKey, List<Entry>>?) = size > 150
+})
+
+/** איחוד כפילויות ברקע (שורות קטגוריה יכולות להכיל אלפי פריטים) – נשמר כדי שחזרה לחלונית תהיה מיידית */
+@Composable
+private fun rememberDeduped(list0: List<Entry>): List<Entry> {
+    val k = IdKey(list0)
+    val hit = dedupeCache[k] ?: if (list0.size < 60) dedupeTitles(list0).also { dedupeCache[k] = it } else null
+    return androidx.compose.runtime.produceState(hit ?: list0, list0) {
+        if (hit != null) { value = hit; return@produceState }
+        val r = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) { dedupeTitles(list0) }
+        dedupeCache[k] = r
+        value = r
+    }.value
+}
+
 fun dedupeTitles(l: List<Entry>): List<Entry> {
     if (l.size < 2) return l
     val groups = LinkedHashMap<String, MutableList<Entry>>()
