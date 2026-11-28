@@ -10,9 +10,11 @@ class App : Application() {
         CrashLog.install(this)
         CrashLog.watchdog()
         Prefs.init(this)
+        Perf.seedIfRequested()
+        Perf.startMonitor()
         I18n.init()
         runCatching { com.tbm.iptv.data.Cloud.init() }
-        runCatching { com.tbm.iptv.data.Devices.register(this) }
+        if (!Perf.testMode) runCatching { com.tbm.iptv.data.Devices.register(this) }
         warmStateHolders()
     }
 
