@@ -1466,7 +1466,10 @@ private fun CatLine(name: String, count: Int?, locked: Boolean, accent: Boolean,
 
 // ============================================================ תצוגת שורות (כמו MyTVOnline)
 // ---- מטמון לחישובי רקע: בחזרה למסך התוצאה זמינה מיד (בלי רשימות ריקות שמאפסות את הגלילה) ----
-internal val bgCache = HashMap<String, Pair<List<Any?>, Any?>>()
+// מוגבל בגודל (בסטרימר יש מעט זיכרון) – הישנים ביותר נזרקים
+internal val bgCache = object : java.util.LinkedHashMap<String, Pair<List<Any?>, Any?>>(64, 0.75f, true) {
+    override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, Pair<List<Any?>, Any?>>?) = size > 80
+}
 internal fun sameInputs(a: List<Any?>, b: List<Any?>) = a.size == b.size && a.indices.all { i ->
     val x = a[i]; val y = b[i]; x === y || (x !is List<*> && x == y) }
 @Suppress("UNCHECKED_CAST")
@@ -1916,7 +1919,7 @@ private class IdKey(val o: Any) {
     override fun hashCode() = System.identityHashCode(o)
 }
 private val dedupeCache = java.util.Collections.synchronizedMap(object : java.util.LinkedHashMap<IdKey, List<Entry>>(64, 0.75f, true) {
-    override fun removeEldestEntry(eldest: MutableMap.MutableEntry<IdKey, List<Entry>>?) = size > 150
+    override fun removeEldestEntry(eldest: MutableMap.MutableEntry<IdKey, List<Entry>>?) = size > 60
 })
 
 /** איחוד כפילויות ברקע (שורות קטגוריה יכולות להכיל אלפי פריטים) – נשמר כדי שחזרה לחלונית תהיה מיידית */
