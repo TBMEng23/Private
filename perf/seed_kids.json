@@ -1,0 +1,1 @@
+{"playlists": "[{\"id\": \"p1\", \"name\": \"Test\", \"type\": \"xtream\", \"url\": \"http://10.0.2.2:8000\", \"user\": \"test\", \"pass\": \"test\"}]", "active": "p1", "profiles": "[{\"id\": \"main\", \"name\": \"Tamir\", \"kids\": false}, {\"id\": \"kids\", \"name\": \"\\u05d9\\u05dc\\u05d3\\u05d9\\u05dd\", \"kids\": true, \"age\": 7, \"auto\": true}]", "profile": "kids"}
