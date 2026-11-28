@@ -35,7 +35,7 @@ def wait_text(label, secs):
     P("timeout waiting", label); return False
 def launch(seed):
     sh(f"am force-stop {PKG}"); sh(f"pm clear {PKG}")
-    sh(f"setprop debug.tbm.seed http://10.0.2.2:8000/{seed}"); sh("setprop debug.tbm.perf 1")
+    sh(f"setprop debug.tbm.seed http://10.0.2.2:8000/{seed}"); sh("setprop debug.tbm.perf 1"); sh("setprop debug.tbm.perfms 80")
     adb("logcat", "-c")
     sh(f"monkey -p {PKG} -c android.intent.category.LEANBACK_LAUNCHER 1")
     time.sleep(3)
@@ -55,11 +55,11 @@ def dumplog(name):
     open(f"{OUT}/{name}-logcat.txt", "w").write("\n".join(keep)); open(f"{OUT}/{name}-logcat-full.txt", "w").write(l[-400000:])
     blocks = [x for x in keep if "BLOCK" in x]
     for f in [x for x in keep if "FATAL" in x or "AndroidRuntime" in x][:12]: P("   !", f[:300])
-    P(f"[{name}] blocks>250ms: {len(blocks)}; ANR lines: {sum('ANR in' in x for x in keep)}; FATAL: {sum('FATAL' in x for x in keep)}")
-    for b in sorted(blocks, key=lambda s: -int(re.search(r'BLOCK (\d+)ms', s).group(1)))[:15]: P("   ", b[b.find('BLOCK'):][:400])
+    P(f"[{name}] blocks>80ms: {len(blocks)}; ANR lines: {sum('ANR in' in x for x in keep)}; FATAL: {sum('FATAL' in x for x in keep)}")
+    for b in sorted(blocks, key=lambda s: -int(re.search(r'BLOCK (\d+)ms', s).group(1)))[:25]: P("   ", b[b.find('BLOCK'):][:400])
 
 phase = sys.argv[1] if len(sys.argv) > 1 else "all"
-sections = ["בית", "ערוצים", "סרטים", "סדרות"]
+sections = ["בית", "טלוויזיה", "סרטים", "סדרות"]
 
 if phase in ("all", "main"):
     launch("seed.json")
@@ -82,7 +82,20 @@ if phase in ("all", "main"):
     for r in range(3):
         key(*([22] * 8)); key(*([21] * 8)); key(*([20] * 6)); key(*([19] * 6))
     time.sleep(8); shot("main-after-rapid-keys")
-    dumplog("main-rapid")
+    dumplog("main-rapid"); adb("logcat", "-c")
+    # פתיחת קטגוריה, סרט, חזרה
+    tap_text("סרטים"); time.sleep(4)
+    tap_text("📂 קטגוריות הספק"); time.sleep(4); shot("main-cats"); P("cats:", texts()[:30])
+    for t, x, y in nodes():
+        if "(" in t and ")" in t and len(t) > 6: sh(f"input tap {x} {y}"); P("open", t); break
+    time.sleep(6); shot("main-details"); P("details:", texts()[:25])
+    key(4); time.sleep(4); key(4); time.sleep(4); shot("main-back")
+    tap_text("סדרות"); time.sleep(4)
+    for t, x, y in nodes():
+        if "(" in t and ")" in t and len(t) > 6: sh(f"input tap {x} {y}"); P("open", t); break
+    time.sleep(6); shot("ser-details"); P("ser details:", texts()[:25]); key(4); time.sleep(4)
+    tap_text("חיפוש"); time.sleep(3); sh("input text Love"); time.sleep(5); shot("search"); P("search:", texts()[:20])
+    dumplog("main-nav")
     P("alive:", PKG in sh("pidof " + PKG) or sh("pidof " + PKG).strip() != "")
 
 if phase in ("all", "kids"):

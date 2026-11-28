@@ -39,13 +39,14 @@ object Perf {
 
     fun startMonitor() {
         if (prop("debug.tbm.perf") != "1") return
+        val thr = prop("debug.tbm.perfms").toLongOrNull() ?: 250L
         val main = android.os.Handler(android.os.Looper.getMainLooper())
         Thread({
             while (true) {
                 val done = java.util.concurrent.atomic.AtomicBoolean(false)
                 val t0 = System.nanoTime()
                 main.post { done.set(true) }
-                Thread.sleep(250)
+                Thread.sleep(thr)
                 if (!done.get()) {
                     val st = android.os.Looper.getMainLooper().thread.stackTrace
                     while (!done.get()) Thread.sleep(20)
