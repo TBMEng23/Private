@@ -399,7 +399,7 @@ object OpenSubtitlesOrgProvider : SubProvider {
     override val name = "OpenSubtitles.org"
     private val iso3 = mapOf("he" to "heb", "en" to "eng", "ar" to "ara", "ru" to "rus", "fr" to "fre",
         "es" to "spa", "de" to "ger", "it" to "ita", "pt" to "por", "tr" to "tur")
-    override fun enabled() = Prefs.bool("p_osorg", true)
+    override fun enabled() = Prefs.bool("p_osorg2", false)
 
     override suspend fun search(q: SubQuery): List<SubResult> {
         val langs = q.langs.mapNotNull { iso3[it] }.joinToString(",").ifBlank { return emptyList() }
@@ -413,7 +413,8 @@ object OpenSubtitlesOrgProvider : SubProvider {
             if (q.isSeries) "episode-${q.episode}/query-$t/season-${q.season}/sublanguageid-$langs"
             else "query-$t/sublanguageid-$langs"
         }
-        val txt = Http.get("https://rest.opensubtitles.org/search/$path", hdr).trim()
+        // השרת הישן חוסם/סוגר גישה בלי חשבון – שגיאה ממנו לא מוצגת, פשוט אין תוצאות
+        val txt = runCatching { Http.get("https://rest.opensubtitles.org/search/$path", hdr).trim() }.getOrDefault("")
         if (!txt.startsWith("[")) return emptyList()
         val a = JSONArray(txt)
         return (0 until a.length()).mapNotNull { i ->

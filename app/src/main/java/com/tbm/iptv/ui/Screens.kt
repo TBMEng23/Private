@@ -642,7 +642,7 @@ private fun SubsPage() {
             Hint(L("מפתח חינמי: subsource.net ← חשבון ← לשונית API."))
 
             Provider(L("OpenSubtitles v3 – ללא מפתח"), "p_os3")
-            Provider(L("OpenSubtitles.org – ללא מפתח"), "p_osorg")
+            Provider(L("OpenSubtitles.org – ללא מפתח"), "p_osorg2", false)
             Provider(L("Podnapisi – ללא הרשמה"), "p_podnapisi", false)
             Provider(L("YIFY – סרטים, ללא הרשמה"), "p_yify", false)
         }
