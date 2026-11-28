@@ -1814,6 +1814,9 @@ private fun KidsHome(content: Content, ver: Int, nav: (Screen) -> Unit) {
     val kids = remember(ver) { Prefs.kidsNames() }
     val child = remember(ver) { Prefs.kidChild.takeIf { it in kids } }
     val kLive = live; val kMov = movies; val kSer = series
+    // מיון לפי דירוג – ברקע ופעם אחת (לא בכל ציור של המסך)
+    val movRated by bgState("k-mrate", kMov, empty = emptyList<Entry>()) { kMov.sortedByDescending { it.rating() } }
+    val serRated by bgState("k-srate", kSer, empty = emptyList<Entry>()) { kSer.sortedByDescending { it.rating() } }
     val favItems by bgState("k-fav", favs, kLive, kMov, kSer, empty = emptyList<Entry>()) { (kLive + kMov + kSer).filter { it.key in favs } }
     LaunchedEffect(movies, series) { com.tbm.iptv.data.KidsFilter.scanAges(movies.take(80) + series.take(80), prof.age) }
     // שורות לפי דמויות ונושאים
@@ -1903,8 +1906,8 @@ private fun KidsHome(content: Content, ver: Int, nav: (Screen) -> Unit) {
         if (resume.isNotEmpty()) item { CategoryStrip(L("▶ להמשיך לצפות"), resume, Kind.MOVIE, favs, nav, null) { menu = MenuTarget(Kind.MOVIE, it, movies) } }
         if (fresh.isNotEmpty()) item { CategoryStrip(L("🆕 חדש בשבילך"), fresh, Kind.MOVIE, favs, nav, null) { menu = MenuTarget(Kind.MOVIE, it, movies) } }
         if (live.isNotEmpty()) item { CategoryStrip(L("📺 הערוצים שלי"), live, Kind.LIVE, favs, nav, null) { menu = MenuTarget(Kind.LIVE, it, live) } }
-        if (movies.isNotEmpty()) item { CategoryStrip(L("🎬 סרטים"), movies.sortedByDescending { it.rating() }, Kind.MOVIE, favs, nav, null) { menu = MenuTarget(Kind.MOVIE, it, movies) } }
-        if (series.isNotEmpty()) item { CategoryStrip(L("🍿 סדרות"), series.sortedByDescending { it.rating() }, Kind.SERIES, favs, nav, null) { menu = MenuTarget(Kind.SERIES, it, series) } }
+        if (movRated.isNotEmpty()) item { CategoryStrip(L("🎬 סרטים"), movRated, Kind.MOVIE, favs, nav, null) { menu = MenuTarget(Kind.MOVIE, it, movies) } }
+        if (serRated.isNotEmpty()) item { CategoryStrip(L("🍿 סדרות"), serRated, Kind.SERIES, favs, nav, null) { menu = MenuTarget(Kind.SERIES, it, series) } }
         items(themeRows, key = { "th:" + it.first }) { (title, l) ->
             CategoryStrip(title, l, Kind.MOVIE, favs, nav, null) { e -> menu = MenuTarget(if (e is SeriesItem) Kind.SERIES else Kind.MOVIE, e, l) }
         }
