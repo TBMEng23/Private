@@ -44,8 +44,11 @@ object CrashLog {
                 if (!done.get() && !reported) {
                     reported = true
                     runCatching {
-                        val st = android.os.Looper.getMainLooper().thread.stackTrace.joinToString("\n") { "  at $it" }
-                        file?.writeText("ANR (UI frozen >4s) – TBM Player ${BuildConfigLite.VERSION}\n$st")
+                        val tr = android.os.Looper.getMainLooper().thread.stackTrace
+                        // קודם השורות מהקוד שלנו (כדי שיראו בדוח איזה מסך/פעולה תקעו), אחר כך כל השאר
+                        val ours = tr.filter { it.className.startsWith("com.tbm") }.joinToString("\n") { "  > $it" }
+                        val st = tr.joinToString("\n") { "  at $it" }
+                        file?.writeText("ANR (UI frozen >4s) – TBM Player ${BuildConfigLite.VERSION}\n$ours\n---\n$st")
                     }
                 }
                 if (done.get()) reported = false
@@ -58,7 +61,7 @@ object CrashLog {
     fun clear() { file?.delete() }
 }
 
-object BuildConfigLite { const val VERSION = "4.9.9" }
+object BuildConfigLite { const val VERSION = "5.0.0" }
 
 /** הגרסה האמיתית מתוך ה-APK (versionName + versionCode) */
 fun appVersion(ctx: android.content.Context): String = runCatching {
